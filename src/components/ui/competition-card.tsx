@@ -1,5 +1,6 @@
 import { MaterialIcons } from '@expo/vector-icons';
-import { StyleSheet, Text, View } from 'react-native';
+import { useRouter } from 'expo-router';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { GlassPanel } from '@/components/ui/glass-panel';
 import type { Competition } from '@/api/types';
@@ -22,42 +23,45 @@ function formatDateRange(start: string, end: string | null): string {
 }
 
 export function CompetitionCard({ competition }: { competition: Competition }) {
+  const router = useRouter();
   const meta = TYPE_META[competition.type];
   const registrationOpen =
     competition.registration_closes_at !== null &&
     new Date(competition.registration_closes_at) > new Date();
 
   return (
-    <GlassPanel style={styles.card}>
-      <View style={styles.header}>
-        <Text style={styles.name}>{competition.name}</Text>
-        <MaterialIcons name={meta.icon} size={22} color={meta.color} />
-      </View>
-
-      {competition.venue && (
-        <View style={styles.row}>
-          <MaterialIcons name="location-on" size={16} color={Colors.onSurfaceVariant} />
-          <Text style={styles.meta}>{competition.venue}</Text>
+    <Pressable onPress={() => router.push(`/competicion/${competition.id}`)}>
+      <GlassPanel style={styles.card}>
+        <View style={styles.header}>
+          <Text style={styles.name}>{competition.name}</Text>
+          <MaterialIcons name={meta.icon} size={22} color={meta.color} />
         </View>
-      )}
 
-      <View style={styles.row}>
-        <MaterialIcons name="calendar-today" size={16} color={Colors.onSurfaceVariant} />
-        <Text style={styles.meta}>
-          {formatDateRange(competition.start_date, competition.end_date)}
-        </Text>
-      </View>
-
-      <View style={styles.footer}>
-        <Text style={[styles.typeLabel, { color: meta.color }]}>{meta.label}</Text>
-        {registrationOpen && (
-          <Text style={styles.registrationLabel}>
-            Inscripciones abiertas hasta{' '}
-            {dateFormatter.format(new Date(competition.registration_closes_at as string))}
-          </Text>
+        {competition.venue && (
+          <View style={styles.row}>
+            <MaterialIcons name="location-on" size={16} color={Colors.onSurfaceVariant} />
+            <Text style={styles.meta}>{competition.venue}</Text>
+          </View>
         )}
-      </View>
-    </GlassPanel>
+
+        <View style={styles.row}>
+          <MaterialIcons name="calendar-today" size={16} color={Colors.onSurfaceVariant} />
+          <Text style={styles.meta}>
+            {formatDateRange(competition.start_date, competition.end_date)}
+          </Text>
+        </View>
+
+        <View style={styles.footer}>
+          <Text style={[styles.typeLabel, { color: meta.color }]}>{meta.label}</Text>
+          {registrationOpen && (
+            <Text style={styles.registrationLabel}>
+              Inscripciones abiertas hasta{' '}
+              {dateFormatter.format(new Date(competition.registration_closes_at as string))}
+            </Text>
+          )}
+        </View>
+      </GlassPanel>
+    </Pressable>
   );
 }
 

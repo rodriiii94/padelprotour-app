@@ -1,3 +1,5 @@
+import { useFocusEffect } from 'expo-router';
+import { useCallback } from 'react';
 import { ActivityIndicator, RefreshControl, StyleSheet, Text } from 'react-native';
 
 import { CompetitionCard } from '@/components/ui/competition-card';
@@ -10,6 +12,12 @@ import { Colors, Spacing, Typography } from '@/theme/tokens';
 export default function CompeticionesScreen() {
   const { competitions, isLoading, isLoadingMore, hasMore, error, refetch, loadMore } =
     useCompetitions();
+
+  useFocusEffect(
+    useCallback(() => {
+      refetch();
+    }, [refetch])
+  );
 
   return (
     <Screen

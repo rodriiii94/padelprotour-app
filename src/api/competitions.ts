@@ -1,5 +1,5 @@
 import { apiFetch } from './client';
-import type { Competition, CompetitionInput, Paginated } from './types';
+import type { Category, Competition, CompetitionInput, Paginated } from './types';
 
 export function listCompetitions(page = 1): Promise<Paginated<Competition>> {
   return apiFetch<Paginated<Competition>>(`/competitions?page=${page}`);
@@ -16,4 +16,19 @@ export function listMyCompetitions(): Promise<Competition[]> {
 
 export function createCompetition(input: CompetitionInput): Promise<Competition> {
   return apiFetch<Competition>('/competitions', { method: 'POST', body: input });
+}
+
+export function getCompetition(id: number): Promise<Competition> {
+  return apiFetch<Competition>(`/competitions/${id}`);
+}
+
+export function updateCompetition(
+  id: number,
+  input: Partial<CompetitionInput>
+): Promise<Competition> {
+  return apiFetch<Competition>(`/competitions/${id}`, { method: 'PUT', body: input });
+}
+
+export function listCategories(competitionId: number): Promise<Category[]> {
+  return apiFetch<Category[]>(`/competitions/${competitionId}/categories`);
 }

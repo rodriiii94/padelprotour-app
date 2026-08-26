@@ -5,7 +5,7 @@ import {
   useFonts,
 } from '@expo-google-fonts/manrope';
 import { Sora_600SemiBold, Sora_700Bold, Sora_800ExtraBold } from '@expo-google-fonts/sora';
-import { Redirect, Slot, useSegments } from 'expo-router';
+import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 import { StatusBar, StyleSheet, View } from 'react-native';
@@ -47,23 +47,22 @@ export default function RootLayout() {
 
 function AuthGate() {
   const { user, isLoading } = useAuth();
-  const segments = useSegments();
 
   if (isLoading) {
     return null;
   }
 
-  const inAuthGroup = segments[0] === '(auth)';
-
-  if (!user && !inAuthGroup) {
-    return <Redirect href="/(auth)/login" />;
-  }
-
-  if (user && inAuthGroup) {
-    return <Redirect href="/(tabs)" />;
-  }
-
-  return <Slot />;
+  return (
+    <Stack screenOptions={{ headerShown: false }}>
+      <Stack.Protected guard={!user}>
+        <Stack.Screen name="(auth)" />
+      </Stack.Protected>
+      <Stack.Protected guard={!!user}>
+        <Stack.Screen name="(tabs)" />
+        <Stack.Screen name="crear-competicion" options={{ presentation: 'modal' }} />
+      </Stack.Protected>
+    </Stack>
+  );
 }
 
 const styles = StyleSheet.create({

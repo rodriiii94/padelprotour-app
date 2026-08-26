@@ -1,16 +1,45 @@
-import { useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { useFocusEffect, useRouter } from 'expo-router';
+import { useCallback, useMemo, useState } from 'react';
+import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 
+import type { Competition } from '@/api/types';
+import { Button } from '@/components/ui/button';
+import { CompetitionCard } from '@/components/ui/competition-card';
 import { GlassPanel } from '@/components/ui/glass-panel';
 import { Screen } from '@/components/ui/screen';
 import { useAuth } from '@/hooks/use-auth';
+import { useMyCompetitions } from '@/hooks/use-my-competitions';
 import { Colors, FontFamilies, Radii, Spacing, Typography } from '@/theme/tokens';
 
 type Role = 'jugador' | 'organizador';
 
+function isActive(competition: Competition): boolean {
+  return !competition.end_date || new Date(competition.end_date) >= new Date();
+}
+
 export default function HomeScreen() {
+  const router = useRouter();
   const { user } = useAuth();
   const [role, setRole] = useState<Role>('jugador');
+  const { competitions, isLoading, error, refetch } = useMyCompetitions();
+
+  useFocusEffect(
+    useCallback(() => {
+      refetch();
+    }, [refetch])
+  );
+
+  const { organizing, playing } = useMemo(() => {
+    const organizing: Competition[] = [];
+    const playing: Competition[] = [];
+    for (const competition of competitions) {
+      (competition.organizer_id === user?.id ? organizing : playing).push(competition);
+    }
+    return { organizing, playing };
+  }, [competitions, user?.id]);
+
+  const visible = role === 'jugador' ? playing : organizing;
+  const activeCount = visible.filter(isActive).length;
 
   return (
     <Screen>
@@ -28,14 +57,42 @@ export default function HomeScreen() {
         />
       </View>
 
-      <GlassPanel style={styles.placeholderCard}>
-        <Text style={styles.placeholderTitle}>
-          {role === 'jugador' ? 'Próximos partidos y ligas activas' : 'Tus competiciones organizadas'}
-        </Text>
-        <Text style={styles.placeholderBody}>
-          Esta sección se conectará a la API de competiciones en la siguiente pasada.
-        </Text>
+      <GlassPanel style={styles.statCard}>
+        <Text style={styles.statLabel}>COMPETICIONES ACTIVAS</Text>
+        <Text style={styles.statValue}>{activeCount}</Text>
       </GlassPanel>
+
+      {role === 'organizador' && (
+        <Button
+          title="Crear competición"
+          onPress={() => router.push('/crear-competicion')}
+        />
+      )}
+
+      {isLoading && competitions.length === 0 && (
+        <ActivityIndicator color={Colors.primaryContainer} style={styles.spinner} />
+      )}
+
+      {error && (
+        <GlassPanel style={styles.messageCard}>
+          <Text style={styles.messageText}>{error}</Text>
+          <Button title="Reintentar" variant="secondary" onPress={refetch} />
+        </GlassPanel>
+      )}
+
+      {!isLoading && !error && visible.length === 0 && (
+        <GlassPanel style={styles.messageCard}>
+          <Text style={styles.messageText}>
+            {role === 'jugador'
+              ? 'Todavía no estás inscrito en ninguna competición.'
+              : 'Todavía no organizas ninguna competición.'}
+          </Text>
+        </GlassPanel>
+      )}
+
+      {visible.map((competition) => (
+        <CompetitionCard key={competition.id} competition={competition} />
+      ))}
     </Screen>
   );
 }
@@ -93,15 +150,27 @@ const styles = StyleSheet.create({
     color: Colors.onPrimary,
     fontFamily: FontFamilies.bodyBold,
   },
-  placeholderCard: {
+  statCard: {
     padding: Spacing.sm,
     gap: Spacing.base,
   },
-  placeholderTitle: {
-    ...Typography.headlineSm,
+  statLabel: {
+    ...Typography.labelCaps,
+    color: Colors.onSurfaceVariant,
+  },
+  statValue: {
+    ...Typography.display,
+    fontSize: 40,
     color: Colors.primary,
   },
-  placeholderBody: {
+  spinner: {
+    marginTop: Spacing.lg,
+  },
+  messageCard: {
+    padding: Spacing.sm,
+    gap: Spacing.sm,
+  },
+  messageText: {
     ...Typography.bodySm,
     color: Colors.onSurfaceVariant,
   },

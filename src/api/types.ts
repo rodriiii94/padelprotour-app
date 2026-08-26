@@ -15,6 +15,38 @@ export interface AuthToken {
   user: User;
 }
 
+export type CompetitionType = 'tournament' | 'league';
+
+export interface Competition {
+  id: number;
+  type: CompetitionType;
+  name: string;
+  venue: string | null;
+  start_date: string;
+  end_date: string | null;
+  registration_closes_at: string | null;
+  organizer_id: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CompetitionInput {
+  type: CompetitionType;
+  name: string;
+  venue?: string | null;
+  start_date: string;
+  end_date?: string | null;
+  registration_closes_at?: string | null;
+}
+
+export interface Paginated<T> {
+  data: T[];
+  current_page: number;
+  last_page: number;
+  per_page: number;
+  total: number;
+}
+
 export interface ApiErrorBody {
   message: string;
   errors?: Record<string, string[]>;

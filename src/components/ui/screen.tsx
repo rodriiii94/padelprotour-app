@@ -1,11 +1,11 @@
-import { ScrollView, StyleSheet, View, type ViewProps } from 'react-native';
+import { ScrollView, StyleSheet, View, type ScrollViewProps } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Colors, Spacing } from '@/theme/tokens';
 
 const TAB_BAR_CLEARANCE = 100;
 
-export function Screen({ style, children, ...rest }: ViewProps) {
+export function Screen({ style, children, ...rest }: ScrollViewProps) {
   return (
     <View style={styles.root}>
       <View style={[styles.glowPrimary]} />

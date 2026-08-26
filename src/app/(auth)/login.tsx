@@ -1,12 +1,13 @@
 import { Link } from 'expo-router';
 import { useState } from 'react';
-import { StyleSheet, Text, TextInput, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ApiError } from '@/api/types';
 import { Button } from '@/components/ui/button';
+import { TextField } from '@/components/ui/text-field';
 import { useAuth } from '@/hooks/use-auth';
-import { Colors, FontFamilies, Radii, Spacing, Typography } from '@/theme/tokens';
+import { Colors, Spacing, Typography } from '@/theme/tokens';
 
 export default function LoginScreen() {
   const { login } = useAuth();
@@ -33,19 +34,15 @@ export default function LoginScreen() {
         <Text style={styles.title}>PadelProTour</Text>
         <Text style={styles.subtitle}>Inicia sesión para continuar</Text>
 
-        <TextInput
-          style={styles.input}
+        <TextField
           placeholder="Email"
-          placeholderTextColor={Colors.onSurfaceVariant}
           autoCapitalize="none"
           keyboardType="email-address"
           value={email}
           onChangeText={setEmail}
         />
-        <TextInput
-          style={styles.input}
+        <TextField
           placeholder="Contraseña"
-          placeholderTextColor={Colors.onSurfaceVariant}
           secureTextEntry
           value={password}
           onChangeText={setPassword}
@@ -90,17 +87,6 @@ const styles = StyleSheet.create({
     color: Colors.onSurfaceVariant,
     textAlign: 'center',
     marginBottom: Spacing.md,
-  },
-  input: {
-    backgroundColor: 'rgba(0, 0, 0, 0.2)',
-    borderWidth: 1,
-    borderColor: Colors.glassBorder,
-    borderRadius: Radii.md,
-    paddingHorizontal: Spacing.sm,
-    paddingVertical: Spacing.xs,
-    color: Colors.onSurface,
-    fontFamily: FontFamilies.body,
-    fontSize: 16,
   },
   error: {
     ...Typography.bodySm,

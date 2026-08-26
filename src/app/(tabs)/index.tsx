@@ -2,6 +2,7 @@ import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 
+import { isCompetitionActive } from '@/api/competitions';
 import type { Competition } from '@/api/types';
 import { Button } from '@/components/ui/button';
 import { CompetitionCard } from '@/components/ui/competition-card';
@@ -12,10 +13,6 @@ import { useMyCompetitions } from '@/hooks/use-my-competitions';
 import { Colors, FontFamilies, Radii, Spacing, Typography } from '@/theme/tokens';
 
 type Role = 'jugador' | 'organizador';
-
-function isActive(competition: Competition): boolean {
-  return !competition.end_date || new Date(competition.end_date) >= new Date();
-}
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -39,7 +36,7 @@ export default function HomeScreen() {
   }, [competitions, user?.id]);
 
   const visible = role === 'jugador' ? playing : organizing;
-  const activeCount = visible.filter(isActive).length;
+  const activeCount = visible.filter(isCompetitionActive).length;
 
   return (
     <Screen>

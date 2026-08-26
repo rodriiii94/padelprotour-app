@@ -8,7 +8,8 @@ import { useCompetitions } from '@/hooks/use-competitions';
 import { Colors, Spacing, Typography } from '@/theme/tokens';
 
 export default function CompeticionesScreen() {
-  const { competitions, isLoading, error, refetch } = useCompetitions();
+  const { competitions, isLoading, isLoadingMore, hasMore, error, refetch, loadMore } =
+    useCompetitions();
 
   return (
     <Screen
@@ -34,13 +35,22 @@ export default function CompeticionesScreen() {
 
       {!isLoading && !error && competitions.length === 0 && (
         <GlassPanel style={styles.card}>
-          <Text style={styles.body}>Todavía no hay competiciones creadas.</Text>
+          <Text style={styles.body}>No hay competiciones activas en este momento.</Text>
         </GlassPanel>
       )}
 
       {competitions.map((competition) => (
         <CompetitionCard key={competition.id} competition={competition} />
       ))}
+
+      {hasMore && !isLoading && (
+        <Button
+          title={isLoadingMore ? 'Cargando…' : 'Cargar más'}
+          variant="secondary"
+          onPress={loadMore}
+          disabled={isLoadingMore}
+        />
+      )}
     </Screen>
   );
 }

@@ -1,8 +1,13 @@
 import { apiFetch } from './client';
 import type { Competition, CompetitionInput, Paginated } from './types';
 
-export function listCompetitions(): Promise<Paginated<Competition>> {
-  return apiFetch<Paginated<Competition>>('/competitions');
+export function listCompetitions(page = 1): Promise<Paginated<Competition>> {
+  return apiFetch<Paginated<Competition>>(`/competitions?page=${page}`);
+}
+
+/** No competition-level "finished" flag exists yet — approximated from end_date. */
+export function isCompetitionActive(competition: Competition): boolean {
+  return !competition.end_date || new Date(competition.end_date) >= new Date();
 }
 
 export function listMyCompetitions(): Promise<Competition[]> {

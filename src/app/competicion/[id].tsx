@@ -129,14 +129,14 @@ export default function CompetitionDetailScreen() {
                 <View style={styles.inviteBox}>
                   {competition.invite_token ? (
                     <>
-                      <Text style={styles.meta}>Código de invitación</Text>
+                      <Text style={styles.meta}>Enlace de invitación</Text>
                       <Text style={styles.inviteToken}>{competition.invite_token}</Text>
                       <Button
-                        title="Compartir código"
+                        title="Compartir enlace"
                         variant="ghost"
                         onPress={() =>
                           Share.share({
-                            message: `Únete a "${competition.name}" en PadelProTour con este código de invitación: ${competition.invite_token}`,
+                            message: `Únete a "${competition.name}" en PadelProTour: padelontourapp://invite/${competition.invite_token}`,
                           })
                         }
                       />

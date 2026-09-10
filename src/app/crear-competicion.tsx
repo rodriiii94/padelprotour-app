@@ -1,11 +1,12 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Switch, Text, View } from 'react-native';
 
 import { createCompetition } from '@/api/competitions';
 import { ApiError, type CompetitionType } from '@/api/types';
 import { Button } from '@/components/ui/button';
+import { GlassPanel } from '@/components/ui/glass-panel';
 import { Screen } from '@/components/ui/screen';
 import { TextField } from '@/components/ui/text-field';
 import { Colors, FontFamilies, Radii, Spacing, Typography } from '@/theme/tokens';
@@ -22,6 +23,7 @@ export default function CrearCompeticionScreen() {
   const [venue, setVenue] = useState('');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
+  const [isPrivate, setIsPrivate] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -35,6 +37,7 @@ export default function CrearCompeticionScreen() {
         venue: venue || null,
         start_date: startDate,
         end_date: endDate || null,
+        is_private: isPrivate,
       });
       router.back();
     } catch (e) {
@@ -85,6 +88,23 @@ export default function CrearCompeticionScreen() {
         autoCapitalize="none"
       />
 
+      <GlassPanel style={styles.privacyRow}>
+        <View style={{ flex: 1 }}>
+          <Text style={styles.cardTitle}>Privada</Text>
+          <Text style={styles.hint}>
+            {isPrivate
+              ? 'Solo visible por invitación.'
+              : 'Visible para cualquiera en Competiciones.'}
+          </Text>
+        </View>
+        <Switch
+          value={isPrivate}
+          onValueChange={setIsPrivate}
+          trackColor={{ false: Colors.glassFill, true: Colors.primaryContainer }}
+          thumbColor={Colors.primary}
+        />
+      </GlassPanel>
+
       {error && <Text style={styles.error}>{error}</Text>}
 
       <Button
@@ -130,6 +150,20 @@ const styles = StyleSheet.create({
   typeButtonLabelActive: {
     color: Colors.onPrimary,
     fontFamily: FontFamilies.bodyBold,
+  },
+  privacyRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+    padding: Spacing.sm,
+  },
+  cardTitle: {
+    ...Typography.headlineSm,
+    color: Colors.primary,
+  },
+  hint: {
+    ...Typography.bodySm,
+    color: Colors.onSurfaceVariant,
   },
   error: {
     ...Typography.bodySm,

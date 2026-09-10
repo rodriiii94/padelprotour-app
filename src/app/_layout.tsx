@@ -63,6 +63,7 @@ function AuthGate() {
         <Stack.Screen name="crear-categoria" options={{ presentation: 'modal' }} />
         <Stack.Screen name="competicion/[id]" />
         <Stack.Screen name="categoria/[id]" />
+        <Stack.Screen name="invite/[token]" />
       </Stack.Protected>
     </Stack>
   );

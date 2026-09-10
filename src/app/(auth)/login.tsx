@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { resendVerification } from '@/api/auth';
 import { ApiError } from '@/api/types';
 import { Button } from '@/components/ui/button';
 import { TextField } from '@/components/ui/text-field';
@@ -15,14 +16,35 @@ export default function LoginScreen() {
   const [password, setPassword] = useState('password');
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isUnverified, setIsUnverified] = useState(false);
+  const [resendMessage, setResendMessage] = useState<string | null>(null);
 
   async function handleSubmit() {
     setError(null);
+    setIsUnverified(false);
+    setResendMessage(null);
     setIsSubmitting(true);
     try {
       await login({ email, password });
     } catch (e) {
-      setError(e instanceof ApiError ? e.message : 'No se pudo iniciar sesión.');
+      if (e instanceof ApiError && e.status === 403) {
+        setIsUnverified(true);
+        setError(e.message);
+      } else {
+        setError(e instanceof ApiError ? e.message : 'No se pudo iniciar sesión.');
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
+  async function handleResend() {
+    setIsSubmitting(true);
+    try {
+      const { message } = await resendVerification({ email });
+      setResendMessage(message);
+    } catch {
+      setResendMessage('No se pudo reenviar el email, inténtalo de nuevo.');
     } finally {
       setIsSubmitting(false);
     }
@@ -49,6 +71,7 @@ export default function LoginScreen() {
         />
 
         {error && <Text style={styles.error}>{error}</Text>}
+        {resendMessage && <Text style={styles.subtitle}>{resendMessage}</Text>}
 
         <Button
           title={isSubmitting ? 'Entrando…' : 'Entrar'}
@@ -56,6 +79,15 @@ export default function LoginScreen() {
           disabled={isSubmitting}
           style={styles.submit}
         />
+
+        {isUnverified && (
+          <Button
+            title="Reenviar email de verificación"
+            variant="secondary"
+            onPress={handleResend}
+            disabled={isSubmitting}
+          />
+        )}
 
         <Link href="/(auth)/register" style={styles.link}>
           <Text style={styles.linkText}>¿No tienes cuenta? Regístrate</Text>

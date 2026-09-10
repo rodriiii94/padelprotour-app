@@ -10,13 +10,18 @@ import {
 
 import * as authApi from '@/api/auth';
 import { getToken, setToken as persistToken } from '@/api/client';
-import type { User } from '@/api/types';
+import type { RegisterResult, User } from '@/api/types';
 
 type AuthContextValue = {
   user: User | null;
   isLoading: boolean;
   login: (input: { email: string; password: string }) => Promise<void>;
-  register: (input: { name: string; email: string; password: string }) => Promise<void>;
+  register: (input: {
+    name: string;
+    email: string;
+    password: string;
+  }) => Promise<RegisterResult>;
+  verifyEmail: (input: { token: string }) => Promise<void>;
   logout: () => Promise<void>;
 };
 
@@ -49,14 +54,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(user);
   }, []);
 
+  // La cuenta se crea sin verificar y sin token — no se inicia sesión aquí,
+  // el usuario debe confirmar el email antes de poder entrar.
   const register = useCallback(
-    async (input: { name: string; email: string; password: string }) => {
-      const { token, user } = await authApi.register(input);
-      await persistToken(token);
-      setUser(user);
-    },
+    (input: { name: string; email: string; password: string }) => authApi.register(input),
     []
   );
+
+  const verifyEmail = useCallback(async (input: { token: string }) => {
+    const { token, user } = await authApi.verifyEmail(input);
+    await persistToken(token);
+    setUser(user);
+  }, []);
 
   const logout = useCallback(async () => {
     try {
@@ -68,8 +77,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const value = useMemo(
-    () => ({ user, isLoading, login, register, logout }),
-    [user, isLoading, login, register, logout]
+    () => ({ user, isLoading, login, register, verifyEmail, logout }),
+    [user, isLoading, login, register, verifyEmail, logout]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

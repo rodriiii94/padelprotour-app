@@ -56,6 +56,7 @@ function AuthGate() {
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Protected guard={!user}>
         <Stack.Screen name="(auth)" />
+        <Stack.Screen name="verify-email" />
       </Stack.Protected>
       <Stack.Protected guard={!!user}>
         <Stack.Screen name="(tabs)" />

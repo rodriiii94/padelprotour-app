@@ -15,6 +15,12 @@ export interface AuthToken {
   user: User;
 }
 
+/** `POST /register` no longer logs the user in — the account still needs email verification. */
+export interface RegisterResult {
+  message: string;
+  user: User;
+}
+
 export type CompetitionType = 'tournament' | 'league';
 
 export interface Competition {

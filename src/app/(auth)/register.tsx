@@ -16,17 +16,34 @@ export default function RegisterScreen() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [registeredMessage, setRegisteredMessage] = useState<string | null>(null);
 
   async function handleSubmit() {
     setError(null);
     setIsSubmitting(true);
     try {
-      await register({ name, email, password });
+      const { message } = await register({ name, email, password });
+      setRegisteredMessage(message);
     } catch (e) {
       setError(e instanceof ApiError ? e.message : 'No se pudo crear la cuenta.');
     } finally {
       setIsSubmitting(false);
     }
+  }
+
+  if (registeredMessage) {
+    return (
+      <SafeAreaView style={styles.safeArea}>
+        <View style={styles.content}>
+          <Text style={styles.title}>Revisa tu email</Text>
+          <Text style={styles.subtitle}>{registeredMessage}</Text>
+
+          <Link href="/(auth)/login" style={styles.link}>
+            <Text style={styles.linkText}>Ir a iniciar sesión</Text>
+          </Link>
+        </View>
+      </SafeAreaView>
+    );
   }
 
   return (
@@ -80,6 +97,12 @@ const styles = StyleSheet.create({
   title: {
     ...Typography.headlineLg,
     color: Colors.primary,
+    textAlign: 'center',
+    marginBottom: Spacing.md,
+  },
+  subtitle: {
+    ...Typography.bodyMd,
+    color: Colors.onSurfaceVariant,
     textAlign: 'center',
     marginBottom: Spacing.md,
   },

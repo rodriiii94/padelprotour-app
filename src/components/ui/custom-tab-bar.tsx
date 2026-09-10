@@ -9,7 +9,6 @@ import { Colors, Radii, Spacing } from '@/theme/tokens';
 const ICONS: Record<string, keyof typeof MaterialIcons.glyphMap> = {
   index: 'home',
   competiciones: 'emoji-events',
-  ranking: 'leaderboard',
   perfil: 'person',
 };
 

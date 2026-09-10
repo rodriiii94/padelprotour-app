@@ -5,12 +5,13 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ApiError } from '@/api/types';
 import { Button } from '@/components/ui/button';
+import { GoogleSignInButton } from '@/components/ui/google-sign-in-button';
 import { TextField } from '@/components/ui/text-field';
 import { useAuth } from '@/hooks/use-auth';
 import { Colors, Spacing, Typography } from '@/theme/tokens';
 
 export default function RegisterScreen() {
-  const { register } = useAuth();
+  const { register, loginWithGoogle } = useAuth();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -74,6 +75,8 @@ export default function RegisterScreen() {
           disabled={isSubmitting}
           style={styles.submit}
         />
+
+        <GoogleSignInButton onIdToken={loginWithGoogle} onError={setError} />
 
         <Link href="/(auth)/login" style={styles.link}>
           <Text style={styles.linkText}>¿Ya tienes cuenta? Inicia sesión</Text>

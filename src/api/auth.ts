@@ -44,6 +44,14 @@ export function resendVerification(input: { email: string }): Promise<{ message:
   });
 }
 
+export function loginWithGoogle(input: { id_token: string }): Promise<AuthToken> {
+  return apiFetch<AuthToken>('/auth/google', {
+    method: 'POST',
+    auth: false,
+    body: { ...input, device_name: deviceName() },
+  });
+}
+
 export function logout(): Promise<void> {
   return apiFetch<void>('/logout', { method: 'POST' });
 }

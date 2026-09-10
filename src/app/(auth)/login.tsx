@@ -6,12 +6,13 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { resendVerification } from '@/api/auth';
 import { ApiError } from '@/api/types';
 import { Button } from '@/components/ui/button';
+import { GoogleSignInButton } from '@/components/ui/google-sign-in-button';
 import { TextField } from '@/components/ui/text-field';
 import { useAuth } from '@/hooks/use-auth';
 import { Colors, Spacing, Typography } from '@/theme/tokens';
 
 export default function LoginScreen() {
-  const { login } = useAuth();
+  const { login, loginWithGoogle } = useAuth();
   const [email, setEmail] = useState('demo@padelprotour.test');
   const [password, setPassword] = useState('password');
   const [error, setError] = useState<string | null>(null);
@@ -88,6 +89,8 @@ export default function LoginScreen() {
             disabled={isSubmitting}
           />
         )}
+
+        <GoogleSignInButton onIdToken={loginWithGoogle} onError={setError} />
 
         <Link href="/(auth)/register" style={styles.link}>
           <Text style={styles.linkText}>¿No tienes cuenta? Regístrate</Text>

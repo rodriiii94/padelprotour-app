@@ -1,5 +1,6 @@
 import { MaterialIcons } from '@expo/vector-icons';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
+import { useCallback } from 'react';
 import { ActivityIndicator, Pressable, Share, StyleSheet, Text, View } from 'react-native';
 
 import { Button } from '@/components/ui/button';
@@ -37,8 +38,14 @@ export default function CompetitionDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { user } = useAuth();
-  const { competition, categories, isLoading, isUpdating, error, togglePrivacy } =
+  const { competition, categories, isLoading, isUpdating, error, refetch, togglePrivacy } =
     useCompetitionDetail(Number(id));
+
+  useFocusEffect(
+    useCallback(() => {
+      refetch();
+    }, [refetch])
+  );
 
   const isOrganizer = competition?.organizer_id === user?.id;
 
@@ -145,7 +152,21 @@ export default function CompetitionDetailScreen() {
           )}
 
           <View>
-            <Text style={styles.sectionTitle}>Categorías</Text>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>Categorías</Text>
+              {isOrganizer && (
+                <Button
+                  title="Crear categoría"
+                  variant="ghost"
+                  onPress={() =>
+                    router.push({
+                      pathname: '/crear-categoria',
+                      params: { competitionId: String(competition.id) },
+                    })
+                  }
+                />
+              )}
+            </View>
             {categories.length === 0 ? (
               <GlassPanel style={styles.card}>
                 <Text style={styles.body}>Todavía no hay categorías creadas.</Text>
@@ -161,25 +182,28 @@ export default function CompetitionDetailScreen() {
 }
 
 function CategoryRow({ category }: { category: Category }) {
+  const router = useRouter();
   return (
-    <GlassPanel style={styles.card}>
-      <Text style={styles.cardTitle}>{category.name}</Text>
-      <View style={styles.row}>
-        <MaterialIcons name="groups" size={16} color={Colors.onSurfaceVariant} />
-        <Text style={styles.meta}>
-          {category.registration_mode
-            ? REGISTRATION_MODE_LABEL[category.registration_mode]
-            : REGISTRATION_MODE_LABEL.fixed_pair}
-          {category.slots ? ` · ${category.slots} plazas` : ''}
-        </Text>
-      </View>
-      {category.match_format && (
+    <Pressable onPress={() => router.push(`/categoria/${category.id}`)}>
+      <GlassPanel style={styles.card}>
+        <Text style={styles.cardTitle}>{category.name}</Text>
         <View style={styles.row}>
-          <MaterialIcons name="sports-tennis" size={16} color={Colors.onSurfaceVariant} />
-          <Text style={styles.meta}>{category.match_format}</Text>
+          <MaterialIcons name="groups" size={16} color={Colors.onSurfaceVariant} />
+          <Text style={styles.meta}>
+            {category.registration_mode
+              ? REGISTRATION_MODE_LABEL[category.registration_mode]
+              : REGISTRATION_MODE_LABEL.fixed_pair}
+            {category.slots ? ` · ${category.slots} plazas` : ''}
+          </Text>
         </View>
-      )}
-    </GlassPanel>
+        {category.match_format && (
+          <View style={styles.row}>
+            <MaterialIcons name="sports-tennis" size={16} color={Colors.onSurfaceVariant} />
+            <Text style={styles.meta}>{category.match_format}</Text>
+          </View>
+        )}
+      </GlassPanel>
+    </Pressable>
   );
 }
 
@@ -248,6 +272,11 @@ const styles = StyleSheet.create({
   sectionTitle: {
     ...Typography.headlineSm,
     color: Colors.primary,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     marginBottom: Spacing.sm,
   },
 });

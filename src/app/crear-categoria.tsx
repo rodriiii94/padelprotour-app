@@ -1,0 +1,92 @@
+import { MaterialIcons } from '@expo/vector-icons';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useState } from 'react';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
+
+import { createCategory } from '@/api/categories';
+import { ApiError } from '@/api/types';
+import { Button } from '@/components/ui/button';
+import { Screen } from '@/components/ui/screen';
+import { TextField } from '@/components/ui/text-field';
+import { Colors, Spacing, Typography } from '@/theme/tokens';
+
+export default function CrearCategoriaScreen() {
+  const router = useRouter();
+  const { competitionId } = useLocalSearchParams<{ competitionId: string }>();
+  const [name, setName] = useState('');
+  const [matchFormat, setMatchFormat] = useState('');
+  const [slots, setSlots] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  async function handleSubmit() {
+    setError(null);
+    setIsSubmitting(true);
+    try {
+      await createCategory(Number(competitionId), {
+        name,
+        match_format: matchFormat || null,
+        slots: slots ? Number(slots) : null,
+      });
+      router.back();
+    } catch (e) {
+      setError(e instanceof ApiError ? e.message : 'No se pudo crear la categoría.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
+  return (
+    <Screen>
+      <View style={styles.header}>
+        <Pressable onPress={() => router.back()} hitSlop={12}>
+          <MaterialIcons name="close" size={24} color={Colors.onSurface} />
+        </Pressable>
+        <Text style={styles.title}>Nueva categoría</Text>
+      </View>
+
+      <Text style={styles.hint}>De pareja fija — así se puede generar el calendario luego.</Text>
+
+      <TextField placeholder="Nombre (p. ej. 4ª Masculina)" value={name} onChangeText={setName} />
+      <TextField
+        placeholder="Formato de partido (opcional)"
+        value={matchFormat}
+        onChangeText={setMatchFormat}
+      />
+      <TextField
+        placeholder="Plazas (opcional)"
+        value={slots}
+        onChangeText={setSlots}
+        keyboardType="number-pad"
+      />
+
+      {error && <Text style={styles.error}>{error}</Text>}
+
+      <Button
+        title={isSubmitting ? 'Creando…' : 'Crear categoría'}
+        onPress={handleSubmit}
+        disabled={isSubmitting || !name}
+      />
+    </Screen>
+  );
+}
+
+const styles = StyleSheet.create({
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+  },
+  title: {
+    ...Typography.headlineMd,
+    color: Colors.primary,
+  },
+  hint: {
+    ...Typography.bodySm,
+    color: Colors.onSurfaceVariant,
+  },
+  error: {
+    ...Typography.bodySm,
+    color: Colors.error,
+  },
+});

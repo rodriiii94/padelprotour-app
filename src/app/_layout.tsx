@@ -60,7 +60,9 @@ function AuthGate() {
       <Stack.Protected guard={!!user}>
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="crear-competicion" options={{ presentation: 'modal' }} />
+        <Stack.Screen name="crear-categoria" options={{ presentation: 'modal' }} />
         <Stack.Screen name="competicion/[id]" />
+        <Stack.Screen name="categoria/[id]" />
       </Stack.Protected>
     </Stack>
   );

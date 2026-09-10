@@ -60,6 +60,69 @@ export interface Category {
   updated_at: string;
 }
 
+export interface CategoryInput {
+  name: string;
+  match_format?: string | null;
+  slots?: number | null;
+  registration_mode?: RegistrationMode;
+}
+
+export type RegistrationStatus = 'pending' | 'confirmed' | 'waitlisted' | 'rejected';
+
+export interface Registration {
+  id: number;
+  category_id: number;
+  pair_id: number | null;
+  player_id: number | null;
+  status: RegistrationStatus;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Pair {
+  id: number;
+  player1_id: number;
+  player2_id: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export type PhaseType = 'group' | 'elimination_round' | 'matchday';
+
+export interface Phase {
+  id: number;
+  category_id: number;
+  type: PhaseType;
+  name: string;
+  order: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export type MatchStatus = 'scheduled' | 'in_progress' | 'pending_validation' | 'completed';
+
+export interface MatchSet {
+  id: number;
+  match_id: number;
+  set_number: number;
+  side1_games: number;
+  side2_games: number;
+}
+
+export interface Match {
+  id: number;
+  phase_id: number;
+  side1_player1_id: number;
+  side1_player2_id: number;
+  side2_player1_id: number;
+  side2_player2_id: number;
+  scheduled_at: string | null;
+  court: string | null;
+  status: MatchStatus;
+  winner_side: 1 | 2 | null;
+  match_sets?: MatchSet[];
+}
+
 export interface Paginated<T> {
   data: T[];
   current_page: number;

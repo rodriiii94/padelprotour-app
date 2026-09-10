@@ -11,7 +11,7 @@ import { Screen } from '@/components/ui/screen';
 import { TextField } from '@/components/ui/text-field';
 import { useAuth } from '@/hooks/use-auth';
 import { useCategoryDetail } from '@/hooks/use-category-detail';
-import { Colors, Spacing, Typography } from '@/theme/tokens';
+import { Colors, FontFamilies, Radii, Spacing, Typography } from '@/theme/tokens';
 
 const STATUS_LABEL: Record<RegistrationStatus, string> = {
   pending: 'Pendiente',
@@ -113,22 +113,24 @@ export default function CategoryDetailScreen() {
             ))}
 
           {isOrganizer && (
-            <View>
+            <View style={styles.section}>
               <Text style={styles.sectionTitle}>Inscripciones</Text>
               {registrations.length === 0 ? (
                 <GlassPanel style={styles.card}>
                   <Text style={styles.body}>Todavía no hay inscripciones.</Text>
                 </GlassPanel>
               ) : (
-                registrations.map((registration) => (
-                  <RegistrationRow
-                    key={registration.id}
-                    registration={registration}
-                    isMutating={isMutating}
-                    onConfirm={() => confirmRegistration(registration.id)}
-                    onReject={() => rejectRegistration(registration.id)}
-                  />
-                ))
+                <View style={styles.list}>
+                  {registrations.map((registration) => (
+                    <RegistrationRow
+                      key={registration.id}
+                      registration={registration}
+                      isMutating={isMutating}
+                      onConfirm={() => confirmRegistration(registration.id)}
+                      onReject={() => rejectRegistration(registration.id)}
+                    />
+                  ))}
+                </View>
               )}
 
               {phases.length === 0 && (
@@ -150,11 +152,13 @@ export default function CategoryDetailScreen() {
           )}
 
           {phases.length > 0 && (
-            <View>
+            <View style={styles.section}>
               <Text style={styles.sectionTitle}>Calendario</Text>
-              {phases.map((phase) => (
-                <PhaseSection key={phase.id} phase={phase} matches={matchesByPhase[phase.id] ?? []} />
-              ))}
+              <View style={styles.list}>
+                {phases.map((phase) => (
+                  <PhaseSection key={phase.id} phase={phase} matches={matchesByPhase[phase.id] ?? []} />
+                ))}
+              </View>
             </View>
           )}
         </>
@@ -257,47 +261,78 @@ function RegistrationRow({
   return (
     <GlassPanel style={styles.card}>
       <View style={styles.rowBetween}>
-        <View>
+        <View style={styles.row}>
+          <MaterialIcons name="groups" size={20} color={Colors.onSurfaceVariant} />
           <Text style={styles.cardTitle}>
             {registration.pair_id ? `Pareja #${registration.pair_id}` : `Jugador #${registration.player_id}`}
           </Text>
-          <Text style={[styles.meta, { color: STATUS_COLOR[registration.status] }]}>
+        </View>
+        <View
+          style={[
+            styles.statusPill,
+            { borderColor: STATUS_COLOR[registration.status] + '80' },
+          ]}>
+          <Text style={[styles.statusPillLabel, { color: STATUS_COLOR[registration.status] }]}>
             {STATUS_LABEL[registration.status]}
           </Text>
         </View>
-        {registration.status === 'pending' && (
-          <View style={{ flexDirection: 'row', gap: Spacing.xs }}>
-            <Button title="Rechazar" variant="ghost" disabled={isMutating} onPress={onReject} />
-            <Button title="Confirmar" variant="secondary" disabled={isMutating} onPress={onConfirm} />
-          </View>
+      </View>
+      {registration.status === 'pending' && (
+        <View style={styles.actionsRow}>
+          <Button title="Rechazar" variant="ghost" disabled={isMutating} onPress={onReject} />
+          <Button title="Confirmar" variant="secondary" disabled={isMutating} onPress={onConfirm} />
+        </View>
+      )}
+    </GlassPanel>
+  );
+}
+
+function MatchSide({ label }: { label: string }) {
+  return (
+    <View style={styles.matchSide}>
+      <View style={styles.matchSideDot} />
+      <Text style={styles.matchSideLabel}>{label}</Text>
+    </View>
+  );
+}
+
+function MatchRow({ match, isFirst }: { match: Match; isFirst: boolean }) {
+  const hasScore = match.match_sets && match.match_sets.length > 0;
+  return (
+    <View style={[styles.matchCard, !isFirst && styles.matchCardDivider]}>
+      <MatchSide label={`Jugador #${match.side1_player1_id} y #${match.side1_player2_id}`} />
+      <Text style={styles.vsLabel}>vs</Text>
+      <MatchSide label={`Jugador #${match.side2_player1_id} y #${match.side2_player2_id}`} />
+
+      <View style={styles.matchFooter}>
+        <View style={styles.row}>
+          <MaterialIcons name="location-on" size={14} color={Colors.onSurfaceVariant} />
+          <Text style={styles.matchMeta}>{match.court ?? 'Pista sin asignar'}</Text>
+          {match.scheduled_at && (
+            <Text style={styles.matchMeta}>
+              · {dateFormatter.format(new Date(match.scheduled_at))}
+            </Text>
+          )}
+        </View>
+        {hasScore && (
+          <Text style={styles.score}>
+            {match.match_sets!.map((set) => `${set.side1_games}-${set.side2_games}`).join(', ')}
+          </Text>
         )}
       </View>
-    </GlassPanel>
+    </View>
   );
 }
 
 function PhaseSection({ phase, matches }: { phase: Phase; matches: Match[] }) {
   return (
     <GlassPanel style={styles.card}>
-      <Text style={styles.cardTitle}>{phase.name}</Text>
-      {matches.map((match) => (
-        <View key={match.id} style={styles.matchRow}>
-          <Text style={styles.meta}>
-            Jugador #{match.side1_player1_id} / #{match.side1_player2_id} vs. Jugador #
-            {match.side2_player1_id} / #{match.side2_player2_id}
-          </Text>
-          <View style={styles.rowBetween}>
-            <Text style={styles.meta}>
-              {match.court ?? 'Pista sin asignar'}
-              {match.scheduled_at ? ` · ${dateFormatter.format(new Date(match.scheduled_at))}` : ''}
-            </Text>
-            {match.match_sets && match.match_sets.length > 0 && (
-              <Text style={styles.score}>
-                {match.match_sets.map((set) => `${set.side1_games}-${set.side2_games}`).join(', ')}
-              </Text>
-            )}
-          </View>
-        </View>
+      <View style={styles.row}>
+        <MaterialIcons name="calendar-today" size={18} color={Colors.primaryContainer} />
+        <Text style={styles.cardTitle}>{phase.name}</Text>
+      </View>
+      {matches.map((match, index) => (
+        <MatchRow key={match.id} match={match} isFirst={index === 0} />
       ))}
     </GlassPanel>
   );
@@ -330,10 +365,20 @@ const styles = StyleSheet.create({
     ...Typography.headlineSm,
     color: Colors.primary,
   },
+  section: {
+    gap: Spacing.sm,
+  },
   sectionTitle: {
     ...Typography.headlineSm,
     color: Colors.primary,
-    marginBottom: Spacing.sm,
+  },
+  list: {
+    gap: Spacing.sm,
+  },
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.base,
   },
   rowBetween: {
     flexDirection: 'row',
@@ -341,17 +386,70 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: Spacing.sm,
   },
-  matchRow: {
+  actionsRow: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    gap: Spacing.xs,
+    marginTop: Spacing.xs,
+    paddingTop: Spacing.xs,
     borderTopWidth: 1,
     borderTopColor: Colors.glassBorder,
-    paddingTop: Spacing.xs,
-    marginTop: Spacing.xs,
-    gap: 2,
+  },
+  statusPill: {
+    borderWidth: 1,
+    borderRadius: Radii.full,
+    paddingHorizontal: Spacing.xs,
+    paddingVertical: 3,
+  },
+  statusPillLabel: {
+    ...Typography.labelCaps,
+    fontSize: 11,
+  },
+  matchCard: {
+    paddingTop: Spacing.sm,
+    gap: Spacing.base,
+  },
+  matchCardDivider: {
+    marginTop: Spacing.sm,
+    borderTopWidth: 1,
+    borderTopColor: Colors.glassBorder,
+  },
+  matchSide: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.xs,
+  },
+  matchSideDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: Colors.primaryContainer,
+  },
+  matchSideLabel: {
+    ...Typography.bodyMd,
+    color: Colors.primary,
+  },
+  vsLabel: {
+    ...Typography.labelCaps,
+    color: Colors.onSurfaceVariant,
+    marginLeft: 14,
+  },
+  matchFooter: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: Spacing.base,
+  },
+  matchMeta: {
+    ...Typography.bodySm,
+    color: Colors.onSurfaceVariant,
+    fontSize: 13,
   },
   score: {
     ...Typography.bodySm,
     color: Colors.primaryContainer,
     fontSize: 12,
+    fontFamily: FontFamilies.bodyBold,
   },
   error: {
     ...Typography.bodySm,

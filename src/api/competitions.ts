@@ -2,7 +2,7 @@ import { apiFetch } from './client';
 import type { Category, Competition, CompetitionInput, Paginated } from './types';
 
 export function listCompetitions(page = 1): Promise<Paginated<Competition>> {
-  return apiFetch<Paginated<Competition>>(`/competitions?page=${page}`);
+  return apiFetch<Paginated<Competition>>(`/competitions?page=${page}&upcoming=1`);
 }
 
 /** No competition-level "finished" flag exists yet — approximated from end_date. */

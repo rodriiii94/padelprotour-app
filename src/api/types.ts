@@ -69,20 +69,32 @@ export interface CategoryInput {
 
 export type RegistrationStatus = 'pending' | 'confirmed' | 'waitlisted' | 'rejected';
 
-export interface Registration {
+/** Minimal player data embedded in Pair/Registration/Match — GET only, absent on POST/PUT responses. */
+export interface UserSummary {
   id: number;
-  category_id: number;
-  pair_id: number | null;
-  player_id: number | null;
-  status: RegistrationStatus;
-  created_at: string;
-  updated_at: string;
+  name: string;
 }
 
 export interface Pair {
   id: number;
   player1_id: number;
   player2_id: number;
+  player1?: UserSummary;
+  player2?: UserSummary;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Registration {
+  id: number;
+  category_id: number;
+  pair_id: number | null;
+  player_id: number | null;
+  status: RegistrationStatus;
+  /** Present (with player1/player2 embedded) only when pair_id is set, GET only. */
+  pair?: Pair;
+  /** Present only when player_id is set, GET only. */
+  player?: UserSummary;
   created_at: string;
   updated_at: string;
 }
@@ -116,6 +128,11 @@ export interface Match {
   side1_player2_id: number;
   side2_player1_id: number;
   side2_player2_id: number;
+  /** Embedded on GET (index/show and round-robin generation) only. */
+  side1_player1?: UserSummary;
+  side1_player2?: UserSummary;
+  side2_player1?: UserSummary;
+  side2_player2?: UserSummary;
   scheduled_at: string | null;
   court: string | null;
   status: MatchStatus;

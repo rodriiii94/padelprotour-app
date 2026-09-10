@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { searchUsers } from '@/api/categories';
-import type { Match, Phase, Registration, RegistrationStatus, User } from '@/api/types';
+import type { Match, Pair, Phase, Registration, RegistrationStatus, User, UserSummary } from '@/api/types';
 import { Button } from '@/components/ui/button';
 import { GlassPanel } from '@/components/ui/glass-panel';
 import { Screen } from '@/components/ui/screen';
@@ -33,6 +33,14 @@ const dateFormatter = new Intl.DateTimeFormat('es-ES', {
   hour: '2-digit',
   minute: '2-digit',
 });
+
+function playerName(summary: UserSummary | undefined, fallbackId: number): string {
+  return summary?.name ?? `Jugador #${fallbackId}`;
+}
+
+function pairLabel(pair: Pick<Pair, 'player1' | 'player2' | 'player1_id' | 'player2_id'>): string {
+  return `${playerName(pair.player1, pair.player1_id)} / ${playerName(pair.player2, pair.player2_id)}`;
+}
 
 export default function CategoryDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -173,7 +181,7 @@ function JoinSection({
   onJoinWithPair,
   onFormPairAndJoin,
 }: {
-  availablePairs: { id: number; player1_id: number; player2_id: number }[];
+  availablePairs: Pair[];
   isMutating: boolean;
   onJoinWithPair: (pairId: number) => void;
   onFormPairAndJoin: (partnerId: number) => void;
@@ -203,7 +211,7 @@ function JoinSection({
 
       {availablePairs.map((pair) => (
         <View key={pair.id} style={styles.rowBetween}>
-          <Text style={styles.meta}>Pareja #{pair.id}</Text>
+          <Text style={styles.meta}>{pairLabel(pair)}</Text>
           <Button
             title="Inscribir"
             variant="secondary"
@@ -258,13 +266,21 @@ function RegistrationRow({
   onConfirm: () => void;
   onReject: () => void;
 }) {
+  const label = registration.pair
+    ? pairLabel(registration.pair)
+    : registration.player
+      ? registration.player.name
+      : registration.pair_id
+        ? `Pareja #${registration.pair_id}`
+        : `Jugador #${registration.player_id}`;
+
   return (
     <GlassPanel style={styles.card}>
       <View style={styles.rowBetween}>
-        <View style={styles.row}>
+        <View style={[styles.row, { flex: 1 }]}>
           <MaterialIcons name="groups" size={20} color={Colors.onSurfaceVariant} />
-          <Text style={styles.cardTitle}>
-            {registration.pair_id ? `Pareja #${registration.pair_id}` : `Jugador #${registration.player_id}`}
+          <Text style={styles.cardTitle} numberOfLines={2}>
+            {label}
           </Text>
         </View>
         <View
@@ -300,9 +316,13 @@ function MatchRow({ match, isFirst }: { match: Match; isFirst: boolean }) {
   const hasScore = match.match_sets && match.match_sets.length > 0;
   return (
     <View style={[styles.matchCard, !isFirst && styles.matchCardDivider]}>
-      <MatchSide label={`Jugador #${match.side1_player1_id} y #${match.side1_player2_id}`} />
+      <MatchSide
+        label={`${playerName(match.side1_player1, match.side1_player1_id)} / ${playerName(match.side1_player2, match.side1_player2_id)}`}
+      />
       <Text style={styles.vsLabel}>vs</Text>
-      <MatchSide label={`Jugador #${match.side2_player1_id} y #${match.side2_player2_id}`} />
+      <MatchSide
+        label={`${playerName(match.side2_player1, match.side2_player1_id)} / ${playerName(match.side2_player2, match.side2_player2_id)}`}
+      />
 
       <View style={styles.matchFooter}>
         <View style={styles.row}>
@@ -364,6 +384,7 @@ const styles = StyleSheet.create({
   cardTitle: {
     ...Typography.headlineSm,
     color: Colors.primary,
+    flexShrink: 1,
   },
   section: {
     gap: Spacing.sm,
@@ -428,6 +449,7 @@ const styles = StyleSheet.create({
   matchSideLabel: {
     ...Typography.bodyMd,
     color: Colors.primary,
+    flexShrink: 1,
   },
   vsLabel: {
     ...Typography.labelCaps,

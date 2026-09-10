@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 
-import { isCompetitionActive, listCompetitions } from '@/api/competitions';
+import { listCompetitions } from '@/api/competitions';
 import type { Competition } from '@/api/types';
 
 export function useCompetitions() {
@@ -15,7 +15,7 @@ export function useCompetitions() {
     setError(null);
     try {
       const result = await listCompetitions(1);
-      setCompetitions(result.data.filter(isCompetitionActive));
+      setCompetitions(result.data);
       setPage(1);
       setHasMore(result.current_page < result.last_page);
     } catch {
@@ -30,7 +30,7 @@ export function useCompetitions() {
     try {
       const nextPage = page + 1;
       const result = await listCompetitions(nextPage);
-      setCompetitions((current) => [...current, ...result.data.filter(isCompetitionActive)]);
+      setCompetitions((current) => [...current, ...result.data]);
       setPage(nextPage);
       setHasMore(result.current_page < result.last_page);
     } catch {
@@ -45,7 +45,7 @@ export function useCompetitions() {
       setError(null);
       try {
         const result = await listCompetitions(1);
-        setCompetitions(result.data.filter(isCompetitionActive));
+        setCompetitions(result.data);
         setHasMore(result.current_page < result.last_page);
       } catch {
         setError('No se pudieron cargar las competiciones.');

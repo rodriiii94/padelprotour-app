@@ -15,7 +15,6 @@ export default function PerfilScreen() {
       <GlassPanel style={styles.card}>
         <Text style={styles.name}>{user?.name}</Text>
         <Text style={styles.email}>{user?.email}</Text>
-        {user?.club && <Text style={styles.body}>Club: {user.club}</Text>}
       </GlassPanel>
       <Button title="Cerrar sesión" variant="secondary" onPress={logout} />
     </Screen>
@@ -36,10 +35,6 @@ const styles = StyleSheet.create({
     color: Colors.primary,
   },
   email: {
-    ...Typography.bodySm,
-    color: Colors.onSurfaceVariant,
-  },
-  body: {
     ...Typography.bodySm,
     color: Colors.onSurfaceVariant,
   },

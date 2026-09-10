@@ -1,10 +1,19 @@
 import { MaterialIcons } from '@expo/vector-icons';
-import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useState } from 'react';
+import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
+import { useCallback, useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { searchUsers } from '@/api/categories';
-import type { Match, Pair, Phase, Registration, RegistrationStatus, User, UserSummary } from '@/api/types';
+import type {
+  Match,
+  Pair,
+  Phase,
+  Ranking,
+  Registration,
+  RegistrationStatus,
+  User,
+  UserSummary,
+} from '@/api/types';
 import { Button } from '@/components/ui/button';
 import { GlassPanel } from '@/components/ui/glass-panel';
 import { Screen } from '@/components/ui/screen';
@@ -42,6 +51,16 @@ function pairLabel(pair: Pick<Pair, 'player1' | 'player2' | 'player1_id' | 'play
   return `${playerName(pair.player1, pair.player1_id)} / ${playerName(pair.player2, pair.player2_id)}`;
 }
 
+/** Ranking rows only carry ids — resolve a label from the registrations already loaded. */
+function rankingLabel(ranking: Ranking, registrations: Registration[]): string {
+  if (ranking.pair_id !== null) {
+    const registration = registrations.find((r) => r.pair_id === ranking.pair_id);
+    return registration?.pair ? pairLabel(registration.pair) : `Pareja #${ranking.pair_id}`;
+  }
+  const registration = registrations.find((r) => r.player_id === ranking.player_id);
+  return registration?.player?.name ?? `Jugador #${ranking.player_id}`;
+}
+
 export default function CategoryDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
@@ -54,15 +73,23 @@ export default function CategoryDetailScreen() {
     myPairs,
     phases,
     matchesByPhase,
+    rankings,
     isLoading,
     isMutating,
     error,
+    refetch,
     confirmRegistration,
     rejectRegistration,
     joinWithPair,
     formPairAndJoin,
     generateCalendar,
   } = useCategoryDetail(categoryId);
+
+  useFocusEffect(
+    useCallback(() => {
+      refetch();
+    }, [refetch])
+  );
 
   const isOrganizer = competition?.organizer_id === user?.id;
   const myRegistration = registrations.find(
@@ -164,9 +191,31 @@ export default function CategoryDetailScreen() {
               <Text style={styles.sectionTitle}>Calendario</Text>
               <View style={styles.list}>
                 {phases.map((phase) => (
-                  <PhaseSection key={phase.id} phase={phase} matches={matchesByPhase[phase.id] ?? []} />
+                  <PhaseSection
+                    key={phase.id}
+                    phase={phase}
+                    matches={matchesByPhase[phase.id] ?? []}
+                    isOrganizer={isOrganizer}
+                  />
                 ))}
               </View>
+            </View>
+          )}
+
+          {rankings.length > 0 && (
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Clasificación</Text>
+              <GlassPanel style={styles.card}>
+                {rankings.map((ranking) => (
+                  <View key={ranking.id} style={styles.rankingRow}>
+                    <Text style={styles.rankingPosition}>{ranking.position}</Text>
+                    <Text style={[styles.meta, styles.rankingName]} numberOfLines={1}>
+                      {rankingLabel(ranking, registrations)}
+                    </Text>
+                    <Text style={styles.rankingPoints}>{ranking.points} pts</Text>
+                  </View>
+                ))}
+              </GlassPanel>
             </View>
           )}
         </>
@@ -303,25 +352,44 @@ function RegistrationRow({
   );
 }
 
-function MatchSide({ label }: { label: string }) {
+function MatchSide({ label, isWinner }: { label: string; isWinner?: boolean }) {
   return (
     <View style={styles.matchSide}>
-      <View style={styles.matchSideDot} />
-      <Text style={styles.matchSideLabel}>{label}</Text>
+      {isWinner ? (
+        <MaterialIcons name="emoji-events" size={14} color={Colors.secondaryContainer} />
+      ) : (
+        <View style={styles.matchSideDot} />
+      )}
+      <Text style={[styles.matchSideLabel, isWinner && styles.matchSideLabelWinner]}>{label}</Text>
     </View>
   );
 }
 
-function MatchRow({ match, isFirst }: { match: Match; isFirst: boolean }) {
+function MatchRow({
+  match,
+  isFirst,
+  isOrganizer,
+}: {
+  match: Match;
+  isFirst: boolean;
+  isOrganizer: boolean;
+}) {
+  const router = useRouter();
   const hasScore = match.match_sets && match.match_sets.length > 0;
+  const isCompleted = match.status === 'completed';
+
   return (
-    <View style={[styles.matchCard, !isFirst && styles.matchCardDivider]}>
+    <Pressable
+      onPress={() => router.push(`/partido/${match.id}?isOrganizer=${isOrganizer ? '1' : '0'}`)}
+      style={[styles.matchCard, !isFirst && styles.matchCardDivider]}>
       <MatchSide
         label={`${playerName(match.side1_player1, match.side1_player1_id)} / ${playerName(match.side1_player2, match.side1_player2_id)}`}
+        isWinner={isCompleted && match.winner_side === 1}
       />
       <Text style={styles.vsLabel}>vs</Text>
       <MatchSide
         label={`${playerName(match.side2_player1, match.side2_player1_id)} / ${playerName(match.side2_player2, match.side2_player2_id)}`}
+        isWinner={isCompleted && match.winner_side === 2}
       />
 
       <View style={styles.matchFooter}>
@@ -334,17 +402,27 @@ function MatchRow({ match, isFirst }: { match: Match; isFirst: boolean }) {
             </Text>
           )}
         </View>
-        {hasScore && (
+        {hasScore ? (
           <Text style={styles.score}>
             {match.match_sets!.map((set) => `${set.side1_games}-${set.side2_games}`).join(', ')}
           </Text>
+        ) : (
+          !isCompleted && <Text style={styles.matchMeta}>Sin resultado</Text>
         )}
       </View>
-    </View>
+    </Pressable>
   );
 }
 
-function PhaseSection({ phase, matches }: { phase: Phase; matches: Match[] }) {
+function PhaseSection({
+  phase,
+  matches,
+  isOrganizer,
+}: {
+  phase: Phase;
+  matches: Match[];
+  isOrganizer: boolean;
+}) {
   return (
     <GlassPanel style={styles.card}>
       <View style={styles.row}>
@@ -352,7 +430,7 @@ function PhaseSection({ phase, matches }: { phase: Phase; matches: Match[] }) {
         <Text style={styles.cardTitle}>{phase.name}</Text>
       </View>
       {matches.map((match, index) => (
-        <MatchRow key={match.id} match={match} isFirst={index === 0} />
+        <MatchRow key={match.id} match={match} isFirst={index === 0} isOrganizer={isOrganizer} />
       ))}
     </GlassPanel>
   );
@@ -450,6 +528,28 @@ const styles = StyleSheet.create({
     ...Typography.bodyMd,
     color: Colors.primary,
     flexShrink: 1,
+  },
+  matchSideLabelWinner: {
+    fontFamily: FontFamilies.bodyBold,
+  },
+  rankingRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+    paddingVertical: Spacing.base,
+  },
+  rankingPosition: {
+    ...Typography.headlineSm,
+    color: Colors.onSurfaceVariant,
+    width: 24,
+  },
+  rankingName: {
+    flex: 1,
+  },
+  rankingPoints: {
+    ...Typography.bodySm,
+    color: Colors.primaryContainer,
+    fontFamily: FontFamilies.bodyBold,
   },
   vsLabel: {
     ...Typography.labelCaps,

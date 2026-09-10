@@ -8,11 +8,12 @@ import {
   listMatches,
   listMyPairs,
   listPhases,
+  listRankings,
   listRegistrations,
   updateRegistrationStatus,
 } from '@/api/categories';
 import { getCompetition } from '@/api/competitions';
-import type { Category, Competition, Match, Pair, Phase, Registration } from '@/api/types';
+import type { Category, Competition, Match, Pair, Phase, Ranking, Registration } from '@/api/types';
 
 export function useCategoryDetail(categoryId: number) {
   const [category, setCategory] = useState<Category | null>(null);
@@ -21,6 +22,7 @@ export function useCategoryDetail(categoryId: number) {
   const [myPairs, setMyPairs] = useState<Pair[]>([]);
   const [phases, setPhases] = useState<Phase[]>([]);
   const [matchesByPhase, setMatchesByPhase] = useState<Record<number, Match[]>>({});
+  const [rankings, setRankings] = useState<Ranking[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isMutating, setIsMutating] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -33,11 +35,12 @@ export function useCategoryDetail(categoryId: number) {
       setError(null);
       try {
         const cat = await getCategory(categoryId);
-        const [comp, registrationsPage, pairs, phaseList] = await Promise.all([
+        const [comp, registrationsPage, pairs, phaseList, rankingList] = await Promise.all([
           getCompetition(cat.competition_id),
           listRegistrations(categoryId),
           listMyPairs(),
           listPhases(categoryId),
+          listRankings(categoryId),
         ]);
 
         const matches: Record<number, Match[]> = {};
@@ -54,6 +57,7 @@ export function useCategoryDetail(categoryId: number) {
         setMyPairs(pairs);
         setPhases(phaseList);
         setMatchesByPhase(matches);
+        setRankings(rankingList);
       } catch {
         setError('No se pudo cargar la categoría.');
       } finally {
@@ -130,6 +134,7 @@ export function useCategoryDetail(categoryId: number) {
     myPairs,
     phases,
     matchesByPhase,
+    rankings,
     isLoading,
     isMutating,
     error,

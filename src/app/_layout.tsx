@@ -64,6 +64,7 @@ function AuthGate() {
         <Stack.Screen name="competicion/[id]" />
         <Stack.Screen name="categoria/[id]" />
         <Stack.Screen name="invite/[token]" />
+        <Stack.Screen name="partido/[id]" />
       </Stack.Protected>
     </Stack>
   );

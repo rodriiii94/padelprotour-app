@@ -3,9 +3,12 @@ import type {
   Category,
   CategoryInput,
   Match,
+  MatchSet,
+  MatchStatus,
   Pair,
   Paginated,
   Phase,
+  Ranking,
   Registration,
   RegistrationStatus,
   User,
@@ -68,4 +71,26 @@ export function listMatches(phaseId: number): Promise<Paginated<Match>> {
 
 export function generateRoundRobin(categoryId: number): Promise<Phase[]> {
   return apiFetch<Phase[]>(`/categories/${categoryId}/round-robin`, { method: 'POST' });
+}
+
+export function getMatch(id: number): Promise<Match> {
+  return apiFetch<Match>(`/matches/${id}`);
+}
+
+export function createMatchSet(
+  matchId: number,
+  input: { set_number: number; side1_games: number; side2_games: number }
+): Promise<MatchSet> {
+  return apiFetch<MatchSet>(`/matches/${matchId}/sets`, { method: 'POST', body: input });
+}
+
+export function updateMatchStatus(
+  matchId: number,
+  input: { status: MatchStatus; winner_side?: 1 | 2 }
+): Promise<Match> {
+  return apiFetch<Match>(`/matches/${matchId}`, { method: 'PUT', body: input });
+}
+
+export function listRankings(categoryId: number): Promise<Ranking[]> {
+  return apiFetch<Ranking[]>(`/categories/${categoryId}/rankings`);
 }

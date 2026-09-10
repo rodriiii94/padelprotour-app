@@ -140,6 +140,16 @@ export interface Match {
   match_sets?: MatchSet[];
 }
 
+export interface Ranking {
+  id: number;
+  category_id: number;
+  pair_id: number | null;
+  player_id: number | null;
+  points: number;
+  position: number;
+  calculated_at: string;
+}
+
 export interface Paginated<T> {
   data: T[];
   current_page: number;

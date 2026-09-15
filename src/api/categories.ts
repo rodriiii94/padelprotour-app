@@ -53,8 +53,11 @@ export function listMyPairs(): Promise<Pair[]> {
   return apiFetch<Pair[]>('/pairs');
 }
 
-export function createPair(partnerId: number): Promise<Pair> {
-  return apiFetch<Pair>('/pairs', { method: 'POST', body: { partner_id: partnerId } });
+export function createPair(partnerId: number, name?: string): Promise<Pair> {
+  return apiFetch<Pair>('/pairs', {
+    method: 'POST',
+    body: name ? { partner_id: partnerId, name } : { partner_id: partnerId },
+  });
 }
 
 export function searchUsers(query: string): Promise<User[]> {

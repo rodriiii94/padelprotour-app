@@ -3,7 +3,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { getInvite, listCategories } from '@/api/competitions';
+import { getInvite, listInviteCategories } from '@/api/competitions';
 import type { Category, Competition } from '@/api/types';
 import { GlassPanel } from '@/components/ui/glass-panel';
 import { Screen } from '@/components/ui/screen';
@@ -25,7 +25,6 @@ export default function InviteScreen() {
   const router = useRouter();
   const [competition, setCompetition] = useState<Competition | null>(null);
   const [categories, setCategories] = useState<Category[] | null>(null);
-  const [categoriesBlocked, setCategoriesBlocked] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -33,17 +32,12 @@ export default function InviteScreen() {
     (async () => {
       setError(null);
       try {
-        const invited = await getInvite(token);
+        const [invited, categoryList] = await Promise.all([
+          getInvite(token),
+          listInviteCategories(token),
+        ]);
         setCompetition(invited);
-        // El token de invitación no da acceso a las categorías todavía
-        // (hueco de backend documentado) — best-effort, sin romper la
-        // pantalla si esto falla con 403. Distinguimos "sin categorías"
-        // de "bloqueado" para no mostrar el mensaje equivocado.
-        try {
-          setCategories(await listCategories(invited.id));
-        } catch {
-          setCategoriesBlocked(true);
-        }
+        setCategories(categoryList);
       } catch {
         setError('Este enlace de invitación no es válido.');
       } finally {
@@ -99,14 +93,7 @@ export default function InviteScreen() {
 
           <View>
             <Text style={styles.sectionTitle}>Categorías</Text>
-            {categoriesBlocked ? (
-              <GlassPanel style={styles.card}>
-                <Text style={styles.body}>
-                  Todavía no puedes ver las categorías de esta competición privada. Pídele al
-                  organizador que te confirme a cuál unirte.
-                </Text>
-              </GlassPanel>
-            ) : categories && categories.length === 0 ? (
+            {categories && categories.length === 0 ? (
               <GlassPanel style={styles.card}>
                 <Text style={styles.body}>El organizador todavía no ha creado categorías.</Text>
               </GlassPanel>

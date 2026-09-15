@@ -8,8 +8,25 @@ import { ApiError, type Match } from '@/api/types';
 import { Button } from '@/components/ui/button';
 import { GlassPanel } from '@/components/ui/glass-panel';
 import { Screen } from '@/components/ui/screen';
-import { TextField } from '@/components/ui/text-field';
 import { Colors, Spacing, Typography } from '@/theme/tokens';
+
+/** Every set result padel actually allows: 6 with a 2-game margin, 7-5, or a 7-6 tie-break. */
+const VALID_SET_SCORES: [number, number][] = [
+  [6, 0],
+  [6, 1],
+  [6, 2],
+  [6, 3],
+  [6, 4],
+  [7, 5],
+  [7, 6],
+  [0, 6],
+  [1, 6],
+  [2, 6],
+  [3, 6],
+  [4, 6],
+  [5, 7],
+  [6, 7],
+];
 
 function sideLabel(
   a: { name: string } | undefined,
@@ -42,8 +59,6 @@ export default function MatchDetailScreen() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [side1Games, setSide1Games] = useState('');
-  const [side2Games, setSide2Games] = useState('');
 
   const refetch = useCallback(async () => {
     try {
@@ -66,18 +81,16 @@ export default function MatchDetailScreen() {
     })();
   }, [matchId]);
 
-  async function handleAddSet() {
-    if (!match || side1Games === '' || side2Games === '') return;
+  async function handleAddSet(side1Games: number, side2Games: number) {
+    if (!match) return;
     setIsSubmitting(true);
     setError(null);
     try {
       await createMatchSet(match.id, {
         set_number: (match.match_sets?.length ?? 0) + 1,
-        side1_games: Number(side1Games),
-        side2_games: Number(side2Games),
+        side1_games: side1Games,
+        side2_games: side2Games,
       });
-      setSide1Games('');
-      setSide2Games('');
       await refetch();
     } catch (e) {
       setError(e instanceof ApiError ? e.message : 'No se pudo guardar el set.');
@@ -108,7 +121,11 @@ export default function MatchDetailScreen() {
   }
 
   const setsWon = match ? countSetsWon(match) : { side1: 0, side2: 0 };
-  const canComplete = (match?.match_sets?.length ?? 0) > 0 && setsWon.side1 !== setsWon.side2;
+  const setCount = match?.match_sets?.length ?? 0;
+  // Mejor de 3: en cuanto un lado lleva 2 sets ganados, el partido está decidido.
+  const isDecided = setsWon.side1 === 2 || setsWon.side2 === 2;
+  const canAddSet = setCount < 3 && !isDecided;
+  const canComplete = setCount > 0 && setsWon.side1 !== setsWon.side2;
 
   return (
     <Screen>
@@ -177,39 +194,33 @@ export default function MatchDetailScreen() {
 
           {match.status !== 'completed' && isOrganizer && (
             <GlassPanel style={styles.card}>
-              <Text style={styles.cardTitle}>Añadir set {(match.match_sets?.length ?? 0) + 1}</Text>
-              <View style={styles.setInputRow}>
-                <TextField
-                  style={styles.setInput}
-                  placeholder="0"
-                  keyboardType="number-pad"
-                  value={side1Games}
-                  onChangeText={setSide1Games}
-                />
-                <Text style={styles.meta}>–</Text>
-                <TextField
-                  style={styles.setInput}
-                  placeholder="0"
-                  keyboardType="number-pad"
-                  value={side2Games}
-                  onChangeText={setSide2Games}
-                />
-                <Button
-                  title="Añadir"
-                  variant="secondary"
-                  disabled={isSubmitting || side1Games === '' || side2Games === ''}
-                  onPress={handleAddSet}
-                />
-              </View>
+              {canAddSet && (
+                <>
+                  <Text style={styles.cardTitle}>Añadir set {setCount + 1}</Text>
+                  <View style={styles.scoreChipsRow}>
+                    {VALID_SET_SCORES.map(([s1, s2]) => (
+                      <Pressable
+                        key={`${s1}-${s2}`}
+                        disabled={isSubmitting}
+                        onPress={() => handleAddSet(s1, s2)}
+                        style={[styles.scoreChip, isSubmitting && styles.scoreChipDisabled]}>
+                        <Text style={styles.scoreChipText}>
+                          {s1}-{s2}
+                        </Text>
+                      </Pressable>
+                    ))}
+                  </View>
+                  {setCount > 0 && setsWon.side1 === setsWon.side2 && (
+                    <Text style={styles.meta}>Empate en sets — añade uno más para desempatar.</Text>
+                  )}
+                </>
+              )}
 
               <Button
                 title={isSubmitting ? 'Guardando…' : 'Marcar como completado'}
                 disabled={isSubmitting || !canComplete}
                 onPress={handleComplete}
               />
-              {(match.match_sets?.length ?? 0) > 0 && setsWon.side1 === setsWon.side2 && (
-                <Text style={styles.meta}>Empate en sets — añade uno más para desempatar.</Text>
-              )}
             </GlassPanel>
           )}
 
@@ -277,14 +288,25 @@ const styles = StyleSheet.create({
     ...Typography.bodySm,
     color: Colors.primaryContainer,
   },
-  setInputRow: {
+  scoreChipsRow: {
     flexDirection: 'row',
-    alignItems: 'center',
+    flexWrap: 'wrap',
     gap: Spacing.xs,
   },
-  setInput: {
-    width: 56,
-    textAlign: 'center',
+  scoreChip: {
+    backgroundColor: Colors.glassFill,
+    borderWidth: 1,
+    borderColor: Colors.primaryContainer,
+    borderRadius: 8,
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: Spacing.xs,
+  },
+  scoreChipDisabled: {
+    opacity: 0.5,
+  },
+  scoreChipText: {
+    ...Typography.bodySm,
+    color: Colors.onSurface,
   },
   errorText: {
     ...Typography.bodySm,

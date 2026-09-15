@@ -87,6 +87,7 @@ export interface Pair {
   player2_id: number;
   player1?: UserSummary;
   player2?: UserSummary;
+  name: string | null;
   created_at: string;
   updated_at: string;
 }

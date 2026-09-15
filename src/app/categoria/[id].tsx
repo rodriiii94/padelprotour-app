@@ -47,7 +47,10 @@ function playerName(summary: UserSummary | undefined, fallbackId: number): strin
   return summary?.name ?? `Jugador #${fallbackId}`;
 }
 
-function pairLabel(pair: Pick<Pair, 'player1' | 'player2' | 'player1_id' | 'player2_id'>): string {
+function pairLabel(
+  pair: Pick<Pair, 'name' | 'player1' | 'player2' | 'player1_id' | 'player2_id'>
+): string {
+  if (pair.name) return pair.name;
   return `${playerName(pair.player1, pair.player1_id)} / ${playerName(pair.player2, pair.player2_id)}`;
 }
 
@@ -233,10 +236,11 @@ function JoinSection({
   availablePairs: Pair[];
   isMutating: boolean;
   onJoinWithPair: (pairId: number) => void;
-  onFormPairAndJoin: (partnerId: number) => void;
+  onFormPairAndJoin: (partnerId: number, name?: string) => void;
 }) {
   const [showSearch, setShowSearch] = useState(false);
   const [query, setQuery] = useState('');
+  const [pairName, setPairName] = useState('');
   const [results, setResults] = useState<User[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [searchError, setSearchError] = useState<string | null>(null);
@@ -288,13 +292,20 @@ function JoinSection({
             disabled={isSearching || query.trim().length < 2}
           />
           {searchError && <Text style={styles.error}>{searchError}</Text>}
+          {results.length > 0 && (
+            <TextField
+              placeholder="Nombre de la pareja (opcional)"
+              value={pairName}
+              onChangeText={setPairName}
+            />
+          )}
           {results.map((result) => (
             <View key={result.id} style={styles.rowBetween}>
               <Text style={styles.meta}>{result.name}</Text>
               <Button
                 title="Formar pareja"
                 disabled={isMutating}
-                onPress={() => onFormPairAndJoin(result.id)}
+                onPress={() => onFormPairAndJoin(result.id, pairName.trim() || undefined)}
               />
             </View>
           ))}

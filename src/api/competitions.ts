@@ -33,11 +33,12 @@ export function listCategories(competitionId: number): Promise<Category[]> {
   return apiFetch<Category[]>(`/competitions/${competitionId}/categories`);
 }
 
-/**
- * Resolves an invite link. Doesn't register the caller for anything, and
- * doesn't itself grant access to the competition's categories — see
- * CATEGORIES-VIA-INVITE gap noted in the handoff doc.
- */
+/** Resolves an invite link. Doesn't register the caller for anything. */
 export function getInvite(token: string): Promise<Competition> {
   return apiFetch<Competition>(`/invites/${encodeURIComponent(token)}`);
+}
+
+/** Categories for the competition behind an invite token — token is the authorization, no membership needed. */
+export function listInviteCategories(token: string): Promise<Category[]> {
+  return apiFetch<Category[]>(`/invites/${encodeURIComponent(token)}/categories`);
 }

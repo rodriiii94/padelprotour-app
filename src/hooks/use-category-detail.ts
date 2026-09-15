@@ -110,9 +110,9 @@ export function useCategoryDetail(categoryId: number) {
   );
 
   const formPairAndJoin = useCallback(
-    (partnerId: number) =>
+    (partnerId: number, name?: string) =>
       runMutation(async () => {
-        const pair = await createPair(partnerId);
+        const pair = await createPair(partnerId, name);
         await createRegistration(categoryId, { pair_id: pair.id });
       }, 'No se pudo formar la pareja e inscribirte.'),
     [runMutation, categoryId]

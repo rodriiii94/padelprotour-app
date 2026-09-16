@@ -1,6 +1,6 @@
 import { Link, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Platform, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ApiError } from '@/api/types';
@@ -61,13 +61,25 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Colors.background,
   },
-  content: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: Spacing.safeMargin,
-    gap: Spacing.sm,
-  },
+  content:
+    Platform.OS === 'web'
+      ? {
+          flex: 1,
+          justifyContent: 'center',
+          alignItems: 'center',
+          paddingHorizontal: Spacing.safeMargin,
+          gap: Spacing.sm,
+          maxWidth: 420,
+          width: '100%',
+          alignSelf: 'center',
+        }
+      : {
+          flex: 1,
+          justifyContent: 'center',
+          alignItems: 'center',
+          paddingHorizontal: Spacing.safeMargin,
+          gap: Spacing.sm,
+        },
   title: {
     ...Typography.headlineLg,
     color: Colors.primary,

@@ -1,6 +1,6 @@
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
-import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { isCompetitionActive } from '@/api/competitions';
 import type { Competition } from '@/api/types';
@@ -87,9 +87,13 @@ export default function HomeScreen() {
         </GlassPanel>
       )}
 
-      {visible.map((competition) => (
-        <CompetitionCard key={competition.id} competition={competition} />
-      ))}
+      <View style={styles.cardsGrid}>
+        {visible.map((competition) => (
+          <View key={competition.id} style={styles.cardsGridItem}>
+            <CompetitionCard competition={competition} />
+          </View>
+        ))}
+      </View>
     </Screen>
   );
 }
@@ -171,4 +175,9 @@ const styles = StyleSheet.create({
     ...Typography.bodySm,
     color: Colors.onSurfaceVariant,
   },
+  cardsGrid:
+    Platform.OS === 'web'
+      ? { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.sm }
+      : { gap: Spacing.lg },
+  cardsGridItem: Platform.OS === 'web' ? { width: 320 } : {},
 });

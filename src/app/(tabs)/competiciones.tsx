@@ -1,6 +1,6 @@
 import { useFocusEffect } from 'expo-router';
 import { useCallback } from 'react';
-import { ActivityIndicator, RefreshControl, StyleSheet, Text } from 'react-native';
+import { ActivityIndicator, Platform, RefreshControl, StyleSheet, Text, View } from 'react-native';
 
 import { CompetitionCard } from '@/components/ui/competition-card';
 import { Button } from '@/components/ui/button';
@@ -47,9 +47,13 @@ export default function CompeticionesScreen() {
         </GlassPanel>
       )}
 
-      {competitions.map((competition) => (
-        <CompetitionCard key={competition.id} competition={competition} />
-      ))}
+      <View style={styles.cardsGrid}>
+        {competitions.map((competition) => (
+          <View key={competition.id} style={styles.cardsGridItem}>
+            <CompetitionCard competition={competition} />
+          </View>
+        ))}
+      </View>
 
       {hasMore && !isLoading && (
         <Button
@@ -79,4 +83,9 @@ const styles = StyleSheet.create({
     ...Typography.bodySm,
     color: Colors.onSurfaceVariant,
   },
+  cardsGrid:
+    Platform.OS === 'web'
+      ? { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.sm }
+      : { gap: Spacing.lg },
+  cardsGridItem: Platform.OS === 'web' ? { width: 320 } : {},
 });

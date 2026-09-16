@@ -9,7 +9,7 @@
     "userInterfaceStyle": "dark",
     "ios": {
       "icon": "./assets/expo.icon",
-      "bundleIdentifier": "com.anonymous.padelontour-app"
+      "bundleIdentifier": "com.padelontour.app"
     },
     "android": {
       "adaptiveIcon": {

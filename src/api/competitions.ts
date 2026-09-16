@@ -5,8 +5,8 @@ export function listCompetitions(page = 1): Promise<Paginated<Competition>> {
   return apiFetch<Paginated<Competition>>(`/competitions?page=${page}&upcoming=1`);
 }
 
-/** No competition-level "finished" flag exists yet — approximated from end_date. */
 export function isCompetitionActive(competition: Competition): boolean {
+  if (competition.cancelled_at) return false;
   return !competition.end_date || new Date(competition.end_date) >= new Date();
 }
 
@@ -27,6 +27,16 @@ export function updateCompetition(
   input: Partial<CompetitionInput>
 ): Promise<Competition> {
   return apiFetch<Competition>(`/competitions/${id}`, { method: 'PUT', body: input });
+}
+
+/** Marks the competition as cancelled — reversible in the data, but stops new registrations. */
+export function cancelCompetition(id: number): Promise<Competition> {
+  return apiFetch<Competition>(`/competitions/${id}/cancel`, { method: 'POST' });
+}
+
+/** Irreversible — cascades to categories, phases, matches, registrations, rankings and chat. */
+export function deleteCompetition(id: number): Promise<void> {
+  return apiFetch<void>(`/competitions/${id}`, { method: 'DELETE' });
 }
 
 export function listCategories(competitionId: number): Promise<Category[]> {

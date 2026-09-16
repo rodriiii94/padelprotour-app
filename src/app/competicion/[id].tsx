@@ -1,14 +1,14 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback } from 'react';
-import { ActivityIndicator, Pressable, Share, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Alert, Pressable, Share, StyleSheet, Text, View } from 'react-native';
 
 import { Button } from '@/components/ui/button';
 import { GlassPanel } from '@/components/ui/glass-panel';
 import { Screen } from '@/components/ui/screen';
 import { useAuth } from '@/hooks/use-auth';
 import { useCompetitionDetail } from '@/hooks/use-competition-detail';
-import { Colors, FontFamilies, Spacing, Typography } from '@/theme/tokens';
+import { Colors, FontFamilies, Radii, Spacing, Typography } from '@/theme/tokens';
 import type { Category, RegistrationMode } from '@/api/types';
 
 const TYPE_META = {
@@ -38,8 +38,17 @@ export default function CompetitionDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { user } = useAuth();
-  const { competition, categories, isLoading, isUpdating, error, refetch, togglePrivacy } =
-    useCompetitionDetail(Number(id));
+  const {
+    competition,
+    categories,
+    isLoading,
+    isUpdating,
+    error,
+    refetch,
+    togglePrivacy,
+    cancelCompetition,
+    deleteCompetition,
+  } = useCompetitionDetail(Number(id));
 
   useFocusEffect(
     useCallback(() => {
@@ -48,6 +57,36 @@ export default function CompetitionDetailScreen() {
   );
 
   const isOrganizer = competition?.organizer_id === user?.id;
+
+  const confirmCancel = useCallback(() => {
+    Alert.alert(
+      'Cancelar competición',
+      'Se marcará como cancelada. No se podrán apuntar más parejas, pero los datos y el historial se conservan.',
+      [
+        { text: 'Volver', style: 'cancel' },
+        { text: 'Cancelar competición', style: 'destructive', onPress: cancelCompetition },
+      ]
+    );
+  }, [cancelCompetition]);
+
+  const confirmDelete = useCallback(() => {
+    Alert.alert(
+      'Eliminar competición',
+      'Se borrará para siempre, junto con sus categorías, partidos e inscripciones. Esta acción no se puede deshacer.',
+      [
+        { text: 'Volver', style: 'cancel' },
+        {
+          text: 'Eliminar',
+          style: 'destructive',
+          onPress: () => {
+            deleteCompetition()
+              .then(() => router.back())
+              .catch(() => {});
+          },
+        },
+      ]
+    );
+  }, [deleteCompetition, router]);
 
   return (
     <Screen>
@@ -76,9 +115,14 @@ export default function CompetitionDetailScreen() {
                 color={TYPE_META[competition.type].color}
               />
             </View>
-            <Text style={[styles.typeLabel, { color: TYPE_META[competition.type].color }]}>
-              {TYPE_META[competition.type].label}
-            </Text>
+            <View style={styles.row}>
+              <Text style={[styles.typeLabel, { color: TYPE_META[competition.type].color }]}>
+                {TYPE_META[competition.type].label}
+              </Text>
+              {competition.cancelled_at && (
+                <Text style={styles.cancelledBadge}>Cancelada</Text>
+              )}
+            </View>
           </View>
 
           <GlassPanel style={styles.card}>
@@ -148,6 +192,23 @@ export default function CompetitionDetailScreen() {
                   )}
                 </View>
               )}
+
+              <View style={styles.dangerZone}>
+                {!competition.cancelled_at && (
+                  <Button
+                    title="Cancelar competición"
+                    variant="danger"
+                    disabled={isUpdating}
+                    onPress={confirmCancel}
+                  />
+                )}
+                <Button
+                  title="Eliminar competición"
+                  variant="danger"
+                  disabled={isUpdating}
+                  onPress={confirmDelete}
+                />
+              </View>
             </GlassPanel>
           )}
 
@@ -229,6 +290,15 @@ const styles = StyleSheet.create({
     ...Typography.labelCaps,
     marginTop: Spacing.base,
   },
+  cancelledBadge: {
+    ...Typography.labelCaps,
+    marginTop: Spacing.base,
+    color: Colors.onErrorContainer,
+    backgroundColor: Colors.errorContainer,
+    borderRadius: Radii.sm,
+    paddingHorizontal: Spacing.xs,
+    paddingVertical: 2,
+  },
   card: {
     padding: Spacing.sm,
     gap: Spacing.xs,
@@ -262,6 +332,13 @@ const styles = StyleSheet.create({
     borderTopColor: Colors.glassBorder,
     gap: Spacing.xs,
     alignItems: 'flex-start',
+  },
+  dangerZone: {
+    marginTop: Spacing.sm,
+    paddingTop: Spacing.sm,
+    borderTopWidth: 1,
+    borderTopColor: Colors.glassBorder,
+    gap: Spacing.xs,
   },
   inviteToken: {
     ...Typography.bodyMd,

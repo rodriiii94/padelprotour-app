@@ -1,6 +1,13 @@
 import { useCallback, useEffect, useState } from 'react';
 
-import { getCompetition, listCategories, updateCompetition } from '@/api/competitions';
+import {
+  cancelCompetition as cancelCompetitionRequest,
+  deleteCompetition as deleteCompetitionRequest,
+  getCompetition,
+  listCategories,
+  updateCompetition,
+} from '@/api/competitions';
+import { ApiError } from '@/api/types';
 import type { Category, Competition } from '@/api/types';
 
 export function useCompetitionDetail(id: number) {
@@ -56,5 +63,41 @@ export function useCompetitionDetail(id: number) {
     }
   }, [competition]);
 
-  return { competition, categories, isLoading, isUpdating, error, refetch, togglePrivacy };
+  const cancelCompetition = useCallback(async () => {
+    if (!competition) return;
+    setIsUpdating(true);
+    try {
+      setCompetition(await cancelCompetitionRequest(competition.id));
+    } catch (e) {
+      setError(e instanceof ApiError ? e.message : 'No se pudo cancelar la competición.');
+    } finally {
+      setIsUpdating(false);
+    }
+  }, [competition]);
+
+  /** Throws on failure — the screen decides what to do (show the error, keep the user here). */
+  const deleteCompetition = useCallback(async () => {
+    if (!competition) return;
+    setIsUpdating(true);
+    try {
+      await deleteCompetitionRequest(competition.id);
+    } catch (e) {
+      setError(e instanceof ApiError ? e.message : 'No se pudo eliminar la competición.');
+      throw e;
+    } finally {
+      setIsUpdating(false);
+    }
+  }, [competition]);
+
+  return {
+    competition,
+    categories,
+    isLoading,
+    isUpdating,
+    error,
+    refetch,
+    togglePrivacy,
+    cancelCompetition,
+    deleteCompetition,
+  };
 }

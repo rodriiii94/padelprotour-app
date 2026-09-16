@@ -2,7 +2,7 @@ import { Pressable, StyleSheet, Text, type PressableProps } from 'react-native';
 
 import { Colors, FontFamilies, Radii, Spacing } from '@/theme/tokens';
 
-type ButtonVariant = 'primary' | 'secondary' | 'ghost';
+type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger';
 
 type ButtonProps = PressableProps & {
   title: string;
@@ -54,6 +54,9 @@ const variantStyles = StyleSheet.create({
   ghost: {
     backgroundColor: 'transparent',
   },
+  danger: {
+    backgroundColor: Colors.errorContainer,
+  },
 });
 
 const variantLabelStyles = StyleSheet.create({
@@ -65,5 +68,8 @@ const variantLabelStyles = StyleSheet.create({
   },
   ghost: {
     color: Colors.primaryContainer,
+  },
+  danger: {
+    color: Colors.onErrorContainer,
   },
 });

@@ -39,6 +39,8 @@ export interface Competition {
    * before this field existed.
    */
   invite_token?: string | null;
+  /** Set by POST /competitions/{id}/cancel. Null means active. */
+  cancelled_at: string | null;
   created_at: string;
   updated_at: string;
 }

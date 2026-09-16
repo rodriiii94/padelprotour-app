@@ -52,7 +52,10 @@ export function CompetitionCard({ competition }: { competition: Competition }) {
         </View>
 
         <View style={styles.footer}>
-          <Text style={[styles.typeLabel, { color: meta.color }]}>{meta.label}</Text>
+          <View style={styles.row}>
+            <Text style={[styles.typeLabel, { color: meta.color }]}>{meta.label}</Text>
+            {competition.cancelled_at && <Text style={styles.cancelledBadge}>Cancelada</Text>}
+          </View>
           {registrationOpen && (
             <Text style={styles.registrationLabel}>
               Inscripciones abiertas hasta{' '}
@@ -99,6 +102,14 @@ const styles = StyleSheet.create({
   typeLabel: {
     ...Typography.labelCaps,
     backgroundColor: Colors.glassFill,
+    borderRadius: Radii.sm,
+    paddingHorizontal: Spacing.xs,
+    paddingVertical: 2,
+  },
+  cancelledBadge: {
+    ...Typography.labelCaps,
+    color: Colors.onErrorContainer,
+    backgroundColor: Colors.errorContainer,
     borderRadius: Radii.sm,
     paddingHorizontal: Spacing.xs,
     paddingVertical: 2,

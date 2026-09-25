@@ -10,7 +10,7 @@ import {
 
 import * as authApi from '@/api/auth';
 import { getToken, setToken as persistToken } from '@/api/client';
-import type { RegisterResult, User } from '@/api/types';
+import type { ProfileInput, RegisterResult, User } from '@/api/types';
 
 type AuthContextValue = {
   user: User | null;
@@ -23,6 +23,7 @@ type AuthContextValue = {
   }) => Promise<RegisterResult>;
   verifyEmail: (input: { token: string }) => Promise<void>;
   loginWithGoogle: (idToken: string) => Promise<void>;
+  updateProfile: (input: ProfileInput) => Promise<void>;
   logout: () => Promise<void>;
 };
 
@@ -74,6 +75,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(user);
   }, []);
 
+  const updateProfile = useCallback(async (input: ProfileInput) => {
+    setUser(await authApi.updateProfile(input));
+  }, []);
+
   const logout = useCallback(async () => {
     try {
       await authApi.logout();
@@ -84,8 +89,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const value = useMemo(
-    () => ({ user, isLoading, login, register, verifyEmail, loginWithGoogle, logout }),
-    [user, isLoading, login, register, verifyEmail, loginWithGoogle, logout]
+    () => ({ user, isLoading, login, register, verifyEmail, loginWithGoogle, updateProfile, logout }),
+    [user, isLoading, login, register, verifyEmail, loginWithGoogle, updateProfile, logout]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

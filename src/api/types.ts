@@ -1,13 +1,77 @@
 /** Types derived from openapi.yaml's `AuthToken` and `User` schemas. */
 
-export interface User {
+export type PreferredSide = 'right' | 'left' | 'both';
+export type DominantHand = 'right' | 'left';
+export type AvatarColor = 'lime' | 'orange' | 'sky' | 'violet' | 'rose' | 'teal';
+export type SocialNetwork = 'instagram' | 'tiktok' | 'x' | 'youtube' | 'facebook';
+/** Network => user handle (no URL, no leading @). */
+export type SocialLinks = Partial<Record<SocialNetwork, string>>;
+export type AchievementKey = 'first_win' | 'matches_10' | 'matches_50' | 'win_streak_5' | 'champion';
+
+/** Profile data shared by the own account and the public profile. */
+export interface ProfileFields {
+  level: string | null;
+  club: string | null;
+  city: string | null;
+  bio: string | null;
+  preferred_side: PreferredSide | null;
+  dominant_hand: DominantHand | null;
+  avatar_color: AvatarColor | null;
+  avatar_emoji: string | null;
+  racket: string | null;
+  motto: string | null;
+  /** Slots like "mon-evening" (day x morning/afternoon/evening). */
+  availability: string[] | null;
+  social_links: SocialLinks | null;
+}
+
+/** The authenticated user's own account — the only place the email is ever returned. */
+export interface User extends ProfileFields {
   id: number;
   name: string;
   email: string;
-  level: string | null;
-  club: string | null;
+  /** When the name can be changed again; null/absent = can change it now. */
+  name_change_available_at?: string | null;
   created_at: string;
   updated_at: string;
+}
+
+/** Body of `PUT /me` — send only what changes. */
+export type ProfileInput = Partial<ProfileFields> & { name?: string };
+
+/** What a player search returns about someone else. Never includes the email. */
+export interface PublicUserSummary {
+  id: number;
+  name: string;
+  level: string | null;
+  club: string | null;
+  city: string | null;
+  avatar_color: AvatarColor | null;
+  avatar_emoji: string | null;
+}
+
+export interface PlayerStats {
+  matches_played: number;
+  wins: number;
+  losses: number;
+  win_rate: number | null;
+  current_streak: number;
+  best_streak: number;
+  sets_won: number;
+  sets_lost: number;
+  games_won: number;
+  games_lost: number;
+  competitions_played: number;
+}
+
+/** `GET /users/{id}` — public to any authenticated user, never includes the email. */
+export interface PlayerProfile extends ProfileFields {
+  id: number;
+  name: string;
+  created_at: string;
+  stats: PlayerStats;
+  achievements: AchievementKey[];
+  usual_partner: { id: number; name: string; matches: number } | null;
 }
 
 export interface AuthToken {

@@ -2,7 +2,7 @@ import * as Device from 'expo-device';
 import { Platform } from 'react-native';
 
 import { apiFetch } from './client';
-import type { AuthToken, RegisterResult, User } from './types';
+import type { AuthToken, ProfileInput, RegisterResult, User } from './types';
 
 function deviceName(): string {
   return Device.deviceName ?? `${Platform.OS}-app`;
@@ -58,4 +58,8 @@ export function logout(): Promise<void> {
 
 export function me(): Promise<User> {
   return apiFetch<User>('/me');
+}
+
+export function updateProfile(input: ProfileInput): Promise<User> {
+  return apiFetch<User>('/me', { method: 'PUT', body: input });
 }

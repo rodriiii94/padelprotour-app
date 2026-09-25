@@ -65,6 +65,8 @@ function AuthGateWeb() {
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="crear-competicion" options={{ presentation: 'modal' }} />
         <Stack.Screen name="crear-categoria" options={{ presentation: 'modal' }} />
+        <Stack.Screen name="editar-perfil" options={{ presentation: 'modal' }} />
+        <Stack.Screen name="jugador/[id]" />
         <Stack.Screen name="competicion/[id]" />
         <Stack.Screen name="categoria/[id]" />
         <Stack.Screen name="invite/[token]" />

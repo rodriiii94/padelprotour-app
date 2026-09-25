@@ -10,12 +10,13 @@ import type {
   Phase,
   Ranking,
   Registration,
+  PublicUserSummary,
   RegistrationStatus,
-  User,
   UserSummary,
 } from '@/api/types';
 import { Button } from '@/components/ui/button';
 import { GlassPanel } from '@/components/ui/glass-panel';
+import { PlayerNames } from '@/components/ui/player-names';
 import { Screen } from '@/components/ui/screen';
 import { TextField } from '@/components/ui/text-field';
 import { useAuth } from '@/hooks/use-auth';
@@ -52,6 +53,29 @@ function pairLabel(
 ): string {
   if (pair.name) return pair.name;
   return `${playerName(pair.player1, pair.player1_id)} / ${playerName(pair.player2, pair.player2_id)}`;
+}
+
+type PlayerRef = { id: number; name: string };
+
+function pairPlayers(
+  pair: Pick<Pair, 'player1' | 'player2' | 'player1_id' | 'player2_id'>
+): PlayerRef[] {
+  return [
+    { id: pair.player1_id, name: playerName(pair.player1, pair.player1_id) },
+    { id: pair.player2_id, name: playerName(pair.player2, pair.player2_id) },
+  ];
+}
+
+function sidePlayers(match: Match, side: 1 | 2): PlayerRef[] {
+  return side === 1
+    ? [
+        { id: match.side1_player1_id, name: playerName(match.side1_player1, match.side1_player1_id) },
+        { id: match.side1_player2_id, name: playerName(match.side1_player2, match.side1_player2_id) },
+      ]
+    : [
+        { id: match.side2_player1_id, name: playerName(match.side2_player1, match.side2_player1_id) },
+        { id: match.side2_player2_id, name: playerName(match.side2_player2, match.side2_player2_id) },
+      ];
 }
 
 /** Ranking rows only carry ids — resolve a label from the registrations already loaded. */
@@ -241,7 +265,7 @@ function JoinSection({
   const [showSearch, setShowSearch] = useState(false);
   const [query, setQuery] = useState('');
   const [pairName, setPairName] = useState('');
-  const [results, setResults] = useState<User[]>([]);
+  const [results, setResults] = useState<PublicUserSummary[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [searchError, setSearchError] = useState<string | null>(null);
 
@@ -264,7 +288,11 @@ function JoinSection({
 
       {availablePairs.map((pair) => (
         <View key={pair.id} style={styles.rowBetween}>
-          <Text style={styles.meta}>{pairLabel(pair)}</Text>
+          {pair.name ? (
+            <Text style={styles.meta}>{pair.name}</Text>
+          ) : (
+            <PlayerNames style={styles.meta} players={pairPlayers(pair)} />
+          )}
           <Button
             title="Inscribir"
             variant="secondary"
@@ -301,7 +329,7 @@ function JoinSection({
           )}
           {results.map((result) => (
             <View key={result.id} style={styles.rowBetween}>
-              <Text style={styles.meta}>{result.name}</Text>
+              <PlayerNames style={styles.meta} players={[{ id: result.id, name: result.name }]} />
               <Button
                 title="Formar pareja"
                 disabled={isMutating}
@@ -326,22 +354,35 @@ function RegistrationRow({
   onConfirm: () => void;
   onReject: () => void;
 }) {
-  const label = registration.pair
-    ? pairLabel(registration.pair)
-    : registration.player
-      ? registration.player.name
-      : registration.pair_id
-        ? `Pareja #${registration.pair_id}`
-        : `Jugador #${registration.player_id}`;
+  const fallbackLabel = registration.pair_id
+    ? `Pareja #${registration.pair_id}`
+    : `Jugador #${registration.player_id}`;
 
   return (
     <GlassPanel style={styles.card}>
       <View style={styles.rowBetween}>
         <View style={[styles.row, { flex: 1 }]}>
           <MaterialIcons name="groups" size={20} color={Colors.onSurfaceVariant} />
-          <Text style={styles.cardTitle} numberOfLines={2}>
-            {label}
-          </Text>
+          <View style={{ flex: 1 }}>
+            {registration.pair ? (
+              registration.pair.name ? (
+                <>
+                  <Text style={styles.cardTitle} numberOfLines={2}>
+                    {registration.pair.name}
+                  </Text>
+                  <PlayerNames style={styles.meta} players={pairPlayers(registration.pair)} />
+                </>
+              ) : (
+                <PlayerNames style={styles.cardTitle} players={pairPlayers(registration.pair)} />
+              )
+            ) : registration.player ? (
+              <PlayerNames style={styles.cardTitle} players={[registration.player]} />
+            ) : (
+              <Text style={styles.cardTitle} numberOfLines={2}>
+                {fallbackLabel}
+              </Text>
+            )}
+          </View>
         </View>
         <View
           style={[
@@ -363,7 +404,7 @@ function RegistrationRow({
   );
 }
 
-function MatchSide({ label, isWinner }: { label: string; isWinner?: boolean }) {
+function MatchSide({ players, isWinner }: { players: PlayerRef[]; isWinner?: boolean }) {
   return (
     <View style={styles.matchSide}>
       {isWinner ? (
@@ -371,7 +412,10 @@ function MatchSide({ label, isWinner }: { label: string; isWinner?: boolean }) {
       ) : (
         <View style={styles.matchSideDot} />
       )}
-      <Text style={[styles.matchSideLabel, isWinner && styles.matchSideLabelWinner]}>{label}</Text>
+      <PlayerNames
+        style={[styles.matchSideLabel, isWinner && styles.matchSideLabelWinner]}
+        players={players}
+      />
     </View>
   );
 }
@@ -394,12 +438,12 @@ function MatchRow({
       onPress={() => router.push(`/partido/${match.id}?isOrganizer=${isOrganizer ? '1' : '0'}`)}
       style={[styles.matchCard, !isFirst && styles.matchCardDivider]}>
       <MatchSide
-        label={`${playerName(match.side1_player1, match.side1_player1_id)} / ${playerName(match.side1_player2, match.side1_player2_id)}`}
+        players={sidePlayers(match, 1)}
         isWinner={isCompleted && match.winner_side === 1}
       />
       <Text style={styles.vsLabel}>vs</Text>
       <MatchSide
-        label={`${playerName(match.side2_player1, match.side2_player1_id)} / ${playerName(match.side2_player2, match.side2_player2_id)}`}
+        players={sidePlayers(match, 2)}
         isWinner={isCompleted && match.winner_side === 2}
       />
 

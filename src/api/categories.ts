@@ -8,10 +8,10 @@ import type {
   Pair,
   Paginated,
   Phase,
+  PublicUserSummary,
   Ranking,
   Registration,
   RegistrationStatus,
-  User,
 } from './types';
 
 export function createCategory(competitionId: number, input: CategoryInput): Promise<Category> {
@@ -60,8 +60,8 @@ export function createPair(partnerId: number, name?: string): Promise<Pair> {
   });
 }
 
-export function searchUsers(query: string): Promise<User[]> {
-  return apiFetch<User[]>(`/users?search=${encodeURIComponent(query)}`);
+export function searchUsers(query: string): Promise<PublicUserSummary[]> {
+  return apiFetch<PublicUserSummary[]>(`/users?search=${encodeURIComponent(query)}`);
 }
 
 export function listPhases(categoryId: number): Promise<Phase[]> {

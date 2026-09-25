@@ -7,6 +7,7 @@ import { createMatchSet, getMatch, updateMatchStatus } from '@/api/categories';
 import { ApiError, type Match } from '@/api/types';
 import { Button } from '@/components/ui/button';
 import { GlassPanel } from '@/components/ui/glass-panel';
+import { PlayerNames } from '@/components/ui/player-names';
 import { Screen } from '@/components/ui/screen';
 import { TextField } from '@/components/ui/text-field';
 import { Colors, Spacing, Typography } from '@/theme/tokens';
@@ -36,13 +37,16 @@ function isValidSetScore(side1Games: string, side2Games: string): boolean {
   return VALID_SET_SCORES.some(([a, b]) => a === s1 && b === s2);
 }
 
-function sideLabel(
+function sidePlayers(
   a: { name: string } | undefined,
   b: { name: string } | undefined,
   idA: number,
   idB: number
-): string {
-  return `${a?.name ?? `Jugador #${idA}`} / ${b?.name ?? `Jugador #${idB}`}`;
+): { id: number; name: string }[] {
+  return [
+    { id: idA, name: a?.name ?? `Jugador #${idA}` },
+    { id: idB, name: b?.name ?? `Jugador #${idB}` },
+  ];
 }
 
 /** Sets won by each side, to derive a winner or detect a tie. */
@@ -161,28 +165,30 @@ export default function MatchDetailScreen() {
               {match.status === 'completed' && match.winner_side === 1 && (
                 <MaterialIcons name="emoji-events" size={18} color={Colors.secondaryContainer} />
               )}
-              <Text style={styles.sideLabel}>
-                {sideLabel(
+              <PlayerNames
+                style={styles.sideLabel}
+                players={sidePlayers(
                   match.side1_player1,
                   match.side1_player2,
                   match.side1_player1_id,
                   match.side1_player2_id
                 )}
-              </Text>
+              />
             </View>
             <Text style={styles.vsLabel}>vs</Text>
             <View style={styles.sideRow}>
               {match.status === 'completed' && match.winner_side === 2 && (
                 <MaterialIcons name="emoji-events" size={18} color={Colors.secondaryContainer} />
               )}
-              <Text style={styles.sideLabel}>
-                {sideLabel(
+              <PlayerNames
+                style={styles.sideLabel}
+                players={sidePlayers(
                   match.side2_player1,
                   match.side2_player2,
                   match.side2_player1_id,
                   match.side2_player2_id
                 )}
-              </Text>
+              />
             </View>
 
             {match.match_sets && match.match_sets.length > 0 && (

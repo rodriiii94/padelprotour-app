@@ -10,6 +10,9 @@ export function TextField({ style, ...rest }: TextInputProps) {
 
 const styles = StyleSheet.create({
   input: {
+    // En web el BlurView absoluto de GlassPanel se pinta encima de los <input>
+    // sin posición propia y los deja borrosos; los View/Text de RN web ya la tienen.
+    position: 'relative',
     backgroundColor: 'rgba(0, 0, 0, 0.2)',
     borderWidth: 1,
     borderColor: Colors.glassBorder,

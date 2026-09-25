@@ -15,7 +15,8 @@ import {
 import { getCompetition } from '@/api/competitions';
 import type { Category, Competition, Match, Pair, Phase, Ranking, Registration } from '@/api/types';
 
-export function useCategoryDetail(categoryId: number) {
+/** `invite`: código del enlace, para leer una competición privada antes de participar en ella. */
+export function useCategoryDetail(categoryId: number, invite?: string) {
   const [category, setCategory] = useState<Category | null>(null);
   const [competition, setCompetition] = useState<Competition | null>(null);
   const [registrations, setRegistrations] = useState<Registration[]>([]);
@@ -34,18 +35,18 @@ export function useCategoryDetail(categoryId: number) {
     (async () => {
       setError(null);
       try {
-        const cat = await getCategory(categoryId);
+        const cat = await getCategory(categoryId, invite);
         const [comp, registrationsPage, pairs, phaseList, rankingList] = await Promise.all([
-          getCompetition(cat.competition_id),
+          getCompetition(cat.competition_id, invite),
           listRegistrations(categoryId),
           listMyPairs(),
-          listPhases(categoryId),
-          listRankings(categoryId),
+          listPhases(categoryId, invite),
+          listRankings(categoryId, invite),
         ]);
 
         const matches: Record<number, Match[]> = {};
         if (phaseList.length > 0) {
-          const matchPages = await Promise.all(phaseList.map((phase) => listMatches(phase.id)));
+          const matchPages = await Promise.all(phaseList.map((phase) => listMatches(phase.id, invite)));
           phaseList.forEach((phase, index) => {
             matches[phase.id] = matchPages[index].data;
           });
@@ -64,7 +65,7 @@ export function useCategoryDetail(categoryId: number) {
         setIsLoading(false);
       }
     })();
-  }, [categoryId, reloadKey]);
+  }, [categoryId, invite, reloadKey]);
 
   const runMutation = useCallback(
     async (action: () => Promise<unknown>, failureMessage: string) => {
@@ -109,6 +110,15 @@ export function useCategoryDetail(categoryId: number) {
     [runMutation, categoryId]
   );
 
+  const joinIndividually = useCallback(
+    (playerId: number) =>
+      runMutation(
+        () => createRegistration(categoryId, { player_id: playerId }),
+        'No se pudo completar la inscripción.'
+      ),
+    [runMutation, categoryId]
+  );
+
   const formPairAndJoin = useCallback(
     (partnerId: number, name?: string) =>
       runMutation(async () => {
@@ -142,6 +152,7 @@ export function useCategoryDetail(categoryId: number) {
     confirmRegistration,
     rejectRegistration,
     joinWithPair,
+    joinIndividually,
     formPairAndJoin,
     generateCalendar,
   };

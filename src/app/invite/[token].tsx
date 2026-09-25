@@ -100,7 +100,7 @@ export default function InviteScreen() {
             ) : categories ? (
               <View style={styles.list}>
                 {categories.map((category) => (
-                  <Pressable key={category.id} onPress={() => router.push(`/categoria/${category.id}`)}>
+                  <Pressable key={category.id} onPress={() => router.push(`/categoria/${category.id}?invite=${token}`)}>
                     <GlassPanel style={styles.card}>
                       <Text style={styles.cardTitle}>{category.name}</Text>
                     </GlassPanel>

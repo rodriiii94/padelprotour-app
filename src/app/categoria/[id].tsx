@@ -89,7 +89,7 @@ function rankingLabel(ranking: Ranking, registrations: Registration[]): string {
 }
 
 export default function CategoryDetailScreen() {
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const { id, invite } = useLocalSearchParams<{ id: string; invite?: string }>();
   const router = useRouter();
   const { user } = useAuth();
   const categoryId = Number(id);
@@ -108,9 +108,10 @@ export default function CategoryDetailScreen() {
     confirmRegistration,
     rejectRegistration,
     joinWithPair,
+    joinIndividually,
     formPairAndJoin,
     generateCalendar,
-  } = useCategoryDetail(categoryId);
+  } = useCategoryDetail(categoryId, invite);
 
   useFocusEffect(
     useCallback(() => {
@@ -119,8 +120,11 @@ export default function CategoryDetailScreen() {
   );
 
   const isOrganizer = competition?.organizer_id === user?.id;
-  const myRegistration = registrations.find(
-    (r) => r.pair_id !== null && myPairs.some((pair) => pair.id === r.pair_id)
+  const isIndividual = category?.registration_mode === 'individual_rotating';
+  const myRegistration = registrations.find((r) =>
+    isIndividual
+      ? r.player_id === user?.id
+      : r.pair_id !== null && myPairs.some((pair) => pair.id === r.pair_id)
   );
   const availablePairs = myPairs.filter(
     (pair) => !registrations.some((r) => r.pair_id === pair.id && r.status !== 'rejected')
@@ -163,6 +167,18 @@ export default function CategoryDetailScreen() {
               <Text style={[styles.meta, { color: STATUS_COLOR[myRegistration.status] }]}>
                 {STATUS_LABEL[myRegistration.status]}
               </Text>
+            </GlassPanel>
+          ) : isIndividual ? (
+            <GlassPanel style={styles.card}>
+              <Text style={styles.cardTitle}>Únete</Text>
+              <Text style={styles.meta}>
+                En esta liga te inscribes tú solo: las parejas rotan en cada jornada.
+              </Text>
+              <Button
+                title="Inscribirme"
+                disabled={isMutating || !user}
+                onPress={() => user && joinIndividually(user.id)}
+              />
             </GlassPanel>
           ) : (
             <JoinSection
@@ -306,7 +322,7 @@ function JoinSection({
       ) : (
         <View style={{ gap: Spacing.xs }}>
           <TextField
-            placeholder="Buscar por nombre o email"
+            placeholder="Buscar por nombre"
             value={query}
             onChangeText={setQuery}
             onSubmitEditing={handleSearch}

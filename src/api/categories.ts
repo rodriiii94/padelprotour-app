@@ -1,4 +1,4 @@
-import { apiFetch } from './client';
+import { apiFetch, withInvite } from './client';
 import type {
   Category,
   CategoryInput,
@@ -21,8 +21,8 @@ export function createCategory(competitionId: number, input: CategoryInput): Pro
   });
 }
 
-export function getCategory(id: number): Promise<Category> {
-  return apiFetch<Category>(`/categories/${id}`);
+export function getCategory(id: number, invite?: string): Promise<Category> {
+  return apiFetch<Category>(withInvite(`/categories/${id}`, invite));
 }
 
 export function listRegistrations(categoryId: number): Promise<Paginated<Registration>> {
@@ -64,12 +64,12 @@ export function searchUsers(query: string): Promise<PublicUserSummary[]> {
   return apiFetch<PublicUserSummary[]>(`/users?search=${encodeURIComponent(query)}`);
 }
 
-export function listPhases(categoryId: number): Promise<Phase[]> {
-  return apiFetch<Phase[]>(`/categories/${categoryId}/phases`);
+export function listPhases(categoryId: number, invite?: string): Promise<Phase[]> {
+  return apiFetch<Phase[]>(withInvite(`/categories/${categoryId}/phases`, invite));
 }
 
-export function listMatches(phaseId: number): Promise<Paginated<Match>> {
-  return apiFetch<Paginated<Match>>(`/phases/${phaseId}/matches`);
+export function listMatches(phaseId: number, invite?: string): Promise<Paginated<Match>> {
+  return apiFetch<Paginated<Match>>(withInvite(`/phases/${phaseId}/matches`, invite));
 }
 
 export function generateRoundRobin(categoryId: number): Promise<Phase[]> {
@@ -94,6 +94,6 @@ export function updateMatchStatus(
   return apiFetch<Match>(`/matches/${matchId}`, { method: 'PUT', body: input });
 }
 
-export function listRankings(categoryId: number): Promise<Ranking[]> {
-  return apiFetch<Ranking[]>(`/categories/${categoryId}/rankings`);
+export function listRankings(categoryId: number, invite?: string): Promise<Ranking[]> {
+  return apiFetch<Ranking[]>(withInvite(`/categories/${categoryId}/rankings`, invite));
 }

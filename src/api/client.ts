@@ -48,3 +48,8 @@ export async function apiFetch<T>(path: string, options: RequestOptions = {}): P
 
   return data as T;
 }
+
+/** Añade el código de invitación (si lo hay) para leer una competición privada sin participar aún. */
+export function withInvite(path: string, invite?: string): string {
+  return invite ? `${path}?invite=${encodeURIComponent(invite)}` : path;
+}

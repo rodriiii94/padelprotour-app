@@ -1,4 +1,4 @@
-import { apiFetch } from './client';
+import { apiFetch, withInvite } from './client';
 import type { Category, Competition, CompetitionInput, Paginated } from './types';
 
 export function listCompetitions(page = 1): Promise<Paginated<Competition>> {
@@ -18,8 +18,8 @@ export function createCompetition(input: CompetitionInput): Promise<Competition>
   return apiFetch<Competition>('/competitions', { method: 'POST', body: input });
 }
 
-export function getCompetition(id: number): Promise<Competition> {
-  return apiFetch<Competition>(`/competitions/${id}`);
+export function getCompetition(id: number, invite?: string): Promise<Competition> {
+  return apiFetch<Competition>(withInvite(`/competitions/${id}`, invite));
 }
 
 export function updateCompetition(

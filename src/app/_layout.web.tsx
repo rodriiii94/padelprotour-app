@@ -6,6 +6,7 @@ import {
 } from '@expo-google-fonts/manrope';
 import { Sora_600SemiBold, Sora_700Bold, Sora_800ExtraBold } from '@expo-google-fonts/sora';
 import { Slot, Stack, useRouter, useSegments } from 'expo-router';
+import Head from 'expo-router/head';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 import { StyleSheet, View } from 'react-native';
@@ -35,12 +36,21 @@ function RootLayoutWeb() {
     }
   }, [fontsLoaded]);
 
+  // Va antes del return anticipado para que también salga en el HTML estático.
+  const pageHead = (
+    <Head>
+      <title>PadelProTour</title>
+      <meta name="description" content="Tus ligas y torneos de pádel" />
+    </Head>
+  );
+
   if (!fontsLoaded) {
-    return null;
+    return pageHead;
   }
 
   return (
     <AuthProvider>
+      {pageHead}
       <View style={styles.root}>
         <AuthGateWeb />
       </View>

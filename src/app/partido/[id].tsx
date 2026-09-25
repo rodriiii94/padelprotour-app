@@ -74,6 +74,23 @@ function sideOf(match: Match, userId: number | undefined): 1 | 2 | null {
   return null;
 }
 
+const AUTO_CONFIRM_HOURS = 48;
+
+const autoConfirmFormatter = new Intl.DateTimeFormat('es-ES', {
+  weekday: 'long',
+  day: 'numeric',
+  month: 'long',
+  hour: '2-digit',
+  minute: '2-digit',
+});
+
+/** Cuándo se confirmará solo el resultado propuesto, si nadie responde. */
+function autoConfirmText(match: Match): string {
+  if (!match.result_proposed_at) return '';
+  const at = new Date(new Date(match.result_proposed_at).getTime() + AUTO_CONFIRM_HOURS * 3_600_000);
+  return `Si nadie responde, se confirmará automáticamente el ${autoConfirmFormatter.format(at)}.`;
+}
+
 /** Nombre de quien propuso el resultado, si está entre los jugadores del partido. */
 function proposerName(match: Match): string | null {
   const players = [
@@ -353,6 +370,7 @@ export default function MatchDetailScreen() {
                   ? 'Si es correcto, confírmalo; si no, recházalo y se borra.'
                   : 'Esperando a que un rival lo confirme.'}
               </Text>
+              <Text style={styles.meta}>{autoConfirmText(match)}</Text>
               {canReview && (
                 <View style={styles.setInputRow}>
                   <Button
@@ -390,7 +408,8 @@ export default function MatchDetailScreen() {
               <GlassPanel style={styles.card}>
                 <Text style={styles.cardTitle}>Proponer resultado</Text>
                 <Text style={styles.meta}>
-                  Juegos de cada lado por set. Un rival tendrá que confirmarlo.
+                  Juegos de cada lado por set. Un rival tendrá que confirmarlo; si no responde en 48
+                  horas, se confirma solo.
                 </Text>
                 {drafts.map((draft, index) => {
                   const hidden =

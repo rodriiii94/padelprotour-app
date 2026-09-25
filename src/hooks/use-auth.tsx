@@ -10,7 +10,7 @@ import {
 
 import * as authApi from '@/api/auth';
 import { getToken, setToken as persistToken } from '@/api/client';
-import type { ProfileInput, RegisterResult, User } from '@/api/types';
+import { ApiError, type ProfileInput, type RegisterResult, type User } from '@/api/types';
 
 type AuthContextValue = {
   user: User | null;
@@ -42,8 +42,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
       try {
         setUser(await authApi.me());
-      } catch {
-        await persistToken(null);
+      } catch (error) {
+        // Solo un 401 significa "token inválido". Un fallo de red o un 5xx no debe
+        // cerrar la sesión: el token sigue siendo bueno.
+        if (error instanceof ApiError && error.status === 401) {
+          await persistToken(null);
+        }
       } finally {
         setIsLoading(false);
       }

@@ -4,8 +4,20 @@ import { Platform } from 'react-native';
 import { apiFetch } from './client';
 import type { AuthToken, ProfileInput, RegisterResult, User } from './types';
 
+const WEB_DEVICE_KEY = 'padelontour_device_id';
+
+// El servidor revoca los tokens con el mismo nombre de dispositivo al iniciar sesión.
+// En web todos los navegadores se llamarían igual, así que cada uno lleva su propio id.
 function deviceName(): string {
-  return Device.deviceName ?? `${Platform.OS}-app`;
+  if (Platform.OS !== 'web') {
+    return Device.deviceName ?? `${Platform.OS}-app`;
+  }
+  let id = globalThis.localStorage?.getItem(WEB_DEVICE_KEY);
+  if (!id) {
+    id = Math.random().toString(36).slice(2, 10);
+    globalThis.localStorage?.setItem(WEB_DEVICE_KEY, id);
+  }
+  return `web-${id}`;
 }
 
 export function register(input: {

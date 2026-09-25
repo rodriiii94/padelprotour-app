@@ -15,7 +15,7 @@ export function PlayerRow({ player }: { player: PublicUserSummary }) {
   return (
     <Pressable onPress={() => router.push(`/jugador/${player.id}`)}>
       <GlassPanel style={styles.card}>
-        <Avatar name={player.name} color={player.avatar_color} emoji={player.avatar_emoji} size={44} />
+        <Avatar name={player.name} imageUrl={player.avatar_url} color={player.avatar_color} emoji={player.avatar_emoji} size={44} />
         <View style={styles.text}>
           <Text style={styles.name} numberOfLines={1}>
             {player.name}

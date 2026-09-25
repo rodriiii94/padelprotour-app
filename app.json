@@ -40,7 +40,13 @@
           "iosUrlScheme": "com.googleusercontent.apps.370159415241-s3jkr63tcnlem9dfs5fd1li67flmq81o"
         }
       ],
-      "@sentry/react-native"
+      "@sentry/react-native",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "PadelProTour necesita acceder a tus fotos para que puedas elegir tu foto de perfil."
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,

@@ -22,6 +22,7 @@ import { SectionLabel, type IconName } from '@/components/ui/section-label';
 import { SegmentedControl } from '@/components/ui/segmented-control';
 import { TextField } from '@/components/ui/text-field';
 import { useAuth } from '@/hooks/use-auth';
+import { pickAvatarPhoto } from '@/lib/avatar-photo';
 import {
   AVAILABILITY_DAYS,
   AVAILABILITY_PARTS,
@@ -89,7 +90,9 @@ const emptyToNull = (value: string): string | null => value.trim() || null;
 
 export default function EditarPerfilScreen() {
   const router = useRouter();
-  const { user, updateProfile } = useAuth();
+  const { user, updateProfile, uploadAvatar, removeAvatar } = useAuth();
+  const [photoBusy, setPhotoBusy] = useState(false);
+  const [photoError, setPhotoError] = useState<string | null>(null);
   const [form, setForm] = useState<FormState>(() => initialForm(user));
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -101,6 +104,32 @@ export default function EditarPerfilScreen() {
 
   function set<K extends keyof FormState>(key: K, value: FormState[K]) {
     setForm((current) => ({ ...current, [key]: value }));
+  }
+
+  async function changePhoto() {
+    setPhotoError(null);
+    setPhotoBusy(true);
+    try {
+      const uri = await pickAvatarPhoto();
+      if (uri) await uploadAvatar(uri);
+    } catch (e) {
+      const first = e instanceof ApiError ? Object.values(e.errors ?? {})[0]?.[0] : undefined;
+      setPhotoError(first ?? 'No se pudo subir la foto. Inténtalo de nuevo.');
+    } finally {
+      setPhotoBusy(false);
+    }
+  }
+
+  async function deletePhoto() {
+    setPhotoError(null);
+    setPhotoBusy(true);
+    try {
+      await removeAvatar();
+    } catch {
+      setPhotoError('No se pudo quitar la foto.');
+    } finally {
+      setPhotoBusy(false);
+    }
   }
 
   function toggleSlot(slot: string) {
@@ -165,6 +194,7 @@ export default function EditarPerfilScreen() {
       <View style={styles.hero}>
         <Avatar
           name={form.name || 'Jugador'}
+          imageUrl={user?.avatar_url}
           color={form.avatar_color}
           emoji={form.avatar_emoji}
           size={88}
@@ -196,6 +226,30 @@ export default function EditarPerfilScreen() {
       </Group>
 
       <Group icon="face" title="Avatar">
+        <LabeledField label="Foto">
+          <View style={styles.photoActions}>
+            <ActionChip
+              icon="add-a-photo"
+              label={user?.avatar_url ? 'Cambiar foto' : 'Subir foto'}
+              disabled={photoBusy}
+              onPress={changePhoto}
+            />
+            {user?.avatar_url ? (
+              <ActionChip
+                icon="delete-outline"
+                label="Quitar"
+                tone="danger"
+                disabled={photoBusy}
+                onPress={deletePhoto}
+              />
+            ) : null}
+          </View>
+          {photoBusy ? <Text style={styles.hint}>Subiendo…</Text> : null}
+          {photoError ? <Text style={styles.error}>{photoError}</Text> : null}
+          <Text style={styles.hint}>
+            Se guarda al momento y la verá cualquier jugador. Sin foto se usa el color y el icono.
+          </Text>
+        </LabeledField>
         <LabeledField label="Color">
           <View style={styles.swatches}>
             {AVATAR_COLOR_KEYS.map((color) => (
@@ -405,6 +459,10 @@ const styles = StyleSheet.create({
   card: {
     padding: Spacing.sm,
     gap: Spacing.sm,
+  },
+  photoActions: {
+    flexDirection: 'row',
+    gap: Spacing.xs,
   },
   hero: {
     alignItems: 'center',

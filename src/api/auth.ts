@@ -1,7 +1,7 @@
 import * as Device from 'expo-device';
 import { Platform } from 'react-native';
 
-import { apiFetch } from './client';
+import { apiFetch, apiUpload } from './client';
 import type { AuthToken, ProfileInput, RegisterResult, User } from './types';
 
 const WEB_DEVICE_KEY = 'padelontour_device_id';
@@ -79,4 +79,20 @@ export function updateProfile(input: ProfileInput): Promise<User> {
 /** Elimina la cuenta (se anonimiza). Pide la contraseña, o el email si la cuenta solo usa Google/Apple. */
 export function deleteAccount(input: { password?: string; email?: string }): Promise<void> {
   return apiFetch<void>('/me', { method: 'DELETE', body: input });
+}
+
+/** Sube la foto de perfil (ya recortada a cuadrado en el cliente; el servidor la vuelve a normalizar). */
+export async function uploadAvatar(uri: string): Promise<User> {
+  const form = new FormData();
+  if (Platform.OS === 'web') {
+    form.append('avatar', await (await fetch(uri)).blob(), 'avatar.jpg');
+  } else {
+    // En React Native un archivo se manda como { uri, name, type }.
+    form.append('avatar', { uri, name: 'avatar.jpg', type: 'image/jpeg' } as unknown as Blob);
+  }
+  return apiUpload<User>('/me/avatar', form);
+}
+
+export function deleteAvatar(): Promise<User> {
+  return apiFetch<User>('/me/avatar', { method: 'DELETE' });
 }

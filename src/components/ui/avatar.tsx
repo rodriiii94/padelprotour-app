@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View } from 'react-native';
+import { Image, StyleSheet, Text, View } from 'react-native';
 
 import type { AvatarColor } from '@/api/types';
 import { AVATAR_COLORS } from '@/lib/profile';
@@ -6,6 +6,8 @@ import { FontFamilies } from '@/theme/tokens';
 
 type Props = {
   name: string;
+  /** Foto de perfil: si hay, se muestra en lugar del emoji/iniciales. */
+  imageUrl?: string | null;
   color?: AvatarColor | null;
   emoji?: string | null;
   size?: number;
@@ -19,8 +21,18 @@ function initials(name: string): string {
 }
 
 /** Emoji si lo ha elegido, y si no sus iniciales, siempre sobre el color del jugador. */
-export function Avatar({ name, color, emoji, size = 48 }: Props) {
+export function Avatar({ name, imageUrl, color, emoji, size = 48 }: Props) {
   const palette = AVATAR_COLORS[color ?? 'lime'];
+
+  if (imageUrl) {
+    return (
+      <Image
+        source={{ uri: imageUrl }}
+        accessibilityLabel={name}
+        style={{ width: size, height: size, borderRadius: size / 2, backgroundColor: palette.background }}
+      />
+    );
+  }
 
   return (
     <View

@@ -45,7 +45,7 @@ export function PlayerProfileView({
   return (
     <>
       <View style={styles.header}>
-        <Avatar name={profile.name} color={profile.avatar_color} emoji={profile.avatar_emoji} size={72} />
+        <Avatar name={profile.name} imageUrl={profile.avatar_url} color={profile.avatar_color} emoji={profile.avatar_emoji} size={72} />
         <View style={styles.headerText}>
           <Text style={styles.name}>{profile.name}</Text>
           {subtitle ? <Text style={styles.meta}>{subtitle}</Text> : null}

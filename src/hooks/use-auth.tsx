@@ -24,6 +24,8 @@ type AuthContextValue = {
   verifyEmail: (input: { token: string }) => Promise<void>;
   loginWithGoogle: (idToken: string) => Promise<void>;
   updateProfile: (input: ProfileInput) => Promise<void>;
+  uploadAvatar: (uri: string) => Promise<void>;
+  removeAvatar: () => Promise<void>;
   deleteAccount: (input: { password?: string; email?: string }) => Promise<void>;
   logout: () => Promise<void>;
 };
@@ -84,6 +86,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(await authApi.updateProfile(input));
   }, []);
 
+  const uploadAvatar = useCallback(async (uri: string) => {
+    setUser(await authApi.uploadAvatar(uri));
+  }, []);
+
+  const removeAvatar = useCallback(async () => {
+    setUser(await authApi.deleteAvatar());
+  }, []);
+
   const deleteAccount = useCallback(async (input: { password?: string; email?: string }) => {
     await authApi.deleteAccount(input);
     await persistToken(null);
@@ -100,8 +110,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const value = useMemo(
-    () => ({ user, isLoading, login, register, verifyEmail, loginWithGoogle, updateProfile, deleteAccount, logout }),
-    [user, isLoading, login, register, verifyEmail, loginWithGoogle, updateProfile, deleteAccount, logout]
+    () => ({ user, isLoading, login, register, verifyEmail, loginWithGoogle, updateProfile, uploadAvatar, removeAvatar, deleteAccount, logout }),
+    [user, isLoading, login, register, verifyEmail, loginWithGoogle, updateProfile, uploadAvatar, removeAvatar, deleteAccount, logout]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

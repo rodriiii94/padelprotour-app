@@ -18,6 +18,8 @@ export interface ProfileFields {
   dominant_hand: DominantHand | null;
   avatar_color: AvatarColor | null;
   avatar_emoji: string | null;
+  /** Foto de perfil (512x512); si existe, sustituye al avatar de color/emoji. */
+  avatar_url: string | null;
   racket: string | null;
   motto: string | null;
   /** Slots like "mon-evening" (day x morning/afternoon/evening). */
@@ -50,6 +52,7 @@ export interface PublicUserSummary {
   city: string | null;
   avatar_color: AvatarColor | null;
   avatar_emoji: string | null;
+  avatar_url: string | null;
 }
 
 export interface PlayerStats {

@@ -19,6 +19,14 @@ export default function CrearCategoriaScreen() {
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  function close() {
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace('/competiciones');
+    }
+  }
+
   async function handleSubmit() {
     setError(null);
     setIsSubmitting(true);
@@ -28,7 +36,7 @@ export default function CrearCategoriaScreen() {
         match_format: matchFormat || null,
         slots: slots ? Number(slots) : null,
       });
-      router.back();
+      close();
     } catch (e) {
       setError(e instanceof ApiError ? e.message : 'No se pudo crear la categoría.');
     } finally {
@@ -39,13 +47,16 @@ export default function CrearCategoriaScreen() {
   return (
     <Screen>
       <View style={styles.header}>
-        <Pressable onPress={() => router.back()} hitSlop={12}>
+        <Pressable onPress={close} hitSlop={12}>
           <MaterialIcons name="close" size={24} color={Colors.onSurface} />
         </Pressable>
         <Text style={styles.title}>Nueva categoría</Text>
       </View>
 
-      <Text style={styles.hint}>De pareja fija — así se puede generar el calendario luego.</Text>
+      <View style={styles.infoRow}>
+        <MaterialIcons name="info-outline" size={16} color={Colors.onSurfaceVariant} />
+        <Text style={styles.hint}>De pareja fija — así se puede generar el calendario luego.</Text>
+      </View>
 
       <TextField placeholder="Nombre (p. ej. 4ª Masculina)" value={name} onChangeText={setName} />
       <TextField
@@ -81,9 +92,15 @@ const styles = StyleSheet.create({
     ...Typography.headlineMd,
     color: Colors.primary,
   },
+  infoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
   hint: {
     ...Typography.bodySm,
     color: Colors.onSurfaceVariant,
+    flex: 1,
   },
   error: {
     ...Typography.bodySm,

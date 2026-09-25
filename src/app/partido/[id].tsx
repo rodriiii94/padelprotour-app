@@ -12,13 +12,14 @@ import {
   updateMatchStatus,
 } from '@/api/categories';
 import { ApiError, type Match } from '@/api/types';
-import { Button } from '@/components/ui/button';
+import { ActionChip } from '@/components/ui/action-chip';
 import { GlassPanel } from '@/components/ui/glass-panel';
 import { PlayerNames } from '@/components/ui/player-names';
 import { Screen } from '@/components/ui/screen';
+import { SectionLabel } from '@/components/ui/section-label';
 import { TextField } from '@/components/ui/text-field';
 import { useAuth } from '@/hooks/use-auth';
-import { Colors, Spacing, Typography } from '@/theme/tokens';
+import { Colors, FontFamilies, Radii, Spacing, Typography } from '@/theme/tokens';
 
 /** Every set result padel actually allows: 6 with a 2-game margin, 7-5, or a 7-6 tie-break. */
 const VALID_SET_SCORES: [number, number][] = [
@@ -125,6 +126,22 @@ function validDraftSets(drafts: SetDraft[]): { side1_games: number; side2_games:
     else won2++;
   }
   return sets;
+}
+
+const STATUS_BADGE: Record<Match['status'], { label: string; color: string }> = {
+  scheduled: { label: 'Programado', color: Colors.onSurfaceVariant },
+  in_progress: { label: 'En juego', color: Colors.secondaryContainer },
+  pending_validation: { label: 'Pendiente de validar', color: Colors.secondaryContainer },
+  completed: { label: 'Finalizado', color: Colors.primaryContainer },
+};
+
+function StatusBadge({ status }: { status: Match['status'] }) {
+  const { label, color } = STATUS_BADGE[status];
+  return (
+    <View style={[styles.badge, { borderColor: color + '80' }]}>
+      <Text style={[styles.badgeLabel, { color }]}>{label.toUpperCase()}</Text>
+    </View>
+  );
 }
 
 export default function MatchDetailScreen() {
@@ -262,48 +279,43 @@ export default function MatchDetailScreen() {
             {match.court && <Text style={styles.meta}>{match.court}</Text>}
           </View>
 
-          <GlassPanel style={styles.card}>
-            <View style={styles.sideRow}>
-              {match.status === 'completed' && match.winner_side === 1 && (
-                <MaterialIcons name="emoji-events" size={18} color={Colors.secondaryContainer} />
-              )}
-              <PlayerNames
-                style={styles.sideLabel}
-                players={sidePlayers(
-                  match.side1_player1,
-                  match.side1_player2,
-                  match.side1_player1_id,
-                  match.side1_player2_id
-                )}
-              />
+          <GlassPanel style={styles.scoreboard}>
+            <View style={styles.scoreboardHeader}>
+              <StatusBadge status={match.status} />
             </View>
-            <Text style={styles.vsLabel}>vs</Text>
-            <View style={styles.sideRow}>
-              {match.status === 'completed' && match.winner_side === 2 && (
-                <MaterialIcons name="emoji-events" size={18} color={Colors.secondaryContainer} />
-              )}
-              <PlayerNames
-                style={styles.sideLabel}
-                players={sidePlayers(
-                  match.side2_player1,
-                  match.side2_player2,
-                  match.side2_player1_id,
-                  match.side2_player2_id
-                )}
-              />
-            </View>
-
-            {match.match_sets && match.match_sets.length > 0 && (
-              <View style={styles.setsRow}>
-                {match.match_sets.map((set) => (
-                  <View key={set.id} style={styles.setPill}>
-                    <Text style={styles.setPillText}>
-                      {set.side1_games}-{set.side2_games}
-                    </Text>
+            {([1, 2] as const).map((side) => {
+              const players =
+                side === 1
+                  ? sidePlayers(match.side1_player1, match.side1_player2, match.side1_player1_id, match.side1_player2_id)
+                  : sidePlayers(match.side2_player1, match.side2_player2, match.side2_player1_id, match.side2_player2_id);
+              const isWinner = match.status === 'completed' && match.winner_side === side;
+              return (
+                <View key={side} style={[styles.scoreRow, side === 1 && styles.scoreRowDivider]}>
+                  <View style={styles.scoreMarker}>
+                    {isWinner ? (
+                      <MaterialIcons name="emoji-events" size={18} color={Colors.secondaryContainer} />
+                    ) : (
+                      <View style={styles.scoreDot} />
+                    )}
                   </View>
-                ))}
-              </View>
-            )}
+                  <View style={styles.scoreNames}>
+                    <PlayerNames
+                      style={[styles.sideLabel, isWinner && styles.sideLabelWinner]}
+                      players={players}
+                    />
+                  </View>
+                  {(match.match_sets ?? []).map((set) => {
+                    const mine = side === 1 ? set.side1_games : set.side2_games;
+                    const theirs = side === 1 ? set.side2_games : set.side1_games;
+                    return (
+                      <Text key={set.id} style={[styles.setScore, mine > theirs && styles.setScoreWon]}>
+                        {mine}
+                      </Text>
+                    );
+                  })}
+                </View>
+              );
+            })}
           </GlassPanel>
 
           {error && (
@@ -314,10 +326,11 @@ export default function MatchDetailScreen() {
 
           {(match.status === 'scheduled' || match.status === 'in_progress') && isOrganizer && (
             <GlassPanel style={styles.card}>
+              <SectionLabel icon="edit" label="Anotar resultado" />
               {canAddSet && (
                 <>
-                  <Text style={styles.cardTitle}>Añadir set {setCount + 1}</Text>
                   <View style={styles.setInputRow}>
+                    <Text style={styles.setLabel}>Set {setCount + 1}</Text>
                     <TextField
                       style={styles.setInput}
                       placeholder="0"
@@ -333,9 +346,10 @@ export default function MatchDetailScreen() {
                       value={side2Games}
                       onChangeText={setSide2Games}
                     />
-                    <Button
-                      title="Añadir"
-                      variant="secondary"
+                    <ActionChip
+                      icon="add"
+                      label="Añadir"
+                      fill={false}
                       disabled={isSubmitting || !isValidSetScore(side1Games, side2Games)}
                       onPress={handleAddSet}
                     />
@@ -353,8 +367,10 @@ export default function MatchDetailScreen() {
                 </>
               )}
 
-              <Button
-                title={isSubmitting ? 'Guardando…' : 'Marcar como completado'}
+              <ActionChip
+                icon="check"
+                label={isSubmitting ? 'Guardando…' : 'Marcar como completado'}
+                tone="accent"
                 disabled={isSubmitting || !canComplete}
                 onPress={handleComplete}
               />
@@ -363,8 +379,8 @@ export default function MatchDetailScreen() {
 
           {match.status === 'pending_validation' && (
             <GlassPanel style={styles.card}>
-              <Text style={styles.cardTitle}>Resultado pendiente de validar</Text>
-              <Text style={styles.meta}>
+              <SectionLabel icon="hourglass-top" label="Pendiente de validar" />
+              <Text style={styles.body}>
                 {proposerName(match) ? `${proposerName(match)} ha propuesto este resultado. ` : ''}
                 {canReview
                   ? 'Si es correcto, confírmalo; si no, recházalo y se borra.'
@@ -372,17 +388,20 @@ export default function MatchDetailScreen() {
               </Text>
               <Text style={styles.meta}>{autoConfirmText(match)}</Text>
               {canReview && (
-                <View style={styles.setInputRow}>
-                  <Button
-                    title="Rechazar"
-                    variant="ghost"
+                <View style={styles.actionsRow}>
+                  <ActionChip
+                    icon="close"
+                    label="Rechazar"
+                    tone="danger"
                     disabled={isSubmitting}
                     onPress={() =>
                       runAction(() => rejectMatchResult(match.id), 'No se pudo rechazar el resultado.')
                     }
                   />
-                  <Button
-                    title="Confirmar"
+                  <ActionChip
+                    icon="check"
+                    label="Confirmar"
+                    tone="accent"
                     disabled={isSubmitting}
                     onPress={() =>
                       runAction(() => confirmMatchResult(match.id), 'No se pudo confirmar el resultado.')
@@ -391,9 +410,9 @@ export default function MatchDetailScreen() {
                 </View>
               )}
               {isProposer && (
-                <Button
-                  title="Retirar propuesta"
-                  variant="ghost"
+                <ActionChip
+                  icon="undo"
+                  label="Retirar propuesta"
                   disabled={isSubmitting}
                   onPress={() =>
                     runAction(() => rejectMatchResult(match.id), 'No se pudo retirar la propuesta.')
@@ -406,7 +425,7 @@ export default function MatchDetailScreen() {
           {(match.status === 'scheduled' || match.status === 'in_progress') && !isOrganizer && (
             mySide ? (
               <GlassPanel style={styles.card}>
-                <Text style={styles.cardTitle}>Proponer resultado</Text>
+                <SectionLabel icon="edit" label="Proponer resultado" />
                 <Text style={styles.meta}>
                   Juegos de cada lado por set. Un rival tendrá que confirmarlo; si no responde en 48
                   horas, se confirma solo.
@@ -417,7 +436,7 @@ export default function MatchDetailScreen() {
                   if (hidden) return null;
                   return (
                     <View key={index} style={styles.setInputRow}>
-                      <Text style={styles.meta}>Set {index + 1}</Text>
+                      <Text style={styles.setLabel}>Set {index + 1}</Text>
                       <TextField
                         style={styles.setInput}
                         placeholder="0"
@@ -447,8 +466,10 @@ export default function MatchDetailScreen() {
                 <Text style={styles.meta}>
                   Marcadores válidos: 6 juegos con 2 de diferencia, 7-5, o 7-6 (tie-break).
                 </Text>
-                <Button
-                  title={isSubmitting ? 'Enviando…' : 'Proponer resultado'}
+                <ActionChip
+                  icon="send"
+                  label={isSubmitting ? 'Enviando…' : 'Proponer resultado'}
+                  tone="accent"
                   disabled={isSubmitting || !draftDecided}
                   onPress={() =>
                     runAction(() => proposeMatchResult(match.id, draftSets), 'No se pudo proponer el resultado.')
@@ -490,35 +511,78 @@ const styles = StyleSheet.create({
     ...Typography.headlineSm,
     color: Colors.primary,
   },
-  sideRow: {
+  body: {
+    ...Typography.bodyMd,
+    color: Colors.onSurface,
+  },
+  scoreboard: {
+    padding: Spacing.sm,
+  },
+  scoreboardHeader: {
+    flexDirection: 'row',
+    marginBottom: Spacing.xs,
+  },
+  badge: {
+    borderWidth: 1,
+    borderRadius: Radii.full,
+    paddingHorizontal: Spacing.xs + 2,
+    paddingVertical: 4,
+  },
+  badgeLabel: {
+    fontFamily: FontFamilies.bodyBold,
+    fontSize: 11,
+    letterSpacing: 1,
+  },
+  scoreRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.xs,
+    paddingVertical: Spacing.xs + 2,
+  },
+  scoreRowDivider: {
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: Colors.glassBorder,
+  },
+  scoreMarker: {
+    width: 20,
+    alignItems: 'center',
+  },
+  scoreDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: Colors.outlineVariant,
+  },
+  scoreNames: {
+    flex: 1,
+    minWidth: 0,
   },
   sideLabel: {
     ...Typography.bodyMd,
-    color: Colors.primary,
-    flexShrink: 1,
+    color: Colors.onSurface,
   },
-  vsLabel: {
-    ...Typography.labelCaps,
+  sideLabelWinner: {
+    fontFamily: FontFamilies.bodyBold,
+    color: Colors.primary,
+  },
+  setScore: {
+    width: 28,
+    textAlign: 'center',
+    fontFamily: FontFamilies.display,
+    fontSize: 22,
     color: Colors.onSurfaceVariant,
   },
-  setsRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: Spacing.xs,
-    marginTop: Spacing.base,
-  },
-  setPill: {
-    backgroundColor: Colors.glassFill,
-    borderRadius: 8,
-    paddingHorizontal: Spacing.xs,
-    paddingVertical: 4,
-  },
-  setPillText: {
-    ...Typography.bodySm,
+  setScoreWon: {
     color: Colors.primaryContainer,
+  },
+  setLabel: {
+    ...Typography.bodySm,
+    color: Colors.onSurfaceVariant,
+    width: 44,
+  },
+  actionsRow: {
+    flexDirection: 'row',
+    gap: Spacing.xs,
   },
   setInputRow: {
     flexDirection: 'row',

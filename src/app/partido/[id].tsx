@@ -1,5 +1,5 @@
 import { MaterialIcons } from '@expo/vector-icons';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 
@@ -12,14 +12,15 @@ import {
   updateMatchStatus,
 } from '@/api/categories';
 import { ApiError, type Match } from '@/api/types';
+import { MatchStatusBadge, ScoreRows } from '@/components/match/match-scoreboard';
 import { ActionChip } from '@/components/ui/action-chip';
 import { GlassPanel } from '@/components/ui/glass-panel';
-import { PlayerNames } from '@/components/ui/player-names';
 import { Screen } from '@/components/ui/screen';
 import { SectionLabel } from '@/components/ui/section-label';
 import { TextField } from '@/components/ui/text-field';
 import { useAuth } from '@/hooks/use-auth';
-import { Colors, FontFamilies, Radii, Spacing, Typography } from '@/theme/tokens';
+import { useGoBack } from '@/hooks/use-go-back';
+import { Colors, Spacing, Typography } from '@/theme/tokens';
 
 /** Every set result padel actually allows: 6 with a 2-game margin, 7-5, or a 7-6 tie-break. */
 const VALID_SET_SCORES: [number, number][] = [
@@ -44,18 +45,6 @@ function isValidSetScore(side1Games: string, side2Games: string): boolean {
   const s1 = Number(side1Games);
   const s2 = Number(side2Games);
   return VALID_SET_SCORES.some(([a, b]) => a === s1 && b === s2);
-}
-
-function sidePlayers(
-  a: { name: string } | undefined,
-  b: { name: string } | undefined,
-  idA: number,
-  idB: number
-): { id: number; name: string }[] {
-  return [
-    { id: idA, name: a?.name ?? `Jugador #${idA}` },
-    { id: idB, name: b?.name ?? `Jugador #${idB}` },
-  ];
 }
 
 /** Sets won by each side, to derive a winner or detect a tie. */
@@ -128,28 +117,12 @@ function validDraftSets(drafts: SetDraft[]): { side1_games: number; side2_games:
   return sets;
 }
 
-const STATUS_BADGE: Record<Match['status'], { label: string; color: string }> = {
-  scheduled: { label: 'Programado', color: Colors.onSurfaceVariant },
-  in_progress: { label: 'En juego', color: Colors.secondaryContainer },
-  pending_validation: { label: 'Pendiente de validar', color: Colors.secondaryContainer },
-  completed: { label: 'Finalizado', color: Colors.primaryContainer },
-};
-
-function StatusBadge({ status }: { status: Match['status'] }) {
-  const { label, color } = STATUS_BADGE[status];
-  return (
-    <View style={[styles.badge, { borderColor: color + '80' }]}>
-      <Text style={[styles.badgeLabel, { color }]}>{label.toUpperCase()}</Text>
-    </View>
-  );
-}
-
 export default function MatchDetailScreen() {
   const { id, isOrganizer: isOrganizerParam } = useLocalSearchParams<{
     id: string;
     isOrganizer?: string;
   }>();
-  const router = useRouter();
+  const goBack = useGoBack();
   const { user } = useAuth();
   const isOrganizer = isOrganizerParam === '1';
   const matchId = Number(id);
@@ -265,7 +238,7 @@ export default function MatchDetailScreen() {
   return (
     <Screen>
       <View style={styles.header}>
-        <Pressable onPress={() => router.back()} hitSlop={12}>
+        <Pressable onPress={goBack} hitSlop={12}>
           <MaterialIcons name="arrow-back" size={24} color={Colors.onSurface} />
         </Pressable>
       </View>
@@ -281,41 +254,9 @@ export default function MatchDetailScreen() {
 
           <GlassPanel style={styles.scoreboard}>
             <View style={styles.scoreboardHeader}>
-              <StatusBadge status={match.status} />
+              <MatchStatusBadge status={match.status} />
             </View>
-            {([1, 2] as const).map((side) => {
-              const players =
-                side === 1
-                  ? sidePlayers(match.side1_player1, match.side1_player2, match.side1_player1_id, match.side1_player2_id)
-                  : sidePlayers(match.side2_player1, match.side2_player2, match.side2_player1_id, match.side2_player2_id);
-              const isWinner = match.status === 'completed' && match.winner_side === side;
-              return (
-                <View key={side} style={[styles.scoreRow, side === 1 && styles.scoreRowDivider]}>
-                  <View style={styles.scoreMarker}>
-                    {isWinner ? (
-                      <MaterialIcons name="emoji-events" size={18} color={Colors.secondaryContainer} />
-                    ) : (
-                      <View style={styles.scoreDot} />
-                    )}
-                  </View>
-                  <View style={styles.scoreNames}>
-                    <PlayerNames
-                      style={[styles.sideLabel, isWinner && styles.sideLabelWinner]}
-                      players={players}
-                    />
-                  </View>
-                  {(match.match_sets ?? []).map((set) => {
-                    const mine = side === 1 ? set.side1_games : set.side2_games;
-                    const theirs = side === 1 ? set.side2_games : set.side1_games;
-                    return (
-                      <Text key={set.id} style={[styles.setScore, mine > theirs && styles.setScoreWon]}>
-                        {mine}
-                      </Text>
-                    );
-                  })}
-                </View>
-              );
-            })}
+            <ScoreRows match={match} />
           </GlassPanel>
 
           {error && (
@@ -521,59 +462,6 @@ const styles = StyleSheet.create({
   scoreboardHeader: {
     flexDirection: 'row',
     marginBottom: Spacing.xs,
-  },
-  badge: {
-    borderWidth: 1,
-    borderRadius: Radii.full,
-    paddingHorizontal: Spacing.xs + 2,
-    paddingVertical: 4,
-  },
-  badgeLabel: {
-    fontFamily: FontFamilies.bodyBold,
-    fontSize: 11,
-    letterSpacing: 1,
-  },
-  scoreRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.xs,
-    paddingVertical: Spacing.xs + 2,
-  },
-  scoreRowDivider: {
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: Colors.glassBorder,
-  },
-  scoreMarker: {
-    width: 20,
-    alignItems: 'center',
-  },
-  scoreDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: Colors.outlineVariant,
-  },
-  scoreNames: {
-    flex: 1,
-    minWidth: 0,
-  },
-  sideLabel: {
-    ...Typography.bodyMd,
-    color: Colors.onSurface,
-  },
-  sideLabelWinner: {
-    fontFamily: FontFamilies.bodyBold,
-    color: Colors.primary,
-  },
-  setScore: {
-    width: 28,
-    textAlign: 'center',
-    fontFamily: FontFamilies.display,
-    fontSize: 22,
-    color: Colors.onSurfaceVariant,
-  },
-  setScoreWon: {
-    color: Colors.primaryContainer,
   },
   setLabel: {
     ...Typography.bodySm,

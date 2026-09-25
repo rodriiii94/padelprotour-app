@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { GlassPanel } from '@/components/ui/glass-panel';
 import { Screen } from '@/components/ui/screen';
 import { useAuth } from '@/hooks/use-auth';
+import { useGoBack } from '@/hooks/use-go-back';
 import { useCompetitionDetail } from '@/hooks/use-competition-detail';
 import { confirmAction } from '@/lib/confirm';
 import { formatDateRange } from '@/lib/dates';
@@ -33,6 +34,7 @@ const dateFormatter = new Intl.DateTimeFormat('es-ES', {
 export default function CompetitionDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
+  const goBack = useGoBack();
   const { user } = useAuth();
   const {
     competition,
@@ -91,7 +93,7 @@ export default function CompetitionDetailScreen() {
   return (
     <Screen>
       <View style={styles.header}>
-        <Pressable onPress={() => router.back()} hitSlop={12}>
+        <Pressable onPress={goBack} hitSlop={12}>
           <MaterialIcons name="arrow-back" size={24} color={Colors.onSurface} />
         </Pressable>
       </View>

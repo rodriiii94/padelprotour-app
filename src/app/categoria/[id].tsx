@@ -14,6 +14,7 @@ import type {
   RegistrationStatus,
   UserSummary,
 } from '@/api/types';
+import { MatchStatusBadge, ScoreRows } from '@/components/match/match-scoreboard';
 import { ActionChip } from '@/components/ui/action-chip';
 import { Button } from '@/components/ui/button';
 import { GlassPanel } from '@/components/ui/glass-panel';
@@ -22,6 +23,7 @@ import { PlayerNames } from '@/components/ui/player-names';
 import { Screen } from '@/components/ui/screen';
 import { TextField } from '@/components/ui/text-field';
 import { useAuth } from '@/hooks/use-auth';
+import { useGoBack } from '@/hooks/use-go-back';
 import { useCategoryDetail } from '@/hooks/use-category-detail';
 import { Colors, FontFamilies, Radii, Spacing, Typography } from '@/theme/tokens';
 
@@ -68,17 +70,6 @@ function pairPlayers(
   ];
 }
 
-function sidePlayers(match: Match, side: 1 | 2): PlayerRef[] {
-  return side === 1
-    ? [
-        { id: match.side1_player1_id, name: playerName(match.side1_player1, match.side1_player1_id) },
-        { id: match.side1_player2_id, name: playerName(match.side1_player2, match.side1_player2_id) },
-      ]
-    : [
-        { id: match.side2_player1_id, name: playerName(match.side2_player1, match.side2_player1_id) },
-        { id: match.side2_player2_id, name: playerName(match.side2_player2, match.side2_player2_id) },
-      ];
-}
 
 /** Ranking rows only carry ids — resolve a label from the registrations already loaded. */
 function rankingLabel(ranking: Ranking, registrations: Registration[]): string {
@@ -92,7 +83,7 @@ function rankingLabel(ranking: Ranking, registrations: Registration[]): string {
 
 export default function CategoryDetailScreen() {
   const { id, invite } = useLocalSearchParams<{ id: string; invite?: string }>();
-  const router = useRouter();
+  const goBack = useGoBack();
   const { user } = useAuth();
   const categoryId = Number(id);
   const {
@@ -136,7 +127,7 @@ export default function CategoryDetailScreen() {
   return (
     <Screen>
       <View style={styles.header}>
-        <Pressable onPress={() => router.back()} hitSlop={12}>
+        <Pressable onPress={goBack} hitSlop={12}>
           <MaterialIcons name="arrow-back" size={24} color={Colors.onSurface} />
         </Pressable>
       </View>
@@ -258,16 +249,34 @@ export default function CategoryDetailScreen() {
           {rankings.length > 0 && (
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>Clasificación</Text>
-              <GlassPanel style={styles.card}>
-                {rankings.map((ranking) => (
-                  <View key={ranking.id} style={styles.rankingRow}>
-                    <Text style={styles.rankingPosition}>{ranking.position}</Text>
-                    <Text style={[styles.meta, styles.rankingName]} numberOfLines={1}>
-                      {rankingLabel(ranking, registrations)}
-                    </Text>
-                    <Text style={styles.rankingPoints}>{ranking.points} pts</Text>
-                  </View>
-                ))}
+              <GlassPanel style={styles.rankingCard}>
+                {rankings.map((ranking, index) => {
+                  const podium = PODIUM[ranking.position];
+                  return (
+                    <View
+                      key={ranking.id}
+                      style={[styles.rankingRow, index > 0 && styles.rankingDivider]}>
+                      <View
+                        style={[
+                          styles.rankingBadge,
+                          podium && { borderColor: podium + '99', backgroundColor: podium + '22' },
+                        ]}>
+                        <Text style={[styles.rankingPosition, podium && { color: podium }]}>
+                          {ranking.position}
+                        </Text>
+                      </View>
+                      <Text
+                        style={[styles.rankingName, ranking.position === 1 && styles.rankingNameFirst]}
+                        numberOfLines={2}>
+                        {rankingLabel(ranking, registrations)}
+                      </Text>
+                      <View style={styles.rankingPointsWrap}>
+                        <Text style={styles.rankingPoints}>{ranking.points}</Text>
+                        <Text style={styles.rankingPointsUnit}>pts</Text>
+                      </View>
+                    </View>
+                  );
+                })}
               </GlassPanel>
             </View>
           )}
@@ -442,22 +451,6 @@ function RegistrationRow({
   );
 }
 
-function MatchSide({ players, isWinner }: { players: PlayerRef[]; isWinner?: boolean }) {
-  return (
-    <View style={styles.matchSide}>
-      {isWinner ? (
-        <MaterialIcons name="emoji-events" size={14} color={Colors.secondaryContainer} />
-      ) : (
-        <View style={styles.matchSideDot} />
-      )}
-      <PlayerNames
-        style={[styles.matchSideLabel, isWinner && styles.matchSideLabelWinner]}
-        players={players}
-      />
-    </View>
-  );
-}
-
 function MatchRow({
   match,
   isFirst,
@@ -468,41 +461,22 @@ function MatchRow({
   isOrganizer: boolean;
 }) {
   const router = useRouter();
-  const hasScore = match.match_sets && match.match_sets.length > 0;
-  const isCompleted = match.status === 'completed';
 
   return (
     <Pressable
       onPress={() => router.push(`/partido/${match.id}?isOrganizer=${isOrganizer ? '1' : '0'}`)}
-      style={[styles.matchCard, !isFirst && styles.matchCardDivider]}>
-      <MatchSide
-        players={sidePlayers(match, 1)}
-        isWinner={isCompleted && match.winner_side === 1}
-      />
-      <Text style={styles.vsLabel}>vs</Text>
-      <MatchSide
-        players={sidePlayers(match, 2)}
-        isWinner={isCompleted && match.winner_side === 2}
-      />
-
-      <View style={styles.matchFooter}>
-        <View style={styles.row}>
-          <MaterialIcons name="location-on" size={14} color={Colors.onSurfaceVariant} />
-          <Text style={styles.matchMeta}>{match.court ?? 'Pista sin asignar'}</Text>
-          {match.scheduled_at && (
-            <Text style={styles.matchMeta}>
-              · {dateFormatter.format(new Date(match.scheduled_at))}
-            </Text>
-          )}
-        </View>
-        {hasScore ? (
-          <Text style={styles.score}>
-            {match.match_sets!.map((set) => `${set.side1_games}-${set.side2_games}`).join(', ')}
+      style={({ pressed }) => [styles.matchCard, !isFirst && styles.matchCardGap, pressed && styles.matchPressed]}>
+      <View style={styles.matchHeader}>
+        <MatchStatusBadge status={match.status} small />
+        <View style={styles.matchWhen}>
+          <MaterialIcons name="location-on" size={13} color={Colors.onSurfaceVariant} />
+          <Text style={styles.matchMeta} numberOfLines={1}>
+            {match.court ?? 'Pista sin asignar'}
+            {match.scheduled_at ? ` · ${dateFormatter.format(new Date(match.scheduled_at))}` : ''}
           </Text>
-        ) : (
-          !isCompleted && <Text style={styles.matchMeta}>Sin resultado</Text>
-        )}
+        </View>
       </View>
+      <ScoreRows match={match} compact />
     </Pressable>
   );
 }
@@ -518,10 +492,7 @@ function PhaseSection({
 }) {
   return (
     <GlassPanel style={styles.card}>
-      <View style={styles.row}>
-        <MaterialIcons name="calendar-today" size={18} color={Colors.primaryContainer} />
-        <Text style={styles.cardTitle}>{phase.name}</Text>
-      </View>
+      <SectionLabel icon="event" label={phase.name} />
       {matches.map((match, index) => (
         <MatchRow key={match.id} match={match} isFirst={index === 0} isOrganizer={isOrganizer} />
       ))}
@@ -529,7 +500,91 @@ function PhaseSection({
   );
 }
 
+const PODIUM: Record<number, string> = {
+  1: '#ffc857',
+  2: '#c9d1c0',
+  3: '#d99a6c',
+};
+
 const styles = StyleSheet.create({
+  rankingCard: {
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: Spacing.base,
+  },
+  rankingRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+    paddingVertical: Spacing.xs + 2,
+  },
+  rankingDivider: {
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: Colors.glassBorder,
+  },
+  rankingBadge: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: Colors.glassBorder,
+    backgroundColor: Colors.glassFill,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  rankingPosition: {
+    fontFamily: FontFamilies.display,
+    fontSize: 14,
+    color: Colors.onSurfaceVariant,
+  },
+  rankingName: {
+    flex: 1,
+    minWidth: 0,
+    ...Typography.bodyMd,
+    color: Colors.onSurface,
+  },
+  rankingNameFirst: {
+    fontFamily: FontFamilies.bodyBold,
+    color: Colors.primary,
+  },
+  rankingPointsWrap: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    gap: 4,
+  },
+  rankingPoints: {
+    fontFamily: FontFamilies.display,
+    fontSize: 20,
+    color: Colors.primaryContainer,
+  },
+  rankingPointsUnit: {
+    ...Typography.bodySm,
+    fontSize: 12,
+    color: Colors.onSurfaceVariant,
+  },
+  matchCard: {
+    paddingVertical: Spacing.xs,
+  },
+  matchCardGap: {
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: Colors.glassBorder,
+    paddingTop: Spacing.xs + 2,
+  },
+  matchPressed: {
+    opacity: 0.7,
+  },
+  matchHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: Spacing.xs,
+    marginBottom: 2,
+  },
+  matchWhen: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    flexShrink: 1,
+  },
   registrationName: {
     fontFamily: FontFamilies.bodyBold,
     fontSize: 16,
@@ -624,74 +679,10 @@ const styles = StyleSheet.create({
     ...Typography.labelCaps,
     fontSize: 11,
   },
-  matchCard: {
-    paddingTop: Spacing.sm,
-    gap: Spacing.base,
-  },
-  matchCardDivider: {
-    marginTop: Spacing.sm,
-    borderTopWidth: 1,
-    borderTopColor: Colors.glassBorder,
-  },
-  matchSide: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.xs,
-  },
-  matchSideDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: Colors.primaryContainer,
-  },
-  matchSideLabel: {
-    ...Typography.bodyMd,
-    color: Colors.primary,
-    flexShrink: 1,
-  },
-  matchSideLabelWinner: {
-    fontFamily: FontFamilies.bodyBold,
-  },
-  rankingRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.sm,
-    paddingVertical: Spacing.base,
-  },
-  rankingPosition: {
-    ...Typography.headlineSm,
-    color: Colors.onSurfaceVariant,
-    width: 24,
-  },
-  rankingName: {
-    flex: 1,
-  },
-  rankingPoints: {
-    ...Typography.bodySm,
-    color: Colors.primaryContainer,
-    fontFamily: FontFamilies.bodyBold,
-  },
-  vsLabel: {
-    ...Typography.labelCaps,
-    color: Colors.onSurfaceVariant,
-    marginLeft: 14,
-  },
-  matchFooter: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginTop: Spacing.base,
-  },
   matchMeta: {
     ...Typography.bodySm,
     color: Colors.onSurfaceVariant,
     fontSize: 13,
-  },
-  score: {
-    ...Typography.bodySm,
-    color: Colors.primaryContainer,
-    fontSize: 12,
-    fontFamily: FontFamilies.bodyBold,
   },
   error: {
     ...Typography.bodySm,

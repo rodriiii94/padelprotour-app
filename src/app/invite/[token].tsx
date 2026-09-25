@@ -8,6 +8,7 @@ import type { Category, Competition } from '@/api/types';
 import { GlassPanel } from '@/components/ui/glass-panel';
 import { Screen } from '@/components/ui/screen';
 import { formatDateRange } from '@/lib/dates';
+import { useGoBack } from '@/hooks/use-go-back';
 import { Colors, Spacing, Typography } from '@/theme/tokens';
 
 const TYPE_META = {
@@ -18,6 +19,7 @@ const TYPE_META = {
 export default function InviteScreen() {
   const { token } = useLocalSearchParams<{ token: string }>();
   const router = useRouter();
+  const goBack = useGoBack();
   const [competition, setCompetition] = useState<Competition | null>(null);
   const [categories, setCategories] = useState<Category[] | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -44,7 +46,7 @@ export default function InviteScreen() {
   return (
     <Screen>
       <View style={styles.header}>
-        <Pressable onPress={() => router.back()} hitSlop={12}>
+        <Pressable onPress={goBack} hitSlop={12}>
           <MaterialIcons name="arrow-back" size={24} color={Colors.onSurface} />
         </Pressable>
       </View>

@@ -97,7 +97,7 @@ export interface Competition {
   type: CompetitionType;
   name: string;
   venue: string | null;
-  start_date: string;
+  start_date: string | null;
   end_date: string | null;
   registration_closes_at: string | null;
   organizer_id: number;
@@ -118,7 +118,7 @@ export interface CompetitionInput {
   type: CompetitionType;
   name: string;
   venue?: string | null;
-  start_date: string;
+  start_date?: string | null;
   end_date?: string | null;
   registration_closes_at?: string | null;
   is_private?: boolean;

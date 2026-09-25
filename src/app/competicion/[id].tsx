@@ -10,6 +10,7 @@ import { Screen } from '@/components/ui/screen';
 import { useAuth } from '@/hooks/use-auth';
 import { useCompetitionDetail } from '@/hooks/use-competition-detail';
 import { confirmAction } from '@/lib/confirm';
+import { formatDateRange } from '@/lib/dates';
 import { Colors, Radii, Spacing, Typography } from '@/theme/tokens';
 import type { Category, RegistrationMode } from '@/api/types';
 
@@ -28,13 +29,6 @@ const dateFormatter = new Intl.DateTimeFormat('es-ES', {
   month: 'short',
   year: 'numeric',
 });
-
-function formatDateRange(start: string, end: string | null): string {
-  const startLabel = dateFormatter.format(new Date(start));
-  if (!end) return startLabel;
-  const endLabel = dateFormatter.format(new Date(end));
-  return startLabel === endLabel ? startLabel : `${startLabel} – ${endLabel}`;
-}
 
 export default function CompetitionDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -141,7 +135,7 @@ export default function CompetitionDetailScreen() {
             <View style={styles.row}>
               <MaterialIcons name="calendar-today" size={16} color={Colors.onSurfaceVariant} />
               <Text style={styles.meta}>
-                {formatDateRange(competition.start_date, competition.end_date)}
+                {formatDateRange(competition.start_date, competition.end_date, { year: true })}
               </Text>
             </View>
             {competition.registration_closes_at && (

@@ -14,8 +14,10 @@ import type {
   RegistrationStatus,
   UserSummary,
 } from '@/api/types';
+import { ActionChip } from '@/components/ui/action-chip';
 import { Button } from '@/components/ui/button';
 import { GlassPanel } from '@/components/ui/glass-panel';
+import { SectionLabel } from '@/components/ui/section-label';
 import { PlayerNames } from '@/components/ui/player-names';
 import { Screen } from '@/components/ui/screen';
 import { TextField } from '@/components/ui/text-field';
@@ -155,27 +157,36 @@ export default function CategoryDetailScreen() {
           </View>
 
           {(category.match_format || category.slots) && (
-            <GlassPanel style={styles.card}>
-              {category.match_format && <Text style={styles.meta}>{category.match_format}</Text>}
-              {category.slots && <Text style={styles.meta}>{category.slots} plazas</Text>}
-            </GlassPanel>
+            <View style={styles.pills}>
+              {category.match_format && (
+                <InfoPill icon="sports-tennis" label={category.match_format} />
+              )}
+              {category.slots && <InfoPill icon="groups" label={`${category.slots} plazas`} />}
+            </View>
           )}
 
           {myRegistration ? (
             <GlassPanel style={styles.card}>
-              <Text style={styles.cardTitle}>Tu inscripción</Text>
-              <Text style={[styles.meta, { color: STATUS_COLOR[myRegistration.status] }]}>
-                {STATUS_LABEL[myRegistration.status]}
-              </Text>
+              <View style={styles.rowBetween}>
+                <SectionLabel icon="how-to-reg" label="Tu inscripción" />
+                <View
+                  style={[styles.statusPill, { borderColor: STATUS_COLOR[myRegistration.status] + '80' }]}>
+                  <Text style={[styles.statusPillLabel, { color: STATUS_COLOR[myRegistration.status] }]}>
+                    {STATUS_LABEL[myRegistration.status]}
+                  </Text>
+                </View>
+              </View>
             </GlassPanel>
           ) : isIndividual ? (
             <GlassPanel style={styles.card}>
-              <Text style={styles.cardTitle}>Únete</Text>
+              <SectionLabel icon="person-add-alt" label="Únete" />
               <Text style={styles.meta}>
                 En esta liga te inscribes tú solo: las parejas rotan en cada jornada.
               </Text>
-              <Button
-                title="Inscribirme"
+              <ActionChip
+                icon="check"
+                label="Inscribirme"
+                tone="accent"
                 disabled={isMutating || !user}
                 onPress={() => user && joinIndividually(user.id)}
               />
@@ -266,6 +277,15 @@ export default function CategoryDetailScreen() {
   );
 }
 
+function InfoPill({ icon, label }: { icon: 'sports-tennis' | 'groups'; label: string }) {
+  return (
+    <View style={styles.infoPill}>
+      <MaterialIcons name={icon} size={14} color={Colors.onSurfaceVariant} />
+      <Text style={styles.infoPillLabel}>{label}</Text>
+    </View>
+  );
+}
+
 function JoinSection({
   availablePairs,
   isMutating,
@@ -299,7 +319,7 @@ function JoinSection({
 
   return (
     <GlassPanel style={styles.card}>
-      <Text style={styles.cardTitle}>Únete</Text>
+      <SectionLabel icon="person-add-alt" label="Únete" />
 
       {availablePairs.map((pair) => (
         <View key={pair.id} style={styles.rowBetween}>
@@ -308,9 +328,10 @@ function JoinSection({
           ) : (
             <PlayerNames style={styles.meta} players={pairPlayers(pair)} />
           )}
-          <Button
-            title="Inscribir"
-            variant="secondary"
+          <ActionChip
+            label="Inscribir"
+            tone="accent"
+            fill={false}
             disabled={isMutating}
             onPress={() => onJoinWithPair(pair.id)}
           />
@@ -318,7 +339,7 @@ function JoinSection({
       ))}
 
       {!showSearch ? (
-        <Button title="Formar nueva pareja" variant="ghost" onPress={() => setShowSearch(true)} />
+        <ActionChip icon="person-add" label="Formar nueva pareja" onPress={() => setShowSearch(true)} />
       ) : (
         <View style={{ gap: Spacing.xs }}>
           <TextField
@@ -328,9 +349,9 @@ function JoinSection({
             onSubmitEditing={handleSearch}
             autoCapitalize="none"
           />
-          <Button
-            title={isSearching ? 'Buscando…' : 'Buscar'}
-            variant="secondary"
+          <ActionChip
+            icon="search"
+            label={isSearching ? 'Buscando…' : 'Buscar'}
             onPress={handleSearch}
             disabled={isSearching || query.trim().length < 2}
           />
@@ -345,8 +366,10 @@ function JoinSection({
           {results.map((result) => (
             <View key={result.id} style={styles.rowBetween}>
               <PlayerNames style={styles.meta} players={[{ id: result.id, name: result.name }]} />
-              <Button
-                title="Formar pareja"
+              <ActionChip
+                label="Formar pareja"
+                tone="accent"
+                fill={false}
                 disabled={isMutating}
                 onPress={() => onFormPairAndJoin(result.id, pairName.trim() || undefined)}
               />
@@ -382,18 +405,18 @@ function RegistrationRow({
             {registration.pair ? (
               registration.pair.name ? (
                 <>
-                  <Text style={styles.cardTitle} numberOfLines={2}>
+                  <Text style={styles.registrationName} numberOfLines={2}>
                     {registration.pair.name}
                   </Text>
                   <PlayerNames style={styles.meta} players={pairPlayers(registration.pair)} />
                 </>
               ) : (
-                <PlayerNames style={styles.cardTitle} players={pairPlayers(registration.pair)} />
+                <PlayerNames style={styles.registrationName} players={pairPlayers(registration.pair)} />
               )
             ) : registration.player ? (
-              <PlayerNames style={styles.cardTitle} players={[registration.player]} />
+              <PlayerNames style={styles.registrationName} players={[registration.player]} />
             ) : (
-              <Text style={styles.cardTitle} numberOfLines={2}>
+              <Text style={styles.registrationName} numberOfLines={2}>
                 {fallbackLabel}
               </Text>
             )}
@@ -411,8 +434,8 @@ function RegistrationRow({
       </View>
       {registration.status === 'pending' && (
         <View style={styles.actionsRow}>
-          <Button title="Rechazar" variant="ghost" disabled={isMutating} onPress={onReject} />
-          <Button title="Confirmar" variant="secondary" disabled={isMutating} onPress={onConfirm} />
+          <ActionChip label="Rechazar" tone="danger" fill={false} disabled={isMutating} onPress={onReject} />
+          <ActionChip label="Confirmar" tone="accent" fill={false} disabled={isMutating} onPress={onConfirm} />
         </View>
       )}
     </GlassPanel>
@@ -507,6 +530,33 @@ function PhaseSection({
 }
 
 const styles = StyleSheet.create({
+  registrationName: {
+    fontFamily: FontFamilies.bodyBold,
+    fontSize: 16,
+    lineHeight: 22,
+    color: Colors.primary,
+    flexShrink: 1,
+  },
+  pills: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: Spacing.xs,
+  },
+  infoPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingVertical: 6,
+    paddingHorizontal: Spacing.xs + 4,
+    borderRadius: Radii.full,
+    borderWidth: 1,
+    borderColor: Colors.glassBorder,
+    backgroundColor: Colors.glassFill,
+  },
+  infoPillLabel: {
+    ...Typography.bodySm,
+    color: Colors.onSurfaceVariant,
+  },
   header: {
     flexDirection: 'row',
   },

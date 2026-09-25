@@ -7,18 +7,13 @@ import { getInvite, listInviteCategories } from '@/api/competitions';
 import type { Category, Competition } from '@/api/types';
 import { GlassPanel } from '@/components/ui/glass-panel';
 import { Screen } from '@/components/ui/screen';
+import { formatDateRange } from '@/lib/dates';
 import { Colors, Spacing, Typography } from '@/theme/tokens';
 
 const TYPE_META = {
   tournament: { icon: 'emoji-events', label: 'Torneo', color: Colors.secondaryContainer },
   league: { icon: 'sports-tennis', label: 'Liga', color: Colors.primaryContainer },
 } as const;
-
-const dateFormatter = new Intl.DateTimeFormat('es-ES', {
-  day: 'numeric',
-  month: 'short',
-  year: 'numeric',
-});
 
 export default function InviteScreen() {
   const { token } = useLocalSearchParams<{ token: string }>();
@@ -87,7 +82,7 @@ export default function InviteScreen() {
             )}
             <View style={styles.row}>
               <MaterialIcons name="calendar-today" size={16} color={Colors.onSurfaceVariant} />
-              <Text style={styles.meta}>{dateFormatter.format(new Date(competition.start_date))}</Text>
+              <Text style={styles.meta}>{formatDateRange(competition.start_date, competition.end_date, { year: true })}</Text>
             </View>
           </GlassPanel>
 

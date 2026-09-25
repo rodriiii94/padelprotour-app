@@ -4,6 +4,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { GlassPanel } from '@/components/ui/glass-panel';
 import type { Competition } from '@/api/types';
+import { formatDateRange } from '@/lib/dates';
 import { Colors, Radii, Spacing, Typography } from '@/theme/tokens';
 
 const TYPE_META = {
@@ -12,15 +13,6 @@ const TYPE_META = {
 } as const;
 
 const dateFormatter = new Intl.DateTimeFormat('es-ES', { day: 'numeric', month: 'short' });
-
-function formatDateRange(start: string, end: string | null): string {
-  const startLabel = dateFormatter.format(new Date(start));
-  if (!end) {
-    return startLabel;
-  }
-  const endLabel = dateFormatter.format(new Date(end));
-  return startLabel === endLabel ? startLabel : `${startLabel} – ${endLabel}`;
-}
 
 export function CompetitionCard({ competition }: { competition: Competition }) {
   const router = useRouter();

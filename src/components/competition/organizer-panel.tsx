@@ -1,13 +1,15 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import * as Clipboard from 'expo-clipboard';
-import { useState, type ComponentProps } from 'react';
+import { useState } from 'react';
 import { Pressable, Share, StyleSheet, Text, View } from 'react-native';
 
 import type { Competition } from '@/api/types';
+import { ActionChip } from '@/components/ui/action-chip';
 import { GlassPanel } from '@/components/ui/glass-panel';
+import { SectionLabel } from '@/components/ui/section-label';
 import { SegmentedControl } from '@/components/ui/segmented-control';
 import { inviteUrl } from '@/lib/invite';
-import { Colors, FontFamilies, Radii, Spacing, Typography } from '@/theme/tokens';
+import { Colors, Radii, Spacing, Typography } from '@/theme/tokens';
 
 type Props = {
   competition: Competition;
@@ -17,8 +19,6 @@ type Props = {
   onCancel: () => void;
   onDelete: () => void;
 };
-
-type IconName = ComponentProps<typeof MaterialIcons>['name'];
 
 /** "padelprotour.net/invite/6CNk…": legible sin mostrar los 32 caracteres del código. */
 function shortLink(token: string): string {
@@ -125,56 +125,6 @@ export function OrganizerPanel({
   );
 }
 
-function SectionLabel({
-  icon,
-  label,
-  tone = 'default',
-}: {
-  icon: IconName;
-  label: string;
-  tone?: 'default' | 'danger';
-}) {
-  const color = tone === 'danger' ? Colors.error : Colors.onSurfaceVariant;
-  return (
-    <View style={styles.sectionLabel}>
-      <MaterialIcons name={icon} size={16} color={color} />
-      <Text style={[styles.sectionLabelText, { color }]}>{label.toUpperCase()}</Text>
-    </View>
-  );
-}
-
-function ActionChip({
-  icon,
-  label,
-  onPress,
-  disabled = false,
-  tone = 'default',
-}: {
-  icon: IconName;
-  label: string;
-  onPress: () => void;
-  disabled?: boolean;
-  tone?: 'default' | 'danger';
-}) {
-  const danger = tone === 'danger';
-  const color = danger ? Colors.error : Colors.onSurface;
-  return (
-    <Pressable
-      onPress={onPress}
-      disabled={disabled}
-      accessibilityRole="button"
-      style={({ pressed }) => [
-        styles.chip,
-        danger && styles.chipDanger,
-        pressed && styles.chipPressed,
-        disabled && styles.chipDisabled,
-      ]}>
-      <MaterialIcons name={icon} size={18} color={color} />
-      <Text style={[styles.chipLabel, { color }]}>{label}</Text>
-    </Pressable>
-  );
-}
-
 const styles = StyleSheet.create({
   panel: {
     padding: Spacing.sm,
@@ -182,16 +132,6 @@ const styles = StyleSheet.create({
   },
   section: {
     gap: Spacing.xs,
-  },
-  sectionLabel: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  sectionLabelText: {
-    fontFamily: FontFamilies.bodyBold,
-    fontSize: 11,
-    letterSpacing: 1.2,
   },
   hint: {
     ...Typography.bodySm,
@@ -221,32 +161,5 @@ const styles = StyleSheet.create({
   actions: {
     flexDirection: 'row',
     gap: Spacing.xs,
-  },
-  chip: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
-    paddingVertical: Spacing.xs + 2,
-    paddingHorizontal: Spacing.xs,
-    borderRadius: Radii.md,
-    borderWidth: 1,
-    borderColor: Colors.glassBorder,
-    backgroundColor: Colors.glassFill,
-  },
-  chipDanger: {
-    borderColor: 'rgba(255, 180, 171, 0.35)',
-    backgroundColor: 'rgba(147, 0, 10, 0.12)',
-  },
-  chipPressed: {
-    opacity: 0.7,
-  },
-  chipDisabled: {
-    opacity: 0.4,
-  },
-  chipLabel: {
-    fontFamily: FontFamilies.bodyBold,
-    fontSize: 14,
   },
 });

@@ -8,8 +8,9 @@ import { ApiError, type CompetitionType } from '@/api/types';
 import { Button } from '@/components/ui/button';
 import { GlassPanel } from '@/components/ui/glass-panel';
 import { Screen } from '@/components/ui/screen';
+import { SegmentedControl } from '@/components/ui/segmented-control';
 import { TextField } from '@/components/ui/text-field';
-import { Colors, FontFamilies, Radii, Spacing, Typography } from '@/theme/tokens';
+import { Colors, Spacing, Typography } from '@/theme/tokens';
 
 const TYPE_OPTIONS: { value: CompetitionType; label: string }[] = [
   { value: 'tournament', label: 'Torneo' },
@@ -27,6 +28,14 @@ export default function CrearCompeticionScreen() {
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  function close() {
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace('/competiciones');
+    }
+  }
+
   async function handleSubmit() {
     setError(null);
     setIsSubmitting(true);
@@ -35,11 +44,11 @@ export default function CrearCompeticionScreen() {
         type,
         name,
         venue: venue || null,
-        start_date: startDate,
+        start_date: startDate || null,
         end_date: endDate || null,
         is_private: isPrivate,
       });
-      router.back();
+      close();
     } catch (e) {
       setError(e instanceof ApiError ? e.message : 'No se pudo crear la competición.');
     } finally {
@@ -50,39 +59,28 @@ export default function CrearCompeticionScreen() {
   return (
     <Screen>
       <View style={styles.header}>
-        <Pressable onPress={() => router.back()} hitSlop={12}>
+        <Pressable onPress={close} hitSlop={12}>
           <MaterialIcons name="close" size={24} color={Colors.onSurface} />
         </Pressable>
         <Text style={styles.title}>Nueva competición</Text>
       </View>
 
-      <View style={styles.typeSelector}>
-        {TYPE_OPTIONS.map((option) => (
-          <Pressable
-            key={option.value}
-            onPress={() => setType(option.value)}
-            style={[styles.typeButton, type === option.value && styles.typeButtonActive]}>
-            <Text
-              style={[
-                styles.typeButtonLabel,
-                type === option.value && styles.typeButtonLabelActive,
-              ]}>
-              {option.label}
-            </Text>
-          </Pressable>
-        ))}
-      </View>
+      <SegmentedControl<CompetitionType>
+        options={TYPE_OPTIONS}
+        value={type}
+        onChange={(value) => value && setType(value)}
+      />
 
       <TextField placeholder="Nombre" value={name} onChangeText={setName} />
       <TextField placeholder="Sede (opcional)" value={venue} onChangeText={setVenue} />
       <TextField
-        placeholder="Fecha de inicio (AAAA-MM-DD)"
+        placeholder="Inicio (opcional) AAAA-MM-DD"
         value={startDate}
         onChangeText={setStartDate}
         autoCapitalize="none"
       />
       <TextField
-        placeholder="Fecha de fin (opcional, AAAA-MM-DD)"
+        placeholder="Fin (opcional) AAAA-MM-DD"
         value={endDate}
         onChangeText={setEndDate}
         autoCapitalize="none"
@@ -110,7 +108,7 @@ export default function CrearCompeticionScreen() {
       <Button
         title={isSubmitting ? 'Creando…' : 'Crear competición'}
         onPress={handleSubmit}
-        disabled={isSubmitting || !name || !startDate}
+        disabled={isSubmitting || !name}
       />
     </Screen>
   );
@@ -125,31 +123,6 @@ const styles = StyleSheet.create({
   title: {
     ...Typography.headlineMd,
     color: Colors.primary,
-  },
-  typeSelector: {
-    flexDirection: 'row',
-    backgroundColor: Colors.glassFill,
-    borderWidth: 1,
-    borderColor: Colors.glassBorder,
-    borderRadius: Radii.full,
-    padding: 4,
-  },
-  typeButton: {
-    flex: 1,
-    paddingVertical: Spacing.xs,
-    borderRadius: Radii.full,
-    alignItems: 'center',
-  },
-  typeButtonActive: {
-    backgroundColor: Colors.primaryContainer,
-  },
-  typeButtonLabel: {
-    ...Typography.bodySm,
-    color: Colors.onSurfaceVariant,
-  },
-  typeButtonLabelActive: {
-    color: Colors.onPrimary,
-    fontFamily: FontFamilies.bodyBold,
   },
   privacyRow: {
     flexDirection: 'row',

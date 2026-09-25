@@ -14,9 +14,11 @@ import {
   type User,
 } from '@/api/types';
 import { Avatar } from '@/components/ui/avatar';
-import { Button } from '@/components/ui/button';
+import { ActionChip } from '@/components/ui/action-chip';
 import { GlassPanel } from '@/components/ui/glass-panel';
+import { LabeledField } from '@/components/ui/labeled-field';
 import { Screen } from '@/components/ui/screen';
+import { SectionLabel, type IconName } from '@/components/ui/section-label';
 import { SegmentedControl } from '@/components/ui/segmented-control';
 import { TextField } from '@/components/ui/text-field';
 import { useAuth } from '@/hooks/use-auth';
@@ -160,7 +162,19 @@ export default function EditarPerfilScreen() {
         <Text style={styles.title}>Editar perfil</Text>
       </View>
 
-      <Group title="Nombre">
+      <View style={styles.hero}>
+        <Avatar
+          name={form.name || 'Jugador'}
+          color={form.avatar_color}
+          emoji={form.avatar_emoji}
+          size={88}
+        />
+        <Text style={styles.heroName} numberOfLines={1}>
+          {form.name.trim() || 'Tu nombre'}
+        </Text>
+      </View>
+
+      <Group icon="badge" title="Nombre">
         <TextField
           placeholder="Nombre"
           value={form.name}
@@ -169,115 +183,135 @@ export default function EditarPerfilScreen() {
           editable={!nameLockedUntil}
           style={nameLockedUntil ? styles.disabledField : undefined}
         />
-        <Text style={styles.hint}>
-          {nameLockedUntil
-            ? `Podrás volver a cambiarlo el ${formatLongDate(nameLockedUntil)}.`
-            : 'Puedes ponerte el nombre que quieras, pero solo se puede cambiar una vez cada 30 días.'}
-        </Text>
+        <View style={styles.hintRow}>
+          {nameLockedUntil ? (
+            <MaterialIcons name="lock-clock" size={14} color={Colors.secondary} />
+          ) : null}
+          <Text style={[styles.hint, nameLockedUntil ? styles.hintLocked : null]}>
+            {nameLockedUntil
+              ? `Podrás volver a cambiarlo el ${formatLongDate(nameLockedUntil)}.`
+              : 'Puedes ponerte el nombre que quieras, pero solo se puede cambiar una vez cada 30 días.'}
+          </Text>
+        </View>
       </Group>
 
-      <Group title="Avatar">
-        <View style={styles.avatarPreview}>
-          <Avatar
-            name={form.name || 'Jugador'}
-            color={form.avatar_color}
-            emoji={form.avatar_emoji}
-            size={64}
-          />
-        </View>
-        <View style={styles.swatches}>
-          {AVATAR_COLOR_KEYS.map((color) => (
+      <Group icon="face" title="Avatar">
+        <LabeledField label="Color">
+          <View style={styles.swatches}>
+            {AVATAR_COLOR_KEYS.map((color) => (
+              <Pressable
+                key={color}
+                onPress={() => set('avatar_color', form.avatar_color === color ? null : color)}
+                accessibilityLabel={`Color ${color}`}
+                style={[
+                  styles.swatch,
+                  { backgroundColor: AVATAR_COLORS[color].background },
+                  form.avatar_color === color && styles.swatchActive,
+                ]}
+              />
+            ))}
+          </View>
+        </LabeledField>
+        <LabeledField label="Icono" right='"Aa" usa tus iniciales'>
+          <View style={styles.swatches}>
             <Pressable
-              key={color}
-              onPress={() => set('avatar_color', form.avatar_color === color ? null : color)}
-              accessibilityLabel={`Color ${color}`}
-              style={[
-                styles.swatch,
-                { backgroundColor: AVATAR_COLORS[color].background },
-                form.avatar_color === color && styles.swatchActive,
-              ]}
-            />
-          ))}
-        </View>
-        <View style={styles.swatches}>
-          <Pressable
-            onPress={() => set('avatar_emoji', null)}
-            style={[styles.emojiButton, form.avatar_emoji === null && styles.emojiButtonActive]}>
-            <Text style={styles.emojiInitials}>Aa</Text>
-          </Pressable>
-          {AVATAR_EMOJIS.map((emoji) => (
-            <Pressable
-              key={emoji}
-              onPress={() => set('avatar_emoji', emoji)}
-              style={[styles.emojiButton, form.avatar_emoji === emoji && styles.emojiButtonActive]}>
-              <Text style={styles.emoji}>{emoji}</Text>
+              onPress={() => set('avatar_emoji', null)}
+              style={[styles.emojiButton, form.avatar_emoji === null && styles.emojiButtonActive]}>
+              <Text style={styles.emojiInitials}>Aa</Text>
             </Pressable>
-          ))}
+            {AVATAR_EMOJIS.map((emoji) => (
+              <Pressable
+                key={emoji}
+                onPress={() => set('avatar_emoji', emoji)}
+                style={[styles.emojiButton, form.avatar_emoji === emoji && styles.emojiButtonActive]}>
+                <Text style={styles.emoji}>{emoji}</Text>
+              </Pressable>
+            ))}
+          </View>
+        </LabeledField>
+      </Group>
+
+      <Group icon="person-outline" title="Sobre ti">
+        <View style={styles.twoCols}>
+          <View style={styles.col}>
+            <LabeledField label="Ciudad">
+              <TextField
+                placeholder="Sevilla"
+                value={form.city}
+                onChangeText={(value) => set('city', value)}
+                maxLength={80}
+              />
+            </LabeledField>
+          </View>
+          <View style={styles.col}>
+            <LabeledField label="Nivel">
+              <TextField
+                placeholder="3ª"
+                value={form.level}
+                onChangeText={(value) => set('level', value)}
+                maxLength={255}
+              />
+            </LabeledField>
+          </View>
         </View>
-        <Text style={styles.hint}>&quot;Aa&quot; usa tus iniciales.</Text>
+        <LabeledField label="Club">
+          <TextField
+            placeholder="Club Pádel Sur"
+            value={form.club}
+            onChangeText={(value) => set('club', value)}
+            maxLength={255}
+          />
+        </LabeledField>
+        <LabeledField label="Presentación" right={`${form.bio.length}/200`}>
+          <TextField
+            placeholder="Cuéntanos algo de ti"
+            value={form.bio}
+            onChangeText={(value) => set('bio', value)}
+            maxLength={200}
+            multiline
+            numberOfLines={3}
+            style={styles.multiline}
+          />
+        </LabeledField>
+        <LabeledField label="Lema">
+          <TextField
+            placeholder="Tu frase de guerra"
+            value={form.motto}
+            onChangeText={(value) => set('motto', value)}
+            maxLength={80}
+          />
+        </LabeledField>
       </Group>
 
-      <Group title="Sobre ti">
-        <TextField
-          placeholder="Ciudad"
-          value={form.city}
-          onChangeText={(value) => set('city', value)}
-          maxLength={80}
-        />
-        <TextField
-          placeholder="Nivel (p. ej. 3ª)"
-          value={form.level}
-          onChangeText={(value) => set('level', value)}
-          maxLength={255}
-        />
-        <TextField
-          placeholder="Club"
-          value={form.club}
-          onChangeText={(value) => set('club', value)}
-          maxLength={255}
-        />
-        <TextField
-          placeholder="Cuéntanos algo de ti"
-          value={form.bio}
-          onChangeText={(value) => set('bio', value)}
-          maxLength={200}
-          multiline
-          numberOfLines={3}
-          style={styles.multiline}
-        />
-        <Text style={styles.hint}>{form.bio.length}/200</Text>
-        <TextField
-          placeholder="Tu lema"
-          value={form.motto}
-          onChangeText={(value) => set('motto', value)}
-          maxLength={80}
-        />
+      <Group icon="sports-tennis" title="Cómo juegas">
+        <LabeledField label="Lado preferido">
+          <SegmentedControl
+            options={SIDE_OPTIONS}
+            value={form.preferred_side}
+            onChange={(value) => set('preferred_side', value)}
+            allowClear
+          />
+        </LabeledField>
+        <LabeledField label="Mano">
+          <SegmentedControl
+            options={HAND_OPTIONS}
+            value={form.dominant_hand}
+            onChange={(value) => set('dominant_hand', value)}
+            allowClear
+          />
+        </LabeledField>
+        <LabeledField label="Pala favorita">
+          <TextField
+            placeholder="Bullpadel Vertex"
+            value={form.racket}
+            onChangeText={(value) => set('racket', value)}
+            maxLength={80}
+          />
+        </LabeledField>
       </Group>
 
-      <Group title="Cómo juegas">
-        <Text style={styles.label}>Lado preferido</Text>
-        <SegmentedControl
-          options={SIDE_OPTIONS}
-          value={form.preferred_side}
-          onChange={(value) => set('preferred_side', value)}
-          allowClear
-        />
-        <Text style={styles.label}>Mano</Text>
-        <SegmentedControl
-          options={HAND_OPTIONS}
-          value={form.dominant_hand}
-          onChange={(value) => set('dominant_hand', value)}
-          allowClear
-        />
-        <TextField
-          placeholder="Pala favorita"
-          value={form.racket}
-          onChangeText={(value) => set('racket', value)}
-          maxLength={80}
-        />
-      </Group>
-
-      <Group title="Disponibilidad">
+      <Group icon="schedule" title="Disponibilidad">
+        <Text style={styles.hint}>Marca cuándo sueles poder jugar.</Text>
         <View style={styles.gridRow}>
           <View style={styles.gridLabel} />
           {AVAILABILITY_DAYS.map((day) => (
@@ -302,10 +336,10 @@ export default function EditarPerfilScreen() {
             })}
           </View>
         ))}
-        <Text style={styles.hint}>Marca cuándo sueles poder jugar.</Text>
       </Group>
 
-      <Group title="Redes sociales">
+      <Group icon="share" title="Redes sociales">
+        <Text style={styles.hint}>Solo tu nombre de usuario, sin @ ni enlace.</Text>
         {SOCIAL_NETWORK_KEYS.map((network) => (
           <View key={network} style={styles.socialRow}>
             <Text style={styles.socialLabel}>{SOCIAL_NETWORKS[network].label}</Text>
@@ -320,26 +354,38 @@ export default function EditarPerfilScreen() {
             />
           </View>
         ))}
-        <Text style={styles.hint}>Solo tu nombre de usuario, sin @ ni enlace.</Text>
       </Group>
 
       {error && <Text style={styles.error}>{error}</Text>}
 
-      <Button
-        title={isSubmitting ? 'Guardando…' : 'Guardar'}
-        onPress={handleSubmit}
-        disabled={isSubmitting || form.name.trim().length < 2}
-      />
+      <View style={styles.actions}>
+        <ActionChip label="Cancelar" onPress={close} disabled={isSubmitting} />
+        <ActionChip
+          icon="check"
+          label={isSubmitting ? 'Guardando…' : 'Guardar'}
+          tone="accent"
+          disabled={isSubmitting || form.name.trim().length < 2}
+          onPress={handleSubmit}
+        />
+      </View>
     </Screen>
   );
 }
 
-function Group({ title, children }: { title: string; children: React.ReactNode }) {
+function Group({
+  icon,
+  title,
+  children,
+}: {
+  icon: IconName;
+  title: string;
+  children: React.ReactNode;
+}) {
   return (
-    <View style={styles.group}>
-      <Text style={styles.groupTitle}>{title}</Text>
-      <GlassPanel style={styles.card}>{children}</GlassPanel>
-    </View>
+    <GlassPanel style={styles.card}>
+      <SectionLabel icon={icon} label={title} />
+      {children}
+    </GlassPanel>
   );
 }
 
@@ -356,20 +402,38 @@ const styles = StyleSheet.create({
     ...Typography.headlineMd,
     color: Colors.primary,
   },
-  group: {
-    gap: Spacing.xs,
-  },
-  groupTitle: {
-    ...Typography.headlineSm,
-    color: Colors.primary,
-  },
   card: {
     padding: Spacing.sm,
+    gap: Spacing.sm,
+  },
+  hero: {
+    alignItems: 'center',
     gap: Spacing.xs,
   },
-  label: {
-    ...Typography.bodySm,
-    color: Colors.onSurface,
+  heroName: {
+    ...Typography.headlineMd,
+    color: Colors.primary,
+  },
+  hintRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  hintLocked: {
+    color: Colors.secondary,
+    flex: 1,
+  },
+  twoCols: {
+    flexDirection: 'row',
+    gap: Spacing.xs,
+  },
+  col: {
+    flex: 1,
+    minWidth: 0,
+  },
+  actions: {
+    flexDirection: 'row',
+    gap: Spacing.xs,
   },
   hint: {
     ...Typography.bodySm,
@@ -386,9 +450,6 @@ const styles = StyleSheet.create({
   multiline: {
     minHeight: 88,
     textAlignVertical: 'top',
-  },
-  avatarPreview: {
-    alignItems: 'center',
   },
   swatches: {
     flexDirection: 'row',

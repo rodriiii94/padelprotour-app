@@ -4,9 +4,12 @@ import { useState, type ReactNode } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { GlassPanel } from '@/components/ui/glass-panel';
+import { LabeledField } from '@/components/ui/labeled-field';
 import { Screen } from '@/components/ui/screen';
 import { TextField } from '@/components/ui/text-field';
-import { Colors, FontFamilies, Radii, Spacing, Typography } from '@/theme/tokens';
+import { Colors, Radii, Spacing, Typography } from '@/theme/tokens';
+
+export { LabeledField };
 
 /** Marco común de las pantallas de acceso: marca arriba, tarjeta con el formulario y enlace legal. */
 export function AuthShell({
@@ -47,22 +50,6 @@ export function AuthShell({
         </View>
       </View>
     </Screen>
-  );
-}
-
-/** Campo con su etiqueta encima. */
-export function LabeledField({
-  label,
-  children,
-}: {
-  label: string;
-  children: ReactNode;
-}) {
-  return (
-    <View style={styles.field}>
-      <Text style={styles.label}>{label.toUpperCase()}</Text>
-      {children}
-    </View>
   );
 }
 
@@ -168,15 +155,6 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     ...Typography.bodySm,
-    color: Colors.onSurfaceVariant,
-  },
-  field: {
-    gap: 6,
-  },
-  label: {
-    fontFamily: FontFamilies.bodyBold,
-    fontSize: 11,
-    letterSpacing: 1.2,
     color: Colors.onSurfaceVariant,
   },
   passwordWrap: {

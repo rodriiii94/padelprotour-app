@@ -1,17 +1,16 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
-import * as Clipboard from 'expo-clipboard';
-import { useCallback, useState } from 'react';
-import { ActivityIndicator, Pressable, Share, StyleSheet, Text, View } from 'react-native';
+import { useCallback } from 'react';
+import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 
+import { OrganizerPanel } from '@/components/competition/organizer-panel';
 import { Button } from '@/components/ui/button';
 import { GlassPanel } from '@/components/ui/glass-panel';
 import { Screen } from '@/components/ui/screen';
 import { useAuth } from '@/hooks/use-auth';
 import { useCompetitionDetail } from '@/hooks/use-competition-detail';
 import { confirmAction } from '@/lib/confirm';
-import { inviteUrl } from '@/lib/invite';
-import { Colors, FontFamilies, Radii, Spacing, Typography } from '@/theme/tokens';
+import { Colors, Radii, Spacing, Typography } from '@/theme/tokens';
 import type { Category, RegistrationMode } from '@/api/types';
 
 const TYPE_META = {
@@ -41,7 +40,6 @@ export default function CompetitionDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { user } = useAuth();
-  const [linkCopied, setLinkCopied] = useState(false);
   const {
     competition,
     categories,
@@ -157,82 +155,14 @@ export default function CompetitionDetailScreen() {
           </GlassPanel>
 
           {isOrganizer && (
-            <GlassPanel style={styles.card}>
-              <View style={styles.privacyRow}>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.cardTitle}>
-                    {competition.is_private ? 'Privada' : 'Pública'}
-                  </Text>
-                  <Text style={styles.meta}>
-                    {competition.is_private
-                      ? 'Solo visible por invitación.'
-                      : 'Visible para cualquiera en Competiciones.'}
-                  </Text>
-                </View>
-                <Button
-                  title={competition.is_private ? 'Hacer pública' : 'Hacer privada'}
-                  variant="secondary"
-                  disabled={isUpdating}
-                  onPress={togglePrivacy}
-                />
-              </View>
-
-              {competition.is_private && (
-                <View style={styles.inviteBox}>
-                  {competition.invite_token ? (
-                    <>
-                      <Text style={styles.meta}>Enlace de invitación</Text>
-                      <Text style={styles.inviteToken}>{inviteUrl(competition.invite_token)}</Text>
-                      <Button
-                        title={linkCopied ? '¡Enlace copiado!' : 'Copiar enlace'}
-                        variant="secondary"
-                        onPress={async () => {
-                          await Clipboard.setStringAsync(inviteUrl(competition.invite_token!));
-                          setLinkCopied(true);
-                          setTimeout(() => setLinkCopied(false), 2000);
-                        }}
-                      />
-                      <Button
-                        title="Compartir enlace"
-                        variant="ghost"
-                        onPress={() =>
-                          Share.share({
-                            message: `Únete a "${competition.name}" en PadelProTour: ${inviteUrl(competition.invite_token!)}`,
-                          })
-                        }
-                      />
-                      <Button
-                        title="Regenerar enlace"
-                        variant="ghost"
-                        disabled={isUpdating}
-                        onPress={confirmRegenerateInvite}
-                      />
-                    </>
-                  ) : (
-                    <Text style={styles.meta}>
-                      Esta competición no tiene código de invitación todavía.
-                    </Text>
-                  )}
-                </View>
-              )}
-
-              <View style={styles.dangerZone}>
-                {!competition.cancelled_at && (
-                  <Button
-                    title="Cancelar competición"
-                    variant="danger"
-                    disabled={isUpdating}
-                    onPress={confirmCancel}
-                  />
-                )}
-                <Button
-                  title="Eliminar competición"
-                  variant="danger"
-                  disabled={isUpdating}
-                  onPress={confirmDelete}
-                />
-              </View>
-            </GlassPanel>
+            <OrganizerPanel
+              competition={competition}
+              disabled={isUpdating}
+              onTogglePrivacy={togglePrivacy}
+              onRegenerateInvite={confirmRegenerateInvite}
+              onCancel={confirmCancel}
+              onDelete={confirmDelete}
+            />
           )}
 
           <View>
@@ -342,32 +272,6 @@ const styles = StyleSheet.create({
   body: {
     ...Typography.bodySm,
     color: Colors.onSurfaceVariant,
-  },
-  privacyRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.sm,
-  },
-  inviteBox: {
-    marginTop: Spacing.sm,
-    paddingTop: Spacing.sm,
-    borderTopWidth: 1,
-    borderTopColor: Colors.glassBorder,
-    gap: Spacing.xs,
-    alignItems: 'flex-start',
-  },
-  dangerZone: {
-    marginTop: Spacing.sm,
-    paddingTop: Spacing.sm,
-    borderTopWidth: 1,
-    borderTopColor: Colors.glassBorder,
-    gap: Spacing.xs,
-  },
-  inviteToken: {
-    ...Typography.bodyMd,
-    fontFamily: FontFamilies.bodyBold,
-    color: Colors.primaryContainer,
-    fontSize: 14,
   },
   sectionTitle: {
     ...Typography.headlineSm,

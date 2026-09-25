@@ -157,22 +157,21 @@ export default function CategoryDetailScreen() {
             </GlassPanel>
           )}
 
-          {!isOrganizer &&
-            (myRegistration ? (
-              <GlassPanel style={styles.card}>
-                <Text style={styles.cardTitle}>Tu inscripción</Text>
-                <Text style={[styles.meta, { color: STATUS_COLOR[myRegistration.status] }]}>
-                  {STATUS_LABEL[myRegistration.status]}
-                </Text>
-              </GlassPanel>
-            ) : (
-              <JoinSection
-                availablePairs={availablePairs}
-                isMutating={isMutating}
-                onJoinWithPair={joinWithPair}
-                onFormPairAndJoin={formPairAndJoin}
-              />
-            ))}
+          {myRegistration ? (
+            <GlassPanel style={styles.card}>
+              <Text style={styles.cardTitle}>Tu inscripción</Text>
+              <Text style={[styles.meta, { color: STATUS_COLOR[myRegistration.status] }]}>
+                {STATUS_LABEL[myRegistration.status]}
+              </Text>
+            </GlassPanel>
+          ) : (
+            <JoinSection
+              availablePairs={availablePairs}
+              isMutating={isMutating}
+              onJoinWithPair={joinWithPair}
+              onFormPairAndJoin={formPairAndJoin}
+            />
+          )}
 
           {isOrganizer && (
             <View style={styles.section}>

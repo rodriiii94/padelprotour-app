@@ -1,6 +1,6 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import { usePathname, useRouter } from 'expo-router';
-import { Pressable, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useAuth } from '@/hooks/use-auth';
@@ -15,13 +15,6 @@ const NAV_ITEMS: {
   { href: '/competiciones', label: 'Competiciones', icon: 'emoji-events' },
   { href: '/perfil', label: 'Perfil', icon: 'person' },
 ];
-
-/** Below this width the sidebar would eat most of the screen (phones in a browser). */
-const NARROW_BREAKPOINT = 768;
-
-export function useIsNarrowWeb(): boolean {
-  return useWindowDimensions().width < NARROW_BREAKPOINT;
-}
 
 /** Bottom tab bar for narrow viewports; logout lives in the Perfil screen. */
 export function WebBottomBar() {
@@ -164,6 +157,11 @@ const styles = StyleSheet.create({
     padding: Spacing.base,
   },
   bottomBar: {
+    // Sticky, no fixed: queda al final del contenido y se pega al borde inferior de la
+    // ventana mientras se hace scroll, sin tapar el último trozo de la página.
+    position: 'sticky' as 'relative',
+    bottom: 0,
+    zIndex: 10,
     flexDirection: 'row',
     backgroundColor: Colors.surfaceContainerLow,
     borderTopWidth: 1,

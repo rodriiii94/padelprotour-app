@@ -5,13 +5,14 @@ import {
   useFonts,
 } from '@expo-google-fonts/manrope';
 import { Sora_600SemiBold, Sora_700Bold, Sora_800ExtraBold } from '@expo-google-fonts/sora';
-import { Stack } from 'expo-router';
+import { Redirect, Slot, Stack, useSegments } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 import { StyleSheet, View } from 'react-native';
 
-import { WebBottomBar, WebSidebar, useIsNarrowWeb } from '@/components/ui/web-sidebar';
+import { WebBottomBar, WebSidebar } from '@/components/ui/web-sidebar';
 import { AuthProvider, useAuth } from '@/hooks/use-auth';
+import { useIsNarrowWeb } from '@/hooks/use-is-narrow-web';
 import { Colors } from '@/theme/tokens';
 
 SplashScreen.preventAutoHideAsync();
@@ -48,41 +49,49 @@ export default function RootLayoutWeb() {
 function AuthGateWeb() {
   const { user, isLoading } = useAuth();
   const isNarrow = useIsNarrowWeb();
+  const isOnAuthRoute = ['(auth)', 'verify-email'].includes((useSegments() as string[])[0]);
 
   if (isLoading) {
     return null;
   }
 
-  // Sin Stack.Protected, expo-router deja abrir por URL cualquier ruta no
-  // declarada en el Stack (p.ej. "/" sin sesión), igual que hace el layout nativo.
-  const stack = (
-    <Stack screenOptions={{ headerShown: false }}>
-      <Stack.Protected guard={!user}>
-        <Stack.Screen name="(auth)" />
-        <Stack.Screen name="verify-email" />
-      </Stack.Protected>
-      <Stack.Protected guard={!!user}>
-        <Stack.Screen name="(tabs)" />
-        <Stack.Screen name="crear-competicion" options={{ presentation: 'modal' }} />
-        <Stack.Screen name="crear-categoria" options={{ presentation: 'modal' }} />
-        <Stack.Screen name="editar-perfil" options={{ presentation: 'modal' }} />
-        <Stack.Screen name="jugador/[id]" />
-        <Stack.Screen name="competicion/[id]" />
-        <Stack.Screen name="categoria/[id]" />
-        <Stack.Screen name="invite/[token]" />
-        <Stack.Screen name="partido/[id]" />
-      </Stack.Protected>
-    </Stack>
-  );
-
+  // Sin sesión: Stack con Stack.Protected. Sin él, expo-router deja abrir por URL
+  // cualquier ruta no declarada (p.ej. "/" sin sesión), igual que el layout nativo.
   if (!user) {
-    return stack;
+    return (
+      <Stack screenOptions={{ headerShown: false }}>
+        <Stack.Protected guard>
+          <Stack.Screen name="(auth)" />
+          <Stack.Screen name="verify-email" />
+        </Stack.Protected>
+        <Stack.Protected guard={false}>
+          <Stack.Screen name="(tabs)" />
+          <Stack.Screen name="crear-competicion" />
+          <Stack.Screen name="crear-categoria" />
+          <Stack.Screen name="editar-perfil" />
+          <Stack.Screen name="jugador/[id]" />
+          <Stack.Screen name="competicion/[id]" />
+          <Stack.Screen name="categoria/[id]" />
+          <Stack.Screen name="invite/[token]" />
+          <Stack.Screen name="partido/[id]" />
+        </Stack.Protected>
+      </Stack>
+    );
+  }
+
+  // Con sesión, Slot en vez de Stack: las pantallas de un Stack se colocan en
+  // absoluto dentro de un contenedor de altura fija, y así el documento no puede
+  // crecer ni hacer scroll (que es lo que hace que el móvil esconda la barra de URL).
+  if (isOnAuthRoute) {
+    return <Redirect href="/" />;
   }
 
   return (
     <View style={isNarrow ? styles.authedRootNarrow : styles.authedRoot}>
       {!isNarrow && <WebSidebar />}
-      <View style={styles.authedContent}>{stack}</View>
+      <View style={styles.authedContent}>
+        <Slot />
+      </View>
       {isNarrow && <WebBottomBar />}
     </View>
   );

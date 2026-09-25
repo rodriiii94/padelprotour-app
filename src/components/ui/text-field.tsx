@@ -13,6 +13,9 @@ const styles = StyleSheet.create({
     // En web el BlurView absoluto de GlassPanel se pinta encima de los <input>
     // sin posición propia y los deja borrosos; los View/Text de RN web ya la tienen.
     position: 'relative',
+    // Un <input> no baja de su ancho intrínseco dentro de una fila flex; sin esto
+    // desborda las filas estrechas (redes sociales) y la página se desplaza al enfocarlo.
+    minWidth: 0,
     backgroundColor: 'rgba(0, 0, 0, 0.2)',
     borderWidth: 1,
     borderColor: Colors.glassBorder,

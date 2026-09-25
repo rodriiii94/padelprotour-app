@@ -212,6 +212,8 @@ export interface Match {
   court: string | null;
   status: MatchStatus;
   winner_side: 1 | 2 | null;
+  /** Quién propuso el resultado mientras el partido está en `pending_validation`. */
+  result_proposed_by?: number | null;
   match_sets?: MatchSet[];
 }
 

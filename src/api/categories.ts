@@ -97,3 +97,21 @@ export function updateMatchStatus(
 export function listRankings(categoryId: number, invite?: string): Promise<Ranking[]> {
   return apiFetch<Ranking[]>(withInvite(`/categories/${categoryId}/rankings`, invite));
 }
+
+/** Un jugador del partido propone los sets; el partido queda pendiente de validar por un rival. */
+export function proposeMatchResult(
+  matchId: number,
+  sets: { side1_games: number; side2_games: number }[]
+): Promise<Match> {
+  return apiFetch<Match>(`/matches/${matchId}/result-proposal`, { method: 'POST', body: { sets } });
+}
+
+/** Un rival (o el organizador) confirma el resultado propuesto: el partido pasa a completado. */
+export function confirmMatchResult(matchId: number): Promise<Match> {
+  return apiFetch<Match>(`/matches/${matchId}/result-proposal/confirm`, { method: 'POST' });
+}
+
+/** Rechaza (un rival) o retira (quien propuso) el resultado: el partido vuelve a programado. */
+export function rejectMatchResult(matchId: number): Promise<Match> {
+  return apiFetch<Match>(`/matches/${matchId}/result-proposal/reject`, { method: 'POST' });
+}

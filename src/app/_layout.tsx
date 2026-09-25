@@ -3,24 +3,21 @@ import {
   Manrope_500Medium,
   Manrope_700Bold,
   useFonts,
-} from "@expo-google-fonts/manrope";
-import {
-  Sora_600SemiBold,
-  Sora_700Bold,
-  Sora_800ExtraBold,
-} from "@expo-google-fonts/sora";
-import { Stack } from "expo-router";
-import * as SplashScreen from "expo-splash-screen";
-import { useEffect } from "react";
-import { StatusBar, StyleSheet, View } from "react-native";
+} from '@expo-google-fonts/manrope';
+import { Sora_600SemiBold, Sora_700Bold, Sora_800ExtraBold } from '@expo-google-fonts/sora';
+import { Stack } from 'expo-router';
+import * as SplashScreen from 'expo-splash-screen';
+import { useEffect } from 'react';
+import { StatusBar, StyleSheet, View } from 'react-native';
 
-import { AuthProvider, useAuth } from "@/hooks/use-auth";
-import { usePendingInviteRedirect } from "@/lib/invite";
-import { Colors } from "@/theme/tokens";
+import { AuthProvider, useAuth } from '@/hooks/use-auth';
+import { usePendingInviteRedirect } from '@/lib/invite';
+import { Sentry } from '@/lib/sentry';
+import { Colors } from '@/theme/tokens';
 
 SplashScreen.preventAutoHideAsync();
 
-export default function RootLayout() {
+function RootLayout() {
   const [fontsLoaded] = useFonts({
     Sora_600SemiBold,
     Sora_700Bold,
@@ -50,6 +47,8 @@ export default function RootLayout() {
   );
 }
 
+export default Sentry.wrap(RootLayout);
+
 function AuthGate() {
   const { user, isLoading } = useAuth();
 
@@ -67,18 +66,9 @@ function AuthGate() {
         </Stack.Protected>
         <Stack.Protected guard={!!user}>
           <Stack.Screen name="(tabs)" />
-          <Stack.Screen
-            name="crear-competicion"
-            options={{ presentation: "modal" }}
-          />
-          <Stack.Screen
-            name="crear-categoria"
-            options={{ presentation: "modal" }}
-          />
-          <Stack.Screen
-            name="editar-perfil"
-            options={{ presentation: "modal" }}
-          />
+          <Stack.Screen name="crear-competicion" options={{ presentation: 'modal' }} />
+          <Stack.Screen name="crear-categoria" options={{ presentation: 'modal' }} />
+          <Stack.Screen name="editar-perfil" options={{ presentation: 'modal' }} />
           <Stack.Screen name="jugador/[id]" />
           <Stack.Screen name="competicion/[id]" />
           <Stack.Screen name="categoria/[id]" />

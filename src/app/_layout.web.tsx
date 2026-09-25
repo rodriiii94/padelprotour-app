@@ -12,13 +12,14 @@ import { StyleSheet, View } from 'react-native';
 
 import { WebBottomBar, WebSidebar } from '@/components/ui/web-sidebar';
 import { AuthProvider, useAuth } from '@/hooks/use-auth';
+import { Sentry } from '@/lib/sentry';
 import { takePendingInvite } from '@/lib/invite';
 import { useIsNarrowWeb } from '@/hooks/use-is-narrow-web';
 import { Colors } from '@/theme/tokens';
 
 SplashScreen.preventAutoHideAsync();
 
-export default function RootLayoutWeb() {
+function RootLayoutWeb() {
   const [fontsLoaded] = useFonts({
     Sora_600SemiBold,
     Sora_700Bold,
@@ -46,6 +47,8 @@ export default function RootLayoutWeb() {
     </AuthProvider>
   );
 }
+
+export default Sentry.wrap(RootLayoutWeb);
 
 function AuthGateWeb() {
   const { user, isLoading } = useAuth();

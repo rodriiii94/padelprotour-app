@@ -8,6 +8,7 @@
     "@expo/ui": "~57.0.13",
     "@expo/vector-icons": "^15.0.2",
     "@react-native-google-signin/google-signin": "^16.1.5",
+    "@sentry/react-native": "~7.11.0",
     "expo": "~57.0.16",
     "expo-blur": "~57.0.2",
     "expo-clipboard": "~57.0.2",

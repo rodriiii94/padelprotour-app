@@ -1,10 +1,11 @@
 import { Link } from 'expo-router';
 import { useState } from 'react';
-import { Platform, StyleSheet, Text, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { StyleSheet, Text } from 'react-native';
 
 import { resendVerification } from '@/api/auth';
 import { ApiError } from '@/api/types';
+import { AuthShell, LabeledField, OrDivider, PasswordField } from '@/components/auth/auth-shell';
+import { ActionChip } from '@/components/ui/action-chip';
 import { Button } from '@/components/ui/button';
 import { GoogleSignInButton } from '@/components/ui/google-sign-in-button';
 import { TextField } from '@/components/ui/text-field';
@@ -53,104 +54,76 @@ export default function LoginScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <View style={styles.content}>
-        <Text style={styles.title}>PadelProTour</Text>
-        <Text style={styles.subtitle}>Inicia sesión para continuar</Text>
-
+    <AuthShell
+      title="Inicia sesión"
+      subtitle="Entra para gestionar tus ligas y torneos."
+      footer={
+        <Link href="/(auth)/register" style={styles.link}>
+          <Text style={styles.linkText}>¿No tienes cuenta? Regístrate</Text>
+        </Link>
+      }>
+      <LabeledField label="Email">
         <TextField
-          placeholder="Email"
+          placeholder="tu@email.com"
           autoCapitalize="none"
+          autoCorrect={false}
+          autoComplete="email"
           keyboardType="email-address"
           value={email}
           onChangeText={setEmail}
         />
-        <TextField
-          placeholder="Contraseña"
-          secureTextEntry
+      </LabeledField>
+      <LabeledField label="Contraseña">
+        <PasswordField
           value={password}
           onChangeText={setPassword}
+          autoComplete="current-password"
+          onSubmitEditing={handleSubmit}
         />
+      </LabeledField>
 
-        {error && <Text style={styles.error}>{error}</Text>}
-        {resendMessage && <Text style={styles.subtitle}>{resendMessage}</Text>}
+      {error && <Text style={styles.error}>{error}</Text>}
+      {resendMessage && <Text style={styles.info}>{resendMessage}</Text>}
 
-        <Button
-          title={isSubmitting ? 'Entrando…' : 'Entrar'}
-          onPress={handleSubmit}
+      <Button
+        title={isSubmitting ? 'Entrando…' : 'Entrar'}
+        onPress={handleSubmit}
+        disabled={isSubmitting}
+        style={styles.submit}
+      />
+
+      {isUnverified && (
+        <ActionChip
+          icon="mail-outline"
+          label="Reenviar email de verificación"
+          onPress={handleResend}
           disabled={isSubmitting}
-          style={styles.submit}
         />
+      )}
 
-        {isUnverified && (
-          <Button
-            title="Reenviar email de verificación"
-            variant="secondary"
-            onPress={handleResend}
-            disabled={isSubmitting}
-          />
-        )}
-
-        <GoogleSignInButton onIdToken={loginWithGoogle} onError={setError} />
-
-        <Link href="/(auth)/register" style={styles.link}>
-          <Text style={styles.linkText}>¿No tienes cuenta? Regístrate</Text>
-        </Link>
-        <Link href="/privacidad" style={styles.link}>
-          <Text style={styles.linkText}>Política de privacidad</Text>
-        </Link>
-      </View>
-    </SafeAreaView>
+      <OrDivider />
+      <GoogleSignInButton onIdToken={loginWithGoogle} onError={setError} />
+    </AuthShell>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: Colors.background,
-  },
-  content:
-    Platform.OS === 'web'
-      ? {
-          flex: 1,
-          justifyContent: 'center',
-          paddingHorizontal: Spacing.safeMargin,
-          gap: Spacing.sm,
-          maxWidth: 420,
-          width: '100%',
-          alignSelf: 'center',
-        }
-      : {
-          flex: 1,
-          justifyContent: 'center',
-          paddingHorizontal: Spacing.safeMargin,
-          gap: Spacing.sm,
-        },
-  title: {
-    ...Typography.display,
-    fontSize: 32,
-    color: Colors.primary,
-    textAlign: 'center',
-  },
-  subtitle: {
-    ...Typography.bodyMd,
-    color: Colors.onSurfaceVariant,
-    textAlign: 'center',
-    marginBottom: Spacing.md,
-  },
   error: {
     ...Typography.bodySm,
     color: Colors.error,
   },
+  info: {
+    ...Typography.bodySm,
+    color: Colors.onSurfaceVariant,
+  },
   submit: {
-    marginTop: Spacing.xs,
+    marginTop: Spacing.base,
   },
   link: {
     alignSelf: 'center',
-    marginTop: Spacing.sm,
   },
   linkText: {
-    ...Typography.bodySm,
+    ...Typography.bodyMd,
     color: Colors.primaryContainer,
   },
 });

@@ -1,9 +1,10 @@
 import { Link } from 'expo-router';
 import { useState } from 'react';
-import { Platform, StyleSheet, Text, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { MaterialIcons } from '@expo/vector-icons';
+import { StyleSheet, Text, View } from 'react-native';
 
 import { ApiError } from '@/api/types';
+import { AuthShell, LabeledField, OrDivider, PasswordField } from '@/components/auth/auth-shell';
 import { Button } from '@/components/ui/button';
 import { GoogleSignInButton } from '@/components/ui/google-sign-in-button';
 import { TextField } from '@/components/ui/text-field';
@@ -34,108 +35,100 @@ export default function RegisterScreen() {
 
   if (registeredMessage) {
     return (
-      <SafeAreaView style={styles.safeArea}>
-        <View style={styles.content}>
-          <Text style={styles.title}>Revisa tu email</Text>
-          <Text style={styles.subtitle}>{registeredMessage}</Text>
-
+      <AuthShell
+        title="Revisa tu email"
+        subtitle={registeredMessage}
+        footer={
           <Link href="/(auth)/login" style={styles.link}>
             <Text style={styles.linkText}>Ir a iniciar sesión</Text>
           </Link>
+        }>
+        <View style={styles.sentRow}>
+          <MaterialIcons name="mark-email-read" size={22} color={Colors.primaryContainer} />
+          <Text style={styles.info}>
+            Pulsa el botón del correo para activar tu cuenta. Si no lo ves, mira en spam.
+          </Text>
         </View>
-      </SafeAreaView>
+      </AuthShell>
     );
   }
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <View style={styles.content}>
-        <Text style={styles.title}>Crear cuenta</Text>
-
-        <TextField placeholder="Nombre" value={name} onChangeText={setName} />
+    <AuthShell
+      title="Crea tu cuenta"
+      subtitle="Es gratis y solo te llevará un minuto."
+      footer={
+        <Link href="/(auth)/login" style={styles.link}>
+          <Text style={styles.linkText}>¿Ya tienes cuenta? Inicia sesión</Text>
+        </Link>
+      }>
+      <LabeledField label="Nombre">
+        <TextField placeholder="Cómo te verán los demás" autoComplete="name" value={name} onChangeText={setName} />
+      </LabeledField>
+      <LabeledField label="Email">
         <TextField
-          placeholder="Email"
+          placeholder="tu@email.com"
           autoCapitalize="none"
+          autoCorrect={false}
+          autoComplete="email"
           keyboardType="email-address"
           value={email}
           onChangeText={setEmail}
         />
-        <TextField
-          placeholder="Contraseña"
-          secureTextEntry
+      </LabeledField>
+      <LabeledField label="Contraseña">
+        <PasswordField
           value={password}
           onChangeText={setPassword}
+          autoComplete="new-password"
+          onSubmitEditing={handleSubmit}
         />
+        <Text style={styles.hint}>Mínimo 8 caracteres.</Text>
+      </LabeledField>
 
-        {error && <Text style={styles.error}>{error}</Text>}
+      {error && <Text style={styles.error}>{error}</Text>}
 
-        <Button
-          title={isSubmitting ? 'Creando…' : 'Crear cuenta'}
-          onPress={handleSubmit}
-          disabled={isSubmitting}
-          style={styles.submit}
-        />
+      <Button
+        title={isSubmitting ? 'Creando…' : 'Crear cuenta'}
+        onPress={handleSubmit}
+        disabled={isSubmitting}
+        style={styles.submit}
+      />
 
-        <GoogleSignInButton onIdToken={loginWithGoogle} onError={setError} />
-
-        <Link href="/(auth)/login" style={styles.link}>
-          <Text style={styles.linkText}>¿Ya tienes cuenta? Inicia sesión</Text>
-        </Link>
-        <Link href="/privacidad" style={styles.link}>
-          <Text style={styles.linkText}>Política de privacidad</Text>
-        </Link>
-      </View>
-    </SafeAreaView>
+      <OrDivider />
+      <GoogleSignInButton onIdToken={loginWithGoogle} onError={setError} />
+    </AuthShell>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: Colors.background,
-  },
-  content:
-    Platform.OS === 'web'
-      ? {
-          flex: 1,
-          justifyContent: 'center',
-          paddingHorizontal: Spacing.safeMargin,
-          gap: Spacing.sm,
-          maxWidth: 420,
-          width: '100%',
-          alignSelf: 'center',
-        }
-      : {
-          flex: 1,
-          justifyContent: 'center',
-          paddingHorizontal: Spacing.safeMargin,
-          gap: Spacing.sm,
-        },
-  title: {
-    ...Typography.headlineLg,
-    color: Colors.primary,
-    textAlign: 'center',
-    marginBottom: Spacing.md,
-  },
-  subtitle: {
-    ...Typography.bodyMd,
-    color: Colors.onSurfaceVariant,
-    textAlign: 'center',
-    marginBottom: Spacing.md,
-  },
   error: {
     ...Typography.bodySm,
     color: Colors.error,
   },
+  info: {
+    ...Typography.bodySm,
+    color: Colors.onSurfaceVariant,
+    flex: 1,
+  },
+  hint: {
+    ...Typography.bodySm,
+    fontSize: 12,
+    color: Colors.onSurfaceVariant,
+  },
+  sentRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.xs,
+  },
   submit: {
-    marginTop: Spacing.xs,
+    marginTop: Spacing.base,
   },
   link: {
     alignSelf: 'center',
-    marginTop: Spacing.sm,
   },
   linkText: {
-    ...Typography.bodySm,
+    ...Typography.bodyMd,
     color: Colors.primaryContainer,
   },
 });

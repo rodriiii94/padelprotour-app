@@ -13,8 +13,9 @@ import { Colors, Spacing, Typography } from '@/theme/tokens';
 
 export default function LoginScreen() {
   const { login, loginWithGoogle } = useAuth();
-  const [email, setEmail] = useState('demo@padelprotour.test');
-  const [password, setPassword] = useState('password');
+  // Cuenta demo del seeder, solo en desarrollo: en producción el formulario va vacío.
+  const [email, setEmail] = useState(__DEV__ ? 'demo@padelprotour.test' : '');
+  const [password, setPassword] = useState(__DEV__ ? 'password' : '');
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isUnverified, setIsUnverified] = useState(false);

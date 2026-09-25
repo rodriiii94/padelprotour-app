@@ -10,7 +10,7 @@ import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 import { StyleSheet, View } from 'react-native';
 
-import { WebSidebar } from '@/components/ui/web-sidebar';
+import { WebBottomBar, WebSidebar, useIsNarrowWeb } from '@/components/ui/web-sidebar';
 import { AuthProvider, useAuth } from '@/hooks/use-auth';
 import { Colors } from '@/theme/tokens';
 
@@ -47,6 +47,7 @@ export default function RootLayoutWeb() {
 
 function AuthGateWeb() {
   const { user, isLoading } = useAuth();
+  const isNarrow = useIsNarrowWeb();
 
   if (isLoading) {
     return null;
@@ -77,9 +78,10 @@ function AuthGateWeb() {
   }
 
   return (
-    <View style={styles.authedRoot}>
-      <WebSidebar />
+    <View style={isNarrow ? styles.authedRootNarrow : styles.authedRoot}>
+      {!isNarrow && <WebSidebar />}
       <View style={styles.authedContent}>{stack}</View>
+      {isNarrow && <WebBottomBar />}
     </View>
   );
 }
@@ -92,6 +94,9 @@ const styles = StyleSheet.create({
   authedRoot: {
     flex: 1,
     flexDirection: 'row',
+  },
+  authedRootNarrow: {
+    flex: 1,
   },
   authedContent: {
     flex: 1,

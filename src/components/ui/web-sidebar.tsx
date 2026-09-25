@@ -1,6 +1,7 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import { usePathname, useRouter } from 'expo-router';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useAuth } from '@/hooks/use-auth';
 import { Colors, FontFamilies, Radii, Spacing, Typography } from '@/theme/tokens';
@@ -14,6 +15,42 @@ const NAV_ITEMS: {
   { href: '/competiciones', label: 'Competiciones', icon: 'emoji-events' },
   { href: '/perfil', label: 'Perfil', icon: 'person' },
 ];
+
+/** Below this width the sidebar would eat most of the screen (phones in a browser). */
+const NARROW_BREAKPOINT = 768;
+
+export function useIsNarrowWeb(): boolean {
+  return useWindowDimensions().width < NARROW_BREAKPOINT;
+}
+
+/** Bottom tab bar for narrow viewports; logout lives in the Perfil screen. */
+export function WebBottomBar() {
+  const router = useRouter();
+  const pathname = usePathname();
+  const insets = useSafeAreaInsets();
+
+  return (
+    <View style={[styles.bottomBar, { paddingBottom: Spacing.xs + insets.bottom }]}>
+      {NAV_ITEMS.map((item) => {
+        const active = pathname === item.href;
+        return (
+          <Pressable
+            key={item.href}
+            onPress={() => router.push(item.href)}
+            style={styles.bottomItem}
+            accessibilityLabel={item.label}>
+            <MaterialIcons
+              name={item.icon}
+              size={24}
+              color={active ? Colors.primaryContainer : Colors.onSurfaceVariant}
+            />
+            <Text style={[styles.bottomLabel, active && styles.bottomLabelActive]}>{item.label}</Text>
+          </Pressable>
+        );
+      })}
+    </View>
+  );
+}
 
 /** Only rendered from `*.web.tsx` layouts — never bundled into the native app. */
 export function WebSidebar() {
@@ -125,5 +162,27 @@ const styles = StyleSheet.create({
   },
   logoutButton: {
     padding: Spacing.base,
+  },
+  bottomBar: {
+    flexDirection: 'row',
+    backgroundColor: Colors.surfaceContainerLow,
+    borderTopWidth: 1,
+    borderTopColor: Colors.glassBorder,
+    paddingTop: Spacing.xs,
+  },
+  bottomItem: {
+    flex: 1,
+    alignItems: 'center',
+    gap: 2,
+    paddingVertical: Spacing.base,
+  },
+  bottomLabel: {
+    ...Typography.bodySm,
+    fontSize: 12,
+    color: Colors.onSurfaceVariant,
+  },
+  bottomLabelActive: {
+    color: Colors.primaryContainer,
+    fontFamily: FontFamilies.bodyBold,
   },
 });

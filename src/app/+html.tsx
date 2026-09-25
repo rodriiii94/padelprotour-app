@@ -20,6 +20,9 @@ export default function Root({ children }: PropsWithChildren) {
           content="width=device-width, initial-scale=1, shrink-to-fit=no, viewport-fit=cover"
         />
         <meta name="theme-color" content="#111508" />
+        <meta name="apple-mobile-web-app-title" content="PadelProTour" />
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+        <link rel="manifest" href="/manifest.webmanifest" />
         <style id="app-reset" dangerouslySetInnerHTML={{ __html: css }} />
       </head>
       <body>{children}</body>

@@ -34,6 +34,11 @@ export function cancelCompetition(id: number): Promise<Competition> {
   return apiFetch<Competition>(`/competitions/${id}/cancel`, { method: 'POST' });
 }
 
+/** Invalidates the current invite link and returns the competition with a new `invite_token`. */
+export function regenerateInvite(id: number): Promise<Competition> {
+  return apiFetch<Competition>(`/competitions/${id}/regenerate-invite`, { method: 'POST' });
+}
+
 /** Irreversible — cascades to categories, phases, matches, registrations, rankings and chat. */
 export function deleteCompetition(id: number): Promise<void> {
   return apiFetch<void>(`/competitions/${id}`, { method: 'DELETE' });

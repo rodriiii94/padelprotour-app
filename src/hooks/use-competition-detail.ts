@@ -3,6 +3,7 @@ import { useCallback, useEffect, useState } from 'react';
 import {
   cancelCompetition as cancelCompetitionRequest,
   deleteCompetition as deleteCompetitionRequest,
+  regenerateInvite as regenerateInviteRequest,
   getCompetition,
   listCategories,
   updateCompetition,
@@ -75,6 +76,18 @@ export function useCompetitionDetail(id: number) {
     }
   }, [competition]);
 
+  const regenerateInvite = useCallback(async () => {
+    if (!competition) return;
+    setIsUpdating(true);
+    try {
+      setCompetition(await regenerateInviteRequest(competition.id));
+    } catch {
+      setError('No se pudo regenerar el enlace.');
+    } finally {
+      setIsUpdating(false);
+    }
+  }, [competition]);
+
   /** Throws on failure — the screen decides what to do (show the error, keep the user here). */
   const deleteCompetition = useCallback(async () => {
     if (!competition) return;
@@ -99,5 +112,6 @@ export function useCompetitionDetail(id: number) {
     togglePrivacy,
     cancelCompetition,
     deleteCompetition,
+    regenerateInvite,
   };
 }

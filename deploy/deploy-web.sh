@@ -8,8 +8,8 @@ set -euo pipefail
 
 HOST="${1:?Uso: deploy-web.sh <ip-o-host-del-vps>}"
 
-echo "==> Exportando build web (usa .env.production automáticamente)"
-npx expo export --platform web
+echo "==> Exportando build web (usa .env.production; --clear evita que Metro reutilice variables EXPO_PUBLIC_ antiguas)"
+npx expo export --platform web --clear
 
 echo "==> Subiendo dist/ a deploy@${HOST}:/var/www/web"
 rsync -avz --delete dist/ "deploy@${HOST}:/var/www/web/"

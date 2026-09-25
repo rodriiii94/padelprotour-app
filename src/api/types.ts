@@ -55,6 +55,13 @@ export interface PublicUserSummary {
   avatar_url: string | null;
 }
 
+export interface MatchMessage {
+  id: number;
+  body: string;
+  created_at: string;
+  author: PublicUserSummary;
+}
+
 export interface PlayerStats {
   matches_played: number;
   wins: number;

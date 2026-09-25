@@ -12,6 +12,7 @@ import {
   updateMatchStatus,
 } from '@/api/categories';
 import { ApiError, type Match } from '@/api/types';
+import { MatchChat } from '@/components/match/match-chat';
 import { MatchStatusBadge, ScoreRows } from '@/components/match/match-scoreboard';
 import { ActionChip } from '@/components/ui/action-chip';
 import { GlassPanel } from '@/components/ui/glass-panel';
@@ -422,6 +423,10 @@ export default function MatchDetailScreen() {
                 <Text style={styles.meta}>Partido pendiente de resultado.</Text>
               </GlassPanel>
             )
+          )}
+
+          {user && (mySide !== null || isOrganizer) && (
+            <MatchChat matchId={match.id} currentUserId={user.id} isOrganizer={isOrganizer} />
           )}
         </>
       )}

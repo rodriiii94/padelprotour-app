@@ -3,6 +3,7 @@ import type {
   Category,
   CategoryInput,
   Match,
+  MatchMessage,
   MatchSet,
   MatchStatus,
   Pair,
@@ -114,4 +115,17 @@ export function confirmMatchResult(matchId: number): Promise<Match> {
 /** Rechaza (un rival) o retira (quien propuso) el resultado: el partido vuelve a programado. */
 export function rejectMatchResult(matchId: number): Promise<Match> {
   return apiFetch<Match>(`/matches/${matchId}/result-proposal/reject`, { method: 'POST' });
+}
+
+/** Mensajes del chat de un partido, los más recientes primero (30 por página). */
+export function listMatchMessages(matchId: number, page = 1): Promise<Paginated<MatchMessage>> {
+  return apiFetch<Paginated<MatchMessage>>(`/matches/${matchId}/messages?page=${page}`);
+}
+
+export function sendMatchMessage(matchId: number, body: string): Promise<MatchMessage> {
+  return apiFetch<MatchMessage>(`/matches/${matchId}/messages`, { method: 'POST', body: { body } });
+}
+
+export function deleteMatchMessage(messageId: number): Promise<void> {
+  return apiFetch<void>(`/match-messages/${messageId}`, { method: 'DELETE' });
 }

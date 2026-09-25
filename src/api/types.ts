@@ -74,6 +74,9 @@ export interface PlayerProfile extends ProfileFields {
   stats: PlayerStats;
   achievements: AchievementKey[];
   usual_partner: { id: number; name: string; matches: number } | null;
+  followers_count: number;
+  following_count: number;
+  is_following: boolean;
 }
 
 export interface AuthToken {

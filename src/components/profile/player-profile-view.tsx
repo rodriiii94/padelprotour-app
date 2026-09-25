@@ -22,7 +22,14 @@ import {
 import { Colors, FontFamilies, Radii, Spacing, Typography } from '@/theme/tokens';
 
 /** La ficha de un jugador. La misma vista sirve para tu perfil y para el de cualquier otro. */
-export function PlayerProfileView({ profile }: { profile: PlayerProfile }) {
+export function PlayerProfileView({
+  profile,
+  action,
+}: {
+  profile: PlayerProfile;
+  /** Botón bajo la cabecera, p. ej. Seguir en el perfil de otro jugador. */
+  action?: ReactNode;
+}) {
   const router = useRouter();
   const { stats, usual_partner: partner } = profile;
   const subtitle = subtitleFor(profile);
@@ -44,6 +51,22 @@ export function PlayerProfileView({ profile }: { profile: PlayerProfile }) {
           {subtitle ? <Text style={styles.meta}>{subtitle}</Text> : null}
         </View>
       </View>
+
+      <View style={styles.followRow}>
+        <Pressable onPress={() => router.push(`/conexiones/${profile.id}?tipo=seguidores`)}>
+          <Text style={styles.followCount}>
+            <Text style={styles.followNumber}>{profile.followers_count}</Text>{' '}
+            {profile.followers_count === 1 ? 'seguidor' : 'seguidores'}
+          </Text>
+        </Pressable>
+        <Pressable onPress={() => router.push(`/conexiones/${profile.id}?tipo=siguiendo`)}>
+          <Text style={styles.followCount}>
+            <Text style={styles.followNumber}>{profile.following_count}</Text> siguiendo
+          </Text>
+        </Pressable>
+      </View>
+
+      {action}
 
       {profile.motto ? <Text style={styles.motto}>“{profile.motto}”</Text> : null}
 
@@ -198,6 +221,18 @@ const styles = StyleSheet.create({
   meta: {
     ...Typography.bodySm,
     color: Colors.onSurfaceVariant,
+  },
+  followRow: {
+    flexDirection: 'row',
+    gap: Spacing.sm,
+  },
+  followCount: {
+    ...Typography.bodyMd,
+    color: Colors.onSurfaceVariant,
+  },
+  followNumber: {
+    fontFamily: FontFamilies.bodyBold,
+    color: Colors.onSurface,
   },
   motto: {
     ...Typography.bodyMd,

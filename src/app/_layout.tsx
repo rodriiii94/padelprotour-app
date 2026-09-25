@@ -72,6 +72,7 @@ function AuthGate() {
           <Stack.Screen name="editar-perfil" options={{ presentation: 'modal' }} />
           <Stack.Screen name="eliminar-cuenta" />
           <Stack.Screen name="jugador/[id]" />
+          <Stack.Screen name="conexiones/[id]" />
           <Stack.Screen name="competicion/[id]" />
           <Stack.Screen name="categoria/[id]" />
           <Stack.Screen name="invite/[token]" />

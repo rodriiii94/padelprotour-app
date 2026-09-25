@@ -7,11 +7,12 @@ import { useAuth } from '@/hooks/use-auth';
 import { Colors, FontFamilies, Radii, Spacing, Typography } from '@/theme/tokens';
 
 const NAV_ITEMS: {
-  href: '/' | '/competiciones' | '/perfil';
+  href: '/' | '/buscar' | '/competiciones' | '/perfil';
   label: string;
   icon: keyof typeof MaterialIcons.glyphMap;
 }[] = [
   { href: '/', label: 'Inicio', icon: 'home' },
+  { href: '/buscar', label: 'Buscar', icon: 'search' },
   { href: '/competiciones', label: 'Competiciones', icon: 'emoji-events' },
   { href: '/perfil', label: 'Perfil', icon: 'person' },
 ];

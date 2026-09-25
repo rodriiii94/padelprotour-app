@@ -1,17 +1,34 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { PlayerProfileView } from '@/components/profile/player-profile-view';
 import { GlassPanel } from '@/components/ui/glass-panel';
 import { Screen } from '@/components/ui/screen';
+import { Button } from '@/components/ui/button';
+import { useAuth } from '@/hooks/use-auth';
 import { usePlayerProfile } from '@/hooks/use-player-profile';
+import { followUser, unfollowUser } from '@/api/users';
 import { Colors, Spacing, Typography } from '@/theme/tokens';
 
 export default function PlayerProfileScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const { profile, isLoading, error } = usePlayerProfile(Number(id));
+  const { user } = useAuth();
+  const { profile, isLoading, error, refetch } = usePlayerProfile(Number(id));
+  const [isToggling, setIsToggling] = useState(false);
+
+  async function toggleFollow() {
+    if (!profile) return;
+    setIsToggling(true);
+    try {
+      await (profile.is_following ? unfollowUser(profile.id) : followUser(profile.id));
+      await refetch();
+    } finally {
+      setIsToggling(false);
+    }
+  }
 
   return (
     <Screen>
@@ -31,7 +48,21 @@ export default function PlayerProfileScreen() {
         </GlassPanel>
       )}
 
-      {profile && <PlayerProfileView profile={profile} />}
+      {profile && (
+        <PlayerProfileView
+          profile={profile}
+          action={
+            user && user.id !== profile.id ? (
+              <Button
+                title={profile.is_following ? 'Siguiendo' : 'Seguir'}
+                variant={profile.is_following ? 'secondary' : 'primary'}
+                disabled={isToggling}
+                onPress={toggleFollow}
+              />
+            ) : undefined
+          }
+        />
+      )}
     </Screen>
   );
 }

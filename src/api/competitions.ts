@@ -5,6 +5,11 @@ export function listCompetitions(page = 1): Promise<Paginated<Competition>> {
   return apiFetch<Paginated<Competition>>(`/competitions?page=${page}&upcoming=1`);
 }
 
+/** Busca por nombre o sede entre las competiciones públicas y no canceladas. */
+export function searchCompetitions(query: string): Promise<Paginated<Competition>> {
+  return apiFetch<Paginated<Competition>>(`/competitions?search=${encodeURIComponent(query)}`);
+}
+
 export function isCompetitionActive(competition: Competition): boolean {
   if (competition.cancelled_at) return false;
   return !competition.end_date || new Date(competition.end_date) >= new Date();

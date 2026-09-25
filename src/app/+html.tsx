@@ -19,6 +19,7 @@ export default function Root({ children }: PropsWithChildren) {
           name="viewport"
           content="width=device-width, initial-scale=1, shrink-to-fit=no, viewport-fit=cover"
         />
+        <meta name="theme-color" content="#111508" />
         <style id="app-reset" dangerouslySetInnerHTML={{ __html: css }} />
       </head>
       <body>{children}</body>
@@ -28,7 +29,10 @@ export default function Root({ children }: PropsWithChildren) {
 
 // `overflow-x: clip` (no `hidden`) recorta lo que se salga a los lados sin convertir
 // #root en contenedor de scroll, así `position: sticky` sigue funcionando.
+// El fondo va en html y body (no solo en el contenido): es lo que se ve en el rebote
+// al pasar del final del scroll y bajo la isla dinámica / barra de estado.
 const css = `
+html, body { background-color: #111508; }
 #root { display: flex; min-height: 100vh; min-height: 100dvh; overflow-x: clip; }
 @media (min-width: 768px) {
   #root, body, html { height: 100%; }

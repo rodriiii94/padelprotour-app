@@ -1,6 +1,7 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
-import { useCallback } from 'react';
+import * as Clipboard from 'expo-clipboard';
+import { useCallback, useState } from 'react';
 import { ActivityIndicator, Alert, Pressable, Share, StyleSheet, Text, View } from 'react-native';
 
 import { Button } from '@/components/ui/button';
@@ -8,6 +9,7 @@ import { GlassPanel } from '@/components/ui/glass-panel';
 import { Screen } from '@/components/ui/screen';
 import { useAuth } from '@/hooks/use-auth';
 import { useCompetitionDetail } from '@/hooks/use-competition-detail';
+import { inviteUrl } from '@/lib/invite';
 import { Colors, FontFamilies, Radii, Spacing, Typography } from '@/theme/tokens';
 import type { Category, RegistrationMode } from '@/api/types';
 
@@ -38,6 +40,7 @@ export default function CompetitionDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { user } = useAuth();
+  const [linkCopied, setLinkCopied] = useState(false);
   const {
     competition,
     categories,
@@ -174,13 +177,22 @@ export default function CompetitionDetailScreen() {
                   {competition.invite_token ? (
                     <>
                       <Text style={styles.meta}>Enlace de invitación</Text>
-                      <Text style={styles.inviteToken}>{competition.invite_token}</Text>
+                      <Text style={styles.inviteToken}>{inviteUrl(competition.invite_token)}</Text>
+                      <Button
+                        title={linkCopied ? '¡Enlace copiado!' : 'Copiar enlace'}
+                        variant="secondary"
+                        onPress={async () => {
+                          await Clipboard.setStringAsync(inviteUrl(competition.invite_token!));
+                          setLinkCopied(true);
+                          setTimeout(() => setLinkCopied(false), 2000);
+                        }}
+                      />
                       <Button
                         title="Compartir enlace"
                         variant="ghost"
                         onPress={() =>
                           Share.share({
-                            message: `Únete a "${competition.name}" en PadelProTour: padelontourapp://invite/${competition.invite_token}`,
+                            message: `Únete a "${competition.name}" en PadelProTour: ${inviteUrl(competition.invite_token!)}`,
                           })
                         }
                       />
@@ -344,7 +356,7 @@ const styles = StyleSheet.create({
     ...Typography.bodyMd,
     fontFamily: FontFamilies.bodyBold,
     color: Colors.primaryContainer,
-    letterSpacing: 1,
+    fontSize: 14,
   },
   sectionTitle: {
     ...Typography.headlineSm,

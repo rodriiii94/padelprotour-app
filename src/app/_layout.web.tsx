@@ -5,13 +5,14 @@ import {
   useFonts,
 } from '@expo-google-fonts/manrope';
 import { Sora_600SemiBold, Sora_700Bold, Sora_800ExtraBold } from '@expo-google-fonts/sora';
-import { Redirect, Slot, Stack, useSegments } from 'expo-router';
+import { Slot, Stack, useRouter, useSegments } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import { WebBottomBar, WebSidebar } from '@/components/ui/web-sidebar';
 import { AuthProvider, useAuth } from '@/hooks/use-auth';
+import { takePendingInvite } from '@/lib/invite';
 import { useIsNarrowWeb } from '@/hooks/use-is-narrow-web';
 import { Colors } from '@/theme/tokens';
 
@@ -51,6 +52,13 @@ function AuthGateWeb() {
   const isNarrow = useIsNarrowWeb();
   const isOnAuthRoute = ['(auth)', 'verify-email'].includes((useSegments() as string[])[0]);
 
+  // Con sesión ya activa, un enlace de invitación se abre tal cual: no queda pendiente.
+  useEffect(() => {
+    if (user && !isOnAuthRoute) {
+      takePendingInvite();
+    }
+  }, [user, isOnAuthRoute]);
+
   if (isLoading) {
     return null;
   }
@@ -83,7 +91,12 @@ function AuthGateWeb() {
   // absoluto dentro de un contenedor de altura fija, y así el documento no puede
   // crecer ni hacer scroll (que es lo que hace que el móvil esconda la barra de URL).
   if (isOnAuthRoute) {
-    return <Redirect href="/" />;
+    return (
+      <>
+        <Slot />
+        <PostLoginRedirect />
+      </>
+    );
   }
 
   return (
@@ -95,6 +108,22 @@ function AuthGateWeb() {
       {isNarrow && <WebBottomBar />}
     </View>
   );
+}
+
+// Tras iniciar sesión, a la invitación con la que se entró; si no, al inicio. Se hace
+// con router.replace sobre un navegador montado (Slot): un <Redirect> que sustituye a
+// todo el árbol no llega a cambiar la ruta y se queda repitiéndose sin fin.
+function PostLoginRedirect() {
+  const router = useRouter();
+  useEffect(() => {
+    const token = takePendingInvite();
+    if (token) {
+      router.replace({ pathname: '/invite/[token]', params: { token } });
+    } else {
+      router.replace('/');
+    }
+  }, [router]);
+  return null;
 }
 
 const styles = StyleSheet.create({

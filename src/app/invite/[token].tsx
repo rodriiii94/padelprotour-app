@@ -74,7 +74,7 @@ export default function InviteScreen() {
               />
             </View>
             <Text style={[styles.typeLabel, { color: TYPE_META[competition.type].color }]}>
-              Te han invitado a esta {TYPE_META[competition.type].label.toLowerCase()}
+              Te han invitado a {competition.type === 'league' ? 'esta liga' : 'este torneo'}
             </Text>
           </View>
 

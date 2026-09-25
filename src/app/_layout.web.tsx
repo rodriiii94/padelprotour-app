@@ -52,29 +52,34 @@ function AuthGateWeb() {
     return null;
   }
 
-  if (!user) {
-    return (
-      <Stack screenOptions={{ headerShown: false }}>
+  // Sin Stack.Protected, expo-router deja abrir por URL cualquier ruta no
+  // declarada en el Stack (p.ej. "/" sin sesión), igual que hace el layout nativo.
+  const stack = (
+    <Stack screenOptions={{ headerShown: false }}>
+      <Stack.Protected guard={!user}>
         <Stack.Screen name="(auth)" />
         <Stack.Screen name="verify-email" />
-      </Stack>
-    );
+      </Stack.Protected>
+      <Stack.Protected guard={!!user}>
+        <Stack.Screen name="(tabs)" />
+        <Stack.Screen name="crear-competicion" options={{ presentation: 'modal' }} />
+        <Stack.Screen name="crear-categoria" options={{ presentation: 'modal' }} />
+        <Stack.Screen name="competicion/[id]" />
+        <Stack.Screen name="categoria/[id]" />
+        <Stack.Screen name="invite/[token]" />
+        <Stack.Screen name="partido/[id]" />
+      </Stack.Protected>
+    </Stack>
+  );
+
+  if (!user) {
+    return stack;
   }
 
   return (
     <View style={styles.authedRoot}>
       <WebSidebar />
-      <View style={styles.authedContent}>
-        <Stack screenOptions={{ headerShown: false }}>
-          <Stack.Screen name="(tabs)" />
-          <Stack.Screen name="crear-competicion" options={{ presentation: 'modal' }} />
-          <Stack.Screen name="crear-categoria" options={{ presentation: 'modal' }} />
-          <Stack.Screen name="competicion/[id]" />
-          <Stack.Screen name="categoria/[id]" />
-          <Stack.Screen name="invite/[token]" />
-          <Stack.Screen name="partido/[id]" />
-        </Stack>
-      </View>
+      <View style={styles.authedContent}>{stack}</View>
     </View>
   );
 }

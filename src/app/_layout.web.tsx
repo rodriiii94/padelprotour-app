@@ -74,12 +74,14 @@ function AuthGateWeb() {
         <Stack.Protected guard>
           <Stack.Screen name="(auth)" />
           <Stack.Screen name="verify-email" />
+          <Stack.Screen name="privacidad" />
         </Stack.Protected>
         <Stack.Protected guard={false}>
           <Stack.Screen name="(tabs)" />
           <Stack.Screen name="crear-competicion" />
           <Stack.Screen name="crear-categoria" />
           <Stack.Screen name="editar-perfil" />
+          <Stack.Screen name="eliminar-cuenta" />
           <Stack.Screen name="jugador/[id]" />
           <Stack.Screen name="competicion/[id]" />
           <Stack.Screen name="categoria/[id]" />

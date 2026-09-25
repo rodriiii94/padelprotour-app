@@ -24,6 +24,7 @@ type AuthContextValue = {
   verifyEmail: (input: { token: string }) => Promise<void>;
   loginWithGoogle: (idToken: string) => Promise<void>;
   updateProfile: (input: ProfileInput) => Promise<void>;
+  deleteAccount: (input: { password?: string; email?: string }) => Promise<void>;
   logout: () => Promise<void>;
 };
 
@@ -83,6 +84,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(await authApi.updateProfile(input));
   }, []);
 
+  const deleteAccount = useCallback(async (input: { password?: string; email?: string }) => {
+    await authApi.deleteAccount(input);
+    await persistToken(null);
+    setUser(null);
+  }, []);
+
   const logout = useCallback(async () => {
     try {
       await authApi.logout();
@@ -93,8 +100,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const value = useMemo(
-    () => ({ user, isLoading, login, register, verifyEmail, loginWithGoogle, updateProfile, logout }),
-    [user, isLoading, login, register, verifyEmail, loginWithGoogle, updateProfile, logout]
+    () => ({ user, isLoading, login, register, verifyEmail, loginWithGoogle, updateProfile, deleteAccount, logout }),
+    [user, isLoading, login, register, verifyEmail, loginWithGoogle, updateProfile, deleteAccount, logout]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

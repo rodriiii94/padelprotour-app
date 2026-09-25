@@ -96,6 +96,9 @@ export default function LoginScreen() {
         <Link href="/(auth)/register" style={styles.link}>
           <Text style={styles.linkText}>¿No tienes cuenta? Regístrate</Text>
         </Link>
+        <Link href="/privacidad" style={styles.link}>
+          <Text style={styles.linkText}>Política de privacidad</Text>
+        </Link>
       </View>
     </SafeAreaView>
   );

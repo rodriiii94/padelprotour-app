@@ -81,6 +81,9 @@ export default function RegisterScreen() {
         <Link href="/(auth)/login" style={styles.link}>
           <Text style={styles.linkText}>¿Ya tienes cuenta? Inicia sesión</Text>
         </Link>
+        <Link href="/privacidad" style={styles.link}>
+          <Text style={styles.linkText}>Política de privacidad</Text>
+        </Link>
       </View>
     </SafeAreaView>
   );

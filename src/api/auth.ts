@@ -75,3 +75,8 @@ export function me(): Promise<User> {
 export function updateProfile(input: ProfileInput): Promise<User> {
   return apiFetch<User>('/me', { method: 'PUT', body: input });
 }
+
+/** Elimina la cuenta (se anonimiza). Pide la contraseña, o el email si la cuenta solo usa Google/Apple. */
+export function deleteAccount(input: { password?: string; email?: string }): Promise<void> {
+  return apiFetch<void>('/me', { method: 'DELETE', body: input });
+}

@@ -27,6 +27,8 @@ export interface ProfileFields {
 
 /** The authenticated user's own account — the only place the email is ever returned. */
 export interface User extends ProfileFields {
+  /** false: la cuenta solo entra con Google/Apple. */
+  has_password?: boolean;
   id: number;
   name: string;
   email: string;

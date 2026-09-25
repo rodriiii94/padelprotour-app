@@ -60,7 +60,8 @@ function AuthGate() {
     <>
       {user && <PendingInviteRedirect />}
       <Stack screenOptions={{ headerShown: false }}>
-        <Stack.Protected guard={!user}>
+        <Stack.Screen name="privacidad" />
+      <Stack.Protected guard={!user}>
           <Stack.Screen name="(auth)" />
           <Stack.Screen name="verify-email" />
         </Stack.Protected>
@@ -69,6 +70,7 @@ function AuthGate() {
           <Stack.Screen name="crear-competicion" options={{ presentation: 'modal' }} />
           <Stack.Screen name="crear-categoria" options={{ presentation: 'modal' }} />
           <Stack.Screen name="editar-perfil" options={{ presentation: 'modal' }} />
+          <Stack.Screen name="eliminar-cuenta" />
           <Stack.Screen name="jugador/[id]" />
           <Stack.Screen name="competicion/[id]" />
           <Stack.Screen name="categoria/[id]" />

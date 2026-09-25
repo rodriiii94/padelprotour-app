@@ -20,6 +20,8 @@ export default function PerfilScreen() {
       <Text style={styles.email}>{user?.email}</Text>
       <Button title="Editar perfil" onPress={() => router.push('/editar-perfil')} />
       <Button title="Cerrar sesión" variant="secondary" onPress={logout} />
+      <Button title="Política de privacidad" variant="ghost" onPress={() => router.push('/privacidad')} />
+      <Button title="Eliminar cuenta" variant="ghost" onPress={() => router.push('/eliminar-cuenta')} />
     </Screen>
   );
 }

@@ -25,6 +25,7 @@ export default function CrearCompeticionScreen() {
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [isPrivate, setIsPrivate] = useState(false);
+  const [isDoubleRound, setIsDoubleRound] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -47,6 +48,7 @@ export default function CrearCompeticionScreen() {
         start_date: startDate || null,
         end_date: endDate || null,
         is_private: isPrivate,
+        double_round: type === 'league' ? isDoubleRound : undefined,
       });
       close();
     } catch (e) {
@@ -85,6 +87,25 @@ export default function CrearCompeticionScreen() {
         onChangeText={setEndDate}
         autoCapitalize="none"
       />
+
+      {type === 'league' && (
+        <GlassPanel style={styles.privacyRow}>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.cardTitle}>Ida y vuelta</Text>
+            <Text style={styles.hint}>
+              {isDoubleRound
+                ? 'Cada pareja se enfrenta dos veces: ida y vuelta.'
+                : 'Cada pareja se enfrenta una sola vez.'}
+            </Text>
+          </View>
+          <Switch
+            value={isDoubleRound}
+            onValueChange={setIsDoubleRound}
+            trackColor={{ false: Colors.glassFill, true: Colors.primaryContainer }}
+            thumbColor={Colors.primary}
+          />
+        </GlassPanel>
+      )}
 
       <GlassPanel style={styles.privacyRow}>
         <View style={{ flex: 1 }}>

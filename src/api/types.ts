@@ -112,6 +112,8 @@ export interface Competition {
   registration_closes_at: string | null;
   organizer_id: number;
   is_private: boolean;
+  /** Solo ligas ("ida y vuelta"): siempre false en un torneo, aunque se envíe true. */
+  double_round: boolean;
   /**
    * Only present when the caller is the organizer (key absent entirely
    * for anyone else); can still be `null` for competitions created
@@ -132,6 +134,8 @@ export interface CompetitionInput {
   end_date?: string | null;
   registration_closes_at?: string | null;
   is_private?: boolean;
+  /** Solo ligas: cada pareja se enfrenta dos veces (ida y vuelta). Se ignora en un torneo. */
+  double_round?: boolean;
 }
 
 export type RegistrationMode = 'fixed_pair' | 'individual_rotating' | null;

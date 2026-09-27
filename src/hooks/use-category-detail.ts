@@ -38,7 +38,7 @@ export function useCategoryDetail(categoryId: number, invite?: string) {
         const cat = await getCategory(categoryId, invite);
         const [comp, registrationsPage, pairs, phaseList, rankingList] = await Promise.all([
           getCompetition(cat.competition_id, invite),
-          listRegistrations(categoryId),
+          listRegistrations(categoryId, invite),
           listMyPairs(),
           listPhases(categoryId, invite),
           listRankings(categoryId, invite),
@@ -104,28 +104,28 @@ export function useCategoryDetail(categoryId: number, invite?: string) {
   const joinWithPair = useCallback(
     (pairId: number) =>
       runMutation(
-        () => createRegistration(categoryId, { pair_id: pairId }),
+        () => createRegistration(categoryId, { pair_id: pairId }, invite),
         'No se pudo completar la inscripción.'
       ),
-    [runMutation, categoryId]
+    [runMutation, categoryId, invite]
   );
 
   const joinIndividually = useCallback(
     (playerId: number) =>
       runMutation(
-        () => createRegistration(categoryId, { player_id: playerId }),
+        () => createRegistration(categoryId, { player_id: playerId }, invite),
         'No se pudo completar la inscripción.'
       ),
-    [runMutation, categoryId]
+    [runMutation, categoryId, invite]
   );
 
   const formPairAndJoin = useCallback(
     (partnerId: number, name?: string) =>
       runMutation(async () => {
         const pair = await createPair(partnerId, name);
-        await createRegistration(categoryId, { pair_id: pair.id });
+        await createRegistration(categoryId, { pair_id: pair.id }, invite);
       }, 'No se pudo formar la pareja e inscribirte.'),
-    [runMutation, categoryId]
+    [runMutation, categoryId, invite]
   );
 
   const generateCalendar = useCallback(

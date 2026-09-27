@@ -26,15 +26,20 @@ export function getCategory(id: number, invite?: string): Promise<Category> {
   return apiFetch<Category>(withInvite(`/categories/${id}`, invite));
 }
 
-export function listRegistrations(categoryId: number): Promise<Paginated<Registration>> {
-  return apiFetch<Paginated<Registration>>(`/categories/${categoryId}/registrations`);
+export function listRegistrations(categoryId: number, invite?: string): Promise<Paginated<Registration>> {
+  return apiFetch<Paginated<Registration>>(withInvite(`/categories/${categoryId}/registrations`, invite));
 }
 
+/**
+ * `invite`: mismo código del enlace que abrió la categoría. El servidor exige poder ver la
+ * competición (participante o código correcto) para poder inscribirse en ella.
+ */
 export function createRegistration(
   categoryId: number,
-  input: { pair_id: number } | { player_id: number }
+  input: { pair_id: number } | { player_id: number },
+  invite?: string
 ): Promise<Registration> {
-  return apiFetch<Registration>(`/categories/${categoryId}/registrations`, {
+  return apiFetch<Registration>(withInvite(`/categories/${categoryId}/registrations`, invite), {
     method: 'POST',
     body: input,
   });

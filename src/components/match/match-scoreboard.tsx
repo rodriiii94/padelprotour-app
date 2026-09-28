@@ -73,7 +73,12 @@ export function ScoreRows({
         return (
           <View
             key={side}
-            style={[styles.row, compact && styles.rowCompact, side === 1 && styles.rowDivider]}>
+            style={[
+              styles.row,
+              compact && styles.rowCompact,
+              side === 1 && styles.rowDivider,
+              isWinner && styles.rowWinner,
+            ]}>
             <View style={styles.marker}>
               {isWinner ? (
                 <MaterialIcons name="emoji-events" size={compact ? 16 : 18} color={Colors.secondaryContainer} />
@@ -144,6 +149,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: Spacing.xs,
     paddingVertical: Spacing.xs + 2,
+    paddingHorizontal: Spacing.xs,
+    borderRadius: Radii.DEFAULT,
   },
   rowCompact: {
     paddingVertical: 6,
@@ -151,6 +158,9 @@ const styles = StyleSheet.create({
   rowDivider: {
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: Colors.glassBorder,
+  },
+  rowWinner: {
+    backgroundColor: Colors.primaryContainer + '14',
   },
   marker: {
     width: 20,

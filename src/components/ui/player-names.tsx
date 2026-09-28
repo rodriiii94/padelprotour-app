@@ -15,7 +15,7 @@ type Props = {
 };
 
 /** Los nombres de una pareja o partido, cada uno pulsable para abrir la ficha de ese jugador. */
-export function PlayerNames({ players, style, separator = ' / ', boldIds }: Props) {
+export function PlayerNames({ players, style, separator = ' · ', boldIds }: Props) {
   const router = useRouter();
 
   return (

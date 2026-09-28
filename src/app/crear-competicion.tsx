@@ -1,6 +1,6 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Pressable, StyleSheet, Switch, Text, View } from 'react-native';
 
 import { createCompetition } from '@/api/competitions';
@@ -10,7 +10,8 @@ import { GlassPanel } from '@/components/ui/glass-panel';
 import { Screen } from '@/components/ui/screen';
 import { SegmentedControl } from '@/components/ui/segmented-control';
 import { TextField } from '@/components/ui/text-field';
-import { Colors, Spacing, Typography } from '@/theme/tokens';
+import { useColors } from '@/hooks/use-theme';
+import { Spacing, Typography, type ColorPalette } from '@/theme/tokens';
 
 const TYPE_OPTIONS: { value: CompetitionType; label: string }[] = [
   { value: 'tournament', label: 'Torneo' },
@@ -28,6 +29,8 @@ export default function CrearCompeticionScreen() {
   const [isDoubleRound, setIsDoubleRound] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
 
   function close() {
     if (router.canGoBack()) {
@@ -62,7 +65,7 @@ export default function CrearCompeticionScreen() {
     <Screen>
       <View style={styles.header}>
         <Pressable onPress={close} hitSlop={12}>
-          <MaterialIcons name="close" size={24} color={Colors.onSurface} />
+          <MaterialIcons name="close" size={24} color={colors.onSurface} />
         </Pressable>
         <Text style={styles.title}>Nueva competición</Text>
       </View>
@@ -101,8 +104,8 @@ export default function CrearCompeticionScreen() {
           <Switch
             value={isDoubleRound}
             onValueChange={setIsDoubleRound}
-            trackColor={{ false: Colors.glassFill, true: Colors.primaryContainer }}
-            thumbColor={Colors.primary}
+            trackColor={{ false: colors.glassFill, true: colors.primaryContainer }}
+            thumbColor={colors.primary}
           />
         </GlassPanel>
       )}
@@ -119,8 +122,8 @@ export default function CrearCompeticionScreen() {
         <Switch
           value={isPrivate}
           onValueChange={setIsPrivate}
-          trackColor={{ false: Colors.glassFill, true: Colors.primaryContainer }}
-          thumbColor={Colors.primary}
+          trackColor={{ false: colors.glassFill, true: colors.primaryContainer }}
+          thumbColor={colors.primary}
         />
       </GlassPanel>
 
@@ -135,32 +138,33 @@ export default function CrearCompeticionScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.sm,
-  },
-  title: {
-    ...Typography.headlineMd,
-    color: Colors.primary,
-  },
-  privacyRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.sm,
-    padding: Spacing.sm,
-  },
-  cardTitle: {
-    ...Typography.headlineSm,
-    color: Colors.primary,
-  },
-  hint: {
-    ...Typography.bodySm,
-    color: Colors.onSurfaceVariant,
-  },
-  error: {
-    ...Typography.bodySm,
-    color: Colors.error,
-  },
-});
+const makeStyles = (colors: ColorPalette) =>
+  StyleSheet.create({
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: Spacing.sm,
+    },
+    title: {
+      ...Typography.headlineMd,
+      color: colors.primary,
+    },
+    privacyRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: Spacing.sm,
+      padding: Spacing.sm,
+    },
+    cardTitle: {
+      ...Typography.headlineSm,
+      color: colors.primary,
+    },
+    hint: {
+      ...Typography.bodySm,
+      color: colors.onSurfaceVariant,
+    },
+    error: {
+      ...Typography.bodySm,
+      color: colors.error,
+    },
+  });

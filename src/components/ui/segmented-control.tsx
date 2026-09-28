@@ -1,6 +1,8 @@
+import { useMemo } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { Colors, FontFamilies, Radii, Spacing, Typography } from '@/theme/tokens';
+import { useColors } from '@/hooks/use-theme';
+import { FontFamilies, Radii, Spacing, Typography, type ColorPalette } from '@/theme/tokens';
 
 type Props<T extends string> = {
   options: { value: T; label: string }[];
@@ -11,6 +13,9 @@ type Props<T extends string> = {
 };
 
 export function SegmentedControl<T extends string>({ options, value, onChange, allowClear = false }: Props<T>) {
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+
   return (
     <View style={styles.container}>
       {options.map((option) => {
@@ -28,30 +33,31 @@ export function SegmentedControl<T extends string>({ options, value, onChange, a
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flexDirection: 'row',
-    backgroundColor: Colors.glassFill,
-    borderWidth: 1,
-    borderColor: Colors.glassBorder,
-    borderRadius: Radii.full,
-    padding: 4,
-  },
-  button: {
-    flex: 1,
-    paddingVertical: Spacing.xs,
-    borderRadius: Radii.full,
-    alignItems: 'center',
-  },
-  buttonActive: {
-    backgroundColor: Colors.primaryContainer,
-  },
-  label: {
-    ...Typography.bodySm,
-    color: Colors.onSurfaceVariant,
-  },
-  labelActive: {
-    color: Colors.onPrimary,
-    fontFamily: FontFamilies.bodyBold,
-  },
-});
+const makeStyles = (colors: ColorPalette) =>
+  StyleSheet.create({
+    container: {
+      flexDirection: 'row',
+      backgroundColor: colors.glassFill,
+      borderWidth: 1,
+      borderColor: colors.glassBorder,
+      borderRadius: Radii.full,
+      padding: 4,
+    },
+    button: {
+      flex: 1,
+      paddingVertical: Spacing.xs,
+      borderRadius: Radii.full,
+      alignItems: 'center',
+    },
+    buttonActive: {
+      backgroundColor: colors.primaryContainer,
+    },
+    label: {
+      ...Typography.bodySm,
+      color: colors.onSurfaceVariant,
+    },
+    labelActive: {
+      color: colors.onPrimary,
+      fontFamily: FontFamilies.bodyBold,
+    },
+  });

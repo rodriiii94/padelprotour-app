@@ -1,6 +1,8 @@
+import { useMemo } from 'react';
 import { Pressable, StyleSheet, Text, type PressableProps } from 'react-native';
 
-import { Colors, FontFamilies, Radii, Spacing } from '@/theme/tokens';
+import { useColors } from '@/hooks/use-theme';
+import { FontFamilies, Radii, Spacing, type ColorPalette } from '@/theme/tokens';
 
 type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger';
 
@@ -10,6 +12,9 @@ type ButtonProps = PressableProps & {
 };
 
 export function Button({ title, variant = 'primary', style, disabled, ...rest }: ButtonProps) {
+  const colors = useColors();
+  const { variantStyles, variantLabelStyles } = useMemo(() => makeVariantStyles(colors), [colors]);
+
   return (
     <Pressable
       style={(state) => [
@@ -42,34 +47,35 @@ const styles = StyleSheet.create({
   },
 });
 
-const variantStyles = StyleSheet.create({
-  primary: {
-    backgroundColor: Colors.secondaryContainer,
-  },
-  secondary: {
-    backgroundColor: Colors.glassFill,
-    borderWidth: 1,
-    borderColor: Colors.primaryContainer,
-  },
-  ghost: {
-    backgroundColor: 'transparent',
-  },
-  danger: {
-    backgroundColor: Colors.errorContainer,
-  },
-});
-
-const variantLabelStyles = StyleSheet.create({
-  primary: {
-    color: Colors.onSecondaryContainer,
-  },
-  secondary: {
-    color: Colors.onSurface,
-  },
-  ghost: {
-    color: Colors.primaryContainer,
-  },
-  danger: {
-    color: Colors.onErrorContainer,
-  },
+const makeVariantStyles = (colors: ColorPalette) => ({
+  variantStyles: StyleSheet.create({
+    primary: {
+      backgroundColor: colors.secondaryContainer,
+    },
+    secondary: {
+      backgroundColor: colors.glassFill,
+      borderWidth: 1,
+      borderColor: colors.primaryContainer,
+    },
+    ghost: {
+      backgroundColor: 'transparent',
+    },
+    danger: {
+      backgroundColor: colors.errorContainer,
+    },
+  }),
+  variantLabelStyles: StyleSheet.create({
+    primary: {
+      color: colors.onSecondaryContainer,
+    },
+    secondary: {
+      color: colors.onSurface,
+    },
+    ghost: {
+      color: colors.primaryContainer,
+    },
+    danger: {
+      color: colors.onErrorContainer,
+    },
+  }),
 });

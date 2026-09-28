@@ -1,6 +1,6 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import * as Clipboard from 'expo-clipboard';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Pressable, Share, StyleSheet, Text, View } from 'react-native';
 
 import type { Competition } from '@/api/types';
@@ -8,8 +8,9 @@ import { ActionChip } from '@/components/ui/action-chip';
 import { GlassPanel } from '@/components/ui/glass-panel';
 import { SectionLabel } from '@/components/ui/section-label';
 import { SegmentedControl } from '@/components/ui/segmented-control';
+import { useTheme } from '@/hooks/use-theme';
 import { inviteUrl } from '@/lib/invite';
-import { Colors, Radii, Spacing, Typography } from '@/theme/tokens';
+import { Radii, Spacing, Typography, type ColorPalette } from '@/theme/tokens';
 
 type Props = {
   competition: Competition;
@@ -36,6 +37,8 @@ export function OrganizerPanel({
   onDelete,
 }: Props) {
   const [copied, setCopied] = useState(false);
+  const { colors, scheme } = useTheme();
+  const styles = useMemo(() => makeStyles(colors, scheme), [colors, scheme]);
   const token = competition.invite_token;
   const link = token ? inviteUrl(token) : null;
 
@@ -83,7 +86,7 @@ export function OrganizerPanel({
                   <MaterialIcons
                     name={copied ? 'check' : 'content-copy'}
                     size={18}
-                    color={copied ? Colors.primaryContainer : Colors.onSurfaceVariant}
+                    color={copied ? colors.primaryContainer : colors.onSurfaceVariant}
                   />
                 </Pressable>
                 <View style={styles.actions}>
@@ -125,41 +128,42 @@ export function OrganizerPanel({
   );
 }
 
-const styles = StyleSheet.create({
-  panel: {
-    padding: Spacing.sm,
-    gap: Spacing.sm,
-  },
-  section: {
-    gap: Spacing.xs,
-  },
-  hint: {
-    ...Typography.bodySm,
-    color: Colors.onSurfaceVariant,
-  },
-  divider: {
-    height: StyleSheet.hairlineWidth,
-    backgroundColor: Colors.glassBorder,
-  },
-  linkBox: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.xs,
-    backgroundColor: 'rgba(0, 0, 0, 0.25)',
-    borderWidth: 1,
-    borderColor: Colors.glassBorder,
-    borderRadius: Radii.md,
-    paddingHorizontal: Spacing.sm,
-    paddingVertical: Spacing.xs + 2,
-  },
-  linkText: {
-    flex: 1,
-    minWidth: 0,
-    ...Typography.bodySm,
-    color: Colors.primaryContainer,
-  },
-  actions: {
-    flexDirection: 'row',
-    gap: Spacing.xs,
-  },
-});
+const makeStyles = (colors: ColorPalette, scheme: 'light' | 'dark') =>
+  StyleSheet.create({
+    panel: {
+      padding: Spacing.sm,
+      gap: Spacing.sm,
+    },
+    section: {
+      gap: Spacing.xs,
+    },
+    hint: {
+      ...Typography.bodySm,
+      color: colors.onSurfaceVariant,
+    },
+    divider: {
+      height: StyleSheet.hairlineWidth,
+      backgroundColor: colors.glassBorder,
+    },
+    linkBox: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: Spacing.xs,
+      backgroundColor: scheme === 'light' ? 'rgba(0, 0, 0, 0.06)' : 'rgba(0, 0, 0, 0.25)',
+      borderWidth: 1,
+      borderColor: colors.glassBorder,
+      borderRadius: Radii.md,
+      paddingHorizontal: Spacing.sm,
+      paddingVertical: Spacing.xs + 2,
+    },
+    linkText: {
+      flex: 1,
+      minWidth: 0,
+      ...Typography.bodySm,
+      color: colors.primaryContainer,
+    },
+    actions: {
+      flexDirection: 'row',
+      gap: Spacing.xs,
+    },
+  });

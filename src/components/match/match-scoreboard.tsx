@@ -1,21 +1,27 @@
 import { MaterialIcons } from '@expo/vector-icons';
+import { useMemo } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
 import type { Match, PublicUserSummary } from '@/api/types';
 import { Avatar } from '@/components/ui/avatar';
 import { PlayerNames } from '@/components/ui/player-names';
-import { Colors, FontFamilies, Radii, Spacing, Typography } from '@/theme/tokens';
+import { useColors } from '@/hooks/use-theme';
+import { FontFamilies, Radii, Spacing, Typography, type ColorPalette } from '@/theme/tokens';
 
-const STATUS_BADGE: Record<Match['status'], { label: string; color: string }> = {
-  scheduled: { label: 'Programado', color: Colors.onSurfaceVariant },
-  in_progress: { label: 'En juego', color: Colors.secondaryContainer },
-  pending_validation: { label: 'Pendiente de validar', color: Colors.secondaryContainer },
-  completed: { label: 'Finalizado', color: Colors.primaryContainer },
-};
+const makeStatusBadge = (colors: ColorPalette): Record<Match['status'], { label: string; color: string }> => ({
+  scheduled: { label: 'Programado', color: colors.onSurfaceVariant },
+  in_progress: { label: 'En juego', color: colors.secondaryContainer },
+  pending_validation: { label: 'Pendiente de validar', color: colors.secondaryContainer },
+  completed: { label: 'Finalizado', color: colors.primaryContainer },
+});
 
 /** Insignia con el estado del partido. */
 export function MatchStatusBadge({ status, small = false }: { status: Match['status']; small?: boolean }) {
-  const { label, color } = STATUS_BADGE[status];
+  const colorsPalette = useColors();
+  const styles = useMemo(() => makeStyles(colorsPalette), [colorsPalette]);
+  const statusBadge = useMemo(() => makeStatusBadge(colorsPalette), [colorsPalette]);
+  const { label, color } = statusBadge[status];
+
   return (
     <View style={[styles.badge, small && styles.badgeSmall, { borderColor: color + '80' }]}>
       <Text style={[styles.badgeLabel, small && styles.badgeLabelSmall, { color }]}>
@@ -63,6 +69,8 @@ export function ScoreRows({
   compact?: boolean;
   currentUserId?: number;
 }) {
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const avatarSize = compact ? 22 : 28;
 
   return (
@@ -81,7 +89,7 @@ export function ScoreRows({
             ]}>
             <View style={styles.marker}>
               {isWinner ? (
-                <MaterialIcons name="emoji-events" size={compact ? 16 : 18} color={Colors.secondaryContainer} />
+                <MaterialIcons name="emoji-events" size={compact ? 16 : 18} color={colors.secondaryContainer} />
               ) : (
                 <View style={styles.dot} />
               )}
@@ -124,84 +132,85 @@ export function ScoreRows({
   );
 }
 
-const styles = StyleSheet.create({
-  badge: {
-    borderWidth: 1,
-    borderRadius: Radii.full,
-    paddingHorizontal: Spacing.xs + 2,
-    paddingVertical: 4,
-  },
-  badgeSmall: {
-    paddingHorizontal: Spacing.xs,
-    paddingVertical: 2,
-  },
-  badgeLabel: {
-    fontFamily: FontFamilies.bodyBold,
-    fontSize: 11,
-    letterSpacing: 1,
-  },
-  badgeLabelSmall: {
-    fontSize: 10,
-    letterSpacing: 0.8,
-  },
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.xs,
-    paddingVertical: Spacing.xs + 2,
-    paddingHorizontal: Spacing.xs,
-    borderRadius: Radii.DEFAULT,
-  },
-  rowCompact: {
-    paddingVertical: 6,
-  },
-  rowDivider: {
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: Colors.glassBorder,
-  },
-  rowWinner: {
-    backgroundColor: Colors.primaryContainer + '14',
-  },
-  marker: {
-    width: 20,
-    alignItems: 'center',
-  },
-  dot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: Colors.outlineVariant,
-  },
-  avatars: {
-    flexDirection: 'row',
-  },
-  names: {
-    flex: 1,
-    minWidth: 0,
-  },
-  name: {
-    ...Typography.bodyMd,
-    color: Colors.onSurface,
-  },
-  nameCompact: {
-    fontSize: 15,
-  },
-  nameWinner: {
-    fontFamily: FontFamilies.bodyBold,
-    color: Colors.primary,
-  },
-  set: {
-    width: 28,
-    textAlign: 'center',
-    fontFamily: FontFamilies.display,
-    fontSize: 22,
-    color: Colors.onSurfaceVariant,
-  },
-  setCompact: {
-    width: 24,
-    fontSize: 18,
-  },
-  setWon: {
-    color: Colors.primaryContainer,
-  },
-});
+const makeStyles = (colors: ColorPalette) =>
+  StyleSheet.create({
+    badge: {
+      borderWidth: 1,
+      borderRadius: Radii.full,
+      paddingHorizontal: Spacing.xs + 2,
+      paddingVertical: 4,
+    },
+    badgeSmall: {
+      paddingHorizontal: Spacing.xs,
+      paddingVertical: 2,
+    },
+    badgeLabel: {
+      fontFamily: FontFamilies.bodyBold,
+      fontSize: 11,
+      letterSpacing: 1,
+    },
+    badgeLabelSmall: {
+      fontSize: 10,
+      letterSpacing: 0.8,
+    },
+    row: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: Spacing.xs,
+      paddingVertical: Spacing.xs + 2,
+      paddingHorizontal: Spacing.xs,
+      borderRadius: Radii.DEFAULT,
+    },
+    rowCompact: {
+      paddingVertical: 6,
+    },
+    rowDivider: {
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: colors.glassBorder,
+    },
+    rowWinner: {
+      backgroundColor: colors.primaryContainer + '14',
+    },
+    marker: {
+      width: 20,
+      alignItems: 'center',
+    },
+    dot: {
+      width: 6,
+      height: 6,
+      borderRadius: 3,
+      backgroundColor: colors.outlineVariant,
+    },
+    avatars: {
+      flexDirection: 'row',
+    },
+    names: {
+      flex: 1,
+      minWidth: 0,
+    },
+    name: {
+      ...Typography.bodyMd,
+      color: colors.onSurface,
+    },
+    nameCompact: {
+      fontSize: 15,
+    },
+    nameWinner: {
+      fontFamily: FontFamilies.bodyBold,
+      color: colors.primary,
+    },
+    set: {
+      width: 28,
+      textAlign: 'center',
+      fontFamily: FontFamilies.display,
+      fontSize: 22,
+      color: colors.onSurfaceVariant,
+    },
+    setCompact: {
+      width: 24,
+      fontSize: 18,
+    },
+    setWon: {
+      color: colors.primaryContainer,
+    },
+  });

@@ -1,6 +1,6 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { ApiError } from '@/api/types';
@@ -9,8 +9,9 @@ import { GlassPanel } from '@/components/ui/glass-panel';
 import { Screen } from '@/components/ui/screen';
 import { TextField } from '@/components/ui/text-field';
 import { useAuth } from '@/hooks/use-auth';
+import { useColors } from '@/hooks/use-theme';
 import { confirmAction } from '@/lib/confirm';
-import { Colors, Spacing, Typography } from '@/theme/tokens';
+import { Spacing, Typography, type ColorPalette } from '@/theme/tokens';
 
 export default function EliminarCuentaScreen() {
   const router = useRouter();
@@ -18,6 +19,8 @@ export default function EliminarCuentaScreen() {
   const [secret, setSecret] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
 
   // Las cuentas que solo entran con Google/Apple no tienen contraseña: confirman con su email.
   const needsPassword = user?.has_password !== false;
@@ -53,7 +56,7 @@ export default function EliminarCuentaScreen() {
     <Screen>
       <View style={styles.header}>
         <Pressable onPress={close} hitSlop={12}>
-          <MaterialIcons name="arrow-back" size={24} color={Colors.onSurface} />
+          <MaterialIcons name="arrow-back" size={24} color={colors.onSurface} />
         </Pressable>
       </View>
 
@@ -95,28 +98,29 @@ export default function EliminarCuentaScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  header: {
-    flexDirection: 'row',
-  },
-  title: {
-    ...Typography.headlineLg,
-    color: Colors.primary,
-  },
-  card: {
-    padding: Spacing.sm,
-    gap: Spacing.xs,
-  },
-  body: {
-    ...Typography.bodyMd,
-    color: Colors.onSurface,
-  },
-  label: {
-    ...Typography.bodySm,
-    color: Colors.onSurfaceVariant,
-  },
-  error: {
-    ...Typography.bodySm,
-    color: Colors.error,
-  },
-});
+const makeStyles = (colors: ColorPalette) =>
+  StyleSheet.create({
+    header: {
+      flexDirection: 'row',
+    },
+    title: {
+      ...Typography.headlineLg,
+      color: colors.primary,
+    },
+    card: {
+      padding: Spacing.sm,
+      gap: Spacing.xs,
+    },
+    body: {
+      ...Typography.bodyMd,
+      color: colors.onSurface,
+    },
+    label: {
+      ...Typography.bodySm,
+      color: colors.onSurfaceVariant,
+    },
+    error: {
+      ...Typography.bodySm,
+      color: colors.error,
+    },
+  });

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 
 import { searchCompetitions } from '@/api/competitions';
@@ -10,7 +10,8 @@ import { PlayerRow } from '@/components/ui/player-row';
 import { Screen } from '@/components/ui/screen';
 import { SegmentedControl } from '@/components/ui/segmented-control';
 import { TextField } from '@/components/ui/text-field';
-import { Colors, Spacing, Typography } from '@/theme/tokens';
+import { useColors } from '@/hooks/use-theme';
+import { Spacing, Typography, type ColorPalette } from '@/theme/tokens';
 
 type Kind = 'players' | 'competitions';
 
@@ -19,6 +20,8 @@ const DEBOUNCE_MS = 350;
 
 /** Buscador de jugadores (por nombre) y de competiciones públicas (por nombre o sede). */
 export default function BuscarScreen() {
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const [kind, setKind] = useState<Kind>('players');
   const [query, setQuery] = useState('');
   const [players, setPlayers] = useState<PublicUserSummary[]>([]);
@@ -91,7 +94,7 @@ export default function BuscarScreen() {
       )}
 
       {canSearch && isSearching && (
-        <ActivityIndicator color={Colors.primaryContainer} style={styles.spinner} />
+        <ActivityIndicator color={colors.primaryContainer} style={styles.spinner} />
       )}
 
       {canSearch && error && (
@@ -119,22 +122,23 @@ export default function BuscarScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  title: {
-    ...Typography.headlineLg,
-    color: Colors.primary,
-  },
-  spinner: {
-    marginTop: Spacing.sm,
-  },
-  card: {
-    padding: Spacing.sm,
-  },
-  body: {
-    ...Typography.bodySm,
-    color: Colors.onSurfaceVariant,
-  },
-  list: {
-    gap: Spacing.sm,
-  },
-});
+const makeStyles = (colors: ColorPalette) =>
+  StyleSheet.create({
+    title: {
+      ...Typography.headlineLg,
+      color: colors.primary,
+    },
+    spinner: {
+      marginTop: Spacing.sm,
+    },
+    card: {
+      padding: Spacing.sm,
+    },
+    body: {
+      ...Typography.bodySm,
+      color: colors.onSurfaceVariant,
+    },
+    list: {
+      gap: Spacing.sm,
+    },
+  });

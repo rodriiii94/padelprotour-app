@@ -1,17 +1,20 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import type { ReactNode } from 'react';
+import { useMemo, type ReactNode } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { GlassPanel } from '@/components/ui/glass-panel';
 import { Screen } from '@/components/ui/screen';
-import { Colors, Spacing, Typography } from '@/theme/tokens';
+import { useColors } from '@/hooks/use-theme';
+import { Spacing, Typography, type ColorPalette } from '@/theme/tokens';
 
 const CONTACT_EMAIL = process.env.EXPO_PUBLIC_CONTACT_EMAIL;
 
 /** Pública: se puede leer sin iniciar sesión (Apple y Google la exigen enlazada). */
 export default function PrivacidadScreen() {
   const router = useRouter();
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
 
   return (
     <Screen>
@@ -19,7 +22,7 @@ export default function PrivacidadScreen() {
         <Pressable
           onPress={() => (router.canGoBack() ? router.back() : router.replace('/'))}
           hitSlop={12}>
-          <MaterialIcons name="arrow-back" size={24} color={Colors.onSurface} />
+          <MaterialIcons name="arrow-back" size={24} color={colors.onSurface} />
         </Pressable>
       </View>
 
@@ -101,6 +104,9 @@ export default function PrivacidadScreen() {
 }
 
 function Section({ title, children }: { title: string; children: ReactNode }) {
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+
   return (
     <View style={styles.section}>
       <Text style={styles.sectionTitle}>{title}</Text>
@@ -110,34 +116,37 @@ function Section({ title, children }: { title: string; children: ReactNode }) {
 }
 
 function P({ children }: { children: ReactNode }) {
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   return <Text style={styles.body}>{children}</Text>;
 }
 
-const styles = StyleSheet.create({
-  header: {
-    flexDirection: 'row',
-  },
-  title: {
-    ...Typography.headlineLg,
-    color: Colors.primary,
-  },
-  meta: {
-    ...Typography.bodySm,
-    color: Colors.onSurfaceVariant,
-  },
-  section: {
-    gap: Spacing.xs,
-  },
-  sectionTitle: {
-    ...Typography.headlineSm,
-    color: Colors.primary,
-  },
-  card: {
-    padding: Spacing.sm,
-    gap: Spacing.xs,
-  },
-  body: {
-    ...Typography.bodyMd,
-    color: Colors.onSurface,
-  },
-});
+const makeStyles = (colors: ColorPalette) =>
+  StyleSheet.create({
+    header: {
+      flexDirection: 'row',
+    },
+    title: {
+      ...Typography.headlineLg,
+      color: colors.primary,
+    },
+    meta: {
+      ...Typography.bodySm,
+      color: colors.onSurfaceVariant,
+    },
+    section: {
+      gap: Spacing.xs,
+    },
+    sectionTitle: {
+      ...Typography.headlineSm,
+      color: colors.primary,
+    },
+    card: {
+      padding: Spacing.sm,
+      gap: Spacing.xs,
+    },
+    body: {
+      ...Typography.bodyMd,
+      color: colors.onSurface,
+    },
+  });

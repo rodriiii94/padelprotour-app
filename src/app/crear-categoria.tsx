@@ -1,6 +1,6 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { createCategory } from '@/api/categories';
@@ -8,7 +8,8 @@ import { ApiError } from '@/api/types';
 import { Button } from '@/components/ui/button';
 import { Screen } from '@/components/ui/screen';
 import { TextField } from '@/components/ui/text-field';
-import { Colors, Spacing, Typography } from '@/theme/tokens';
+import { useColors } from '@/hooks/use-theme';
+import { Spacing, Typography, type ColorPalette } from '@/theme/tokens';
 
 export default function CrearCategoriaScreen() {
   const router = useRouter();
@@ -18,6 +19,8 @@ export default function CrearCategoriaScreen() {
   const [slots, setSlots] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
 
   function close() {
     if (router.canGoBack()) {
@@ -48,13 +51,13 @@ export default function CrearCategoriaScreen() {
     <Screen>
       <View style={styles.header}>
         <Pressable onPress={close} hitSlop={12}>
-          <MaterialIcons name="close" size={24} color={Colors.onSurface} />
+          <MaterialIcons name="close" size={24} color={colors.onSurface} />
         </Pressable>
         <Text style={styles.title}>Nueva categoría</Text>
       </View>
 
       <View style={styles.infoRow}>
-        <MaterialIcons name="info-outline" size={16} color={Colors.onSurfaceVariant} />
+        <MaterialIcons name="info-outline" size={16} color={colors.onSurfaceVariant} />
         <Text style={styles.hint}>De pareja fija — así se puede generar el calendario luego.</Text>
       </View>
 
@@ -82,28 +85,29 @@ export default function CrearCategoriaScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.sm,
-  },
-  title: {
-    ...Typography.headlineMd,
-    color: Colors.primary,
-  },
-  infoRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  hint: {
-    ...Typography.bodySm,
-    color: Colors.onSurfaceVariant,
-    flex: 1,
-  },
-  error: {
-    ...Typography.bodySm,
-    color: Colors.error,
-  },
-});
+const makeStyles = (colors: ColorPalette) =>
+  StyleSheet.create({
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: Spacing.sm,
+    },
+    title: {
+      ...Typography.headlineMd,
+      color: colors.primary,
+    },
+    infoRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+    },
+    hint: {
+      ...Typography.bodySm,
+      color: colors.onSurfaceVariant,
+      flex: 1,
+    },
+    error: {
+      ...Typography.bodySm,
+      color: colors.error,
+    },
+  });

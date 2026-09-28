@@ -1,6 +1,6 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
-import { useCallback } from 'react';
+import { useCallback, useMemo } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { OrganizerPanel } from '@/components/competition/organizer-panel';
@@ -10,15 +10,11 @@ import { Screen } from '@/components/ui/screen';
 import { useAuth } from '@/hooks/use-auth';
 import { useGoBack } from '@/hooks/use-go-back';
 import { useCompetitionDetail } from '@/hooks/use-competition-detail';
+import { useColors } from '@/hooks/use-theme';
 import { confirmAction } from '@/lib/confirm';
 import { formatDateRange } from '@/lib/dates';
-import { Colors, Radii, Spacing, Typography } from '@/theme/tokens';
+import { Radii, Spacing, Typography, type ColorPalette } from '@/theme/tokens';
 import type { Category, RegistrationMode } from '@/api/types';
-
-const TYPE_META = {
-  tournament: { icon: 'emoji-events', label: 'Torneo', color: Colors.secondaryContainer },
-  league: { icon: 'sports-tennis', label: 'Liga', color: Colors.primaryContainer },
-} as const;
 
 const REGISTRATION_MODE_LABEL: Record<Exclude<RegistrationMode, null>, string> = {
   fixed_pair: 'Pareja fija',
@@ -36,6 +32,15 @@ export default function CompetitionDetailScreen() {
   const router = useRouter();
   const goBack = useGoBack();
   const { user } = useAuth();
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+  const typeMeta = useMemo(
+    () => ({
+      tournament: { icon: 'emoji-events', label: 'Torneo', color: colors.secondaryContainer },
+      league: { icon: 'sports-tennis', label: 'Liga', color: colors.primaryContainer },
+    } as const),
+    [colors]
+  );
   const {
     competition,
     categories,
@@ -94,11 +99,11 @@ export default function CompetitionDetailScreen() {
     <Screen>
       <View style={styles.header}>
         <Pressable onPress={goBack} hitSlop={12}>
-          <MaterialIcons name="arrow-back" size={24} color={Colors.onSurface} />
+          <MaterialIcons name="arrow-back" size={24} color={colors.onSurface} />
         </Pressable>
       </View>
 
-      {isLoading && <ActivityIndicator color={Colors.primaryContainer} style={styles.spinner} />}
+      {isLoading && <ActivityIndicator color={colors.primaryContainer} style={styles.spinner} />}
 
       {error && (
         <GlassPanel style={styles.card}>
@@ -112,14 +117,14 @@ export default function CompetitionDetailScreen() {
             <View style={styles.titleRow}>
               <Text style={styles.title}>{competition.name}</Text>
               <MaterialIcons
-                name={TYPE_META[competition.type].icon}
+                name={typeMeta[competition.type].icon}
                 size={26}
-                color={TYPE_META[competition.type].color}
+                color={typeMeta[competition.type].color}
               />
             </View>
             <View style={styles.row}>
-              <Text style={[styles.typeLabel, { color: TYPE_META[competition.type].color }]}>
-                {TYPE_META[competition.type].label}
+              <Text style={[styles.typeLabel, { color: typeMeta[competition.type].color }]}>
+                {typeMeta[competition.type].label}
               </Text>
               {competition.cancelled_at && (
                 <Text style={styles.cancelledBadge}>Cancelada</Text>
@@ -130,19 +135,19 @@ export default function CompetitionDetailScreen() {
           <GlassPanel style={styles.card}>
             {competition.venue && (
               <View style={styles.row}>
-                <MaterialIcons name="location-on" size={16} color={Colors.onSurfaceVariant} />
+                <MaterialIcons name="location-on" size={16} color={colors.onSurfaceVariant} />
                 <Text style={styles.meta}>{competition.venue}</Text>
               </View>
             )}
             <View style={styles.row}>
-              <MaterialIcons name="calendar-today" size={16} color={Colors.onSurfaceVariant} />
+              <MaterialIcons name="calendar-today" size={16} color={colors.onSurfaceVariant} />
               <Text style={styles.meta}>
                 {formatDateRange(competition.start_date, competition.end_date, { year: true })}
               </Text>
             </View>
             {competition.registration_closes_at && (
               <View style={styles.row}>
-                <MaterialIcons name="how-to-reg" size={16} color={Colors.onSurfaceVariant} />
+                <MaterialIcons name="how-to-reg" size={16} color={colors.onSurfaceVariant} />
                 <Text style={styles.meta}>
                   Inscripciones hasta {dateFormatter.format(new Date(competition.registration_closes_at))}
                 </Text>
@@ -193,12 +198,14 @@ export default function CompetitionDetailScreen() {
 
 function CategoryRow({ category }: { category: Category }) {
   const router = useRouter();
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   return (
     <Pressable onPress={() => router.push(`/categoria/${category.id}`)}>
       <GlassPanel style={styles.card}>
         <Text style={styles.cardTitle}>{category.name}</Text>
         <View style={styles.row}>
-          <MaterialIcons name="groups" size={16} color={Colors.onSurfaceVariant} />
+          <MaterialIcons name="groups" size={16} color={colors.onSurfaceVariant} />
           <Text style={styles.meta}>
             {category.registration_mode
               ? REGISTRATION_MODE_LABEL[category.registration_mode]
@@ -208,7 +215,7 @@ function CategoryRow({ category }: { category: Category }) {
         </View>
         {category.match_format && (
           <View style={styles.row}>
-            <MaterialIcons name="sports-tennis" size={16} color={Colors.onSurfaceVariant} />
+            <MaterialIcons name="sports-tennis" size={16} color={colors.onSurfaceVariant} />
             <Text style={styles.meta}>{category.match_format}</Text>
           </View>
         )}
@@ -217,66 +224,67 @@ function CategoryRow({ category }: { category: Category }) {
   );
 }
 
-const styles = StyleSheet.create({
-  header: {
-    flexDirection: 'row',
-  },
-  spinner: {
-    marginTop: Spacing.lg,
-  },
-  titleRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    gap: Spacing.xs,
-  },
-  title: {
-    ...Typography.headlineLg,
-    color: Colors.primary,
-    flex: 1,
-  },
-  typeLabel: {
-    ...Typography.labelCaps,
-    marginTop: Spacing.base,
-  },
-  cancelledBadge: {
-    ...Typography.labelCaps,
-    marginTop: Spacing.base,
-    color: Colors.onErrorContainer,
-    backgroundColor: Colors.errorContainer,
-    borderRadius: Radii.sm,
-    paddingHorizontal: Spacing.xs,
-    paddingVertical: 2,
-  },
-  card: {
-    padding: Spacing.sm,
-    gap: Spacing.xs,
-  },
-  cardTitle: {
-    ...Typography.headlineSm,
-    color: Colors.primary,
-  },
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.base,
-  },
-  meta: {
-    ...Typography.bodySm,
-    color: Colors.onSurfaceVariant,
-  },
-  body: {
-    ...Typography.bodySm,
-    color: Colors.onSurfaceVariant,
-  },
-  sectionTitle: {
-    ...Typography.headlineSm,
-    color: Colors.primary,
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: Spacing.sm,
-  },
-});
+const makeStyles = (colors: ColorPalette) =>
+  StyleSheet.create({
+    header: {
+      flexDirection: 'row',
+    },
+    spinner: {
+      marginTop: Spacing.lg,
+    },
+    titleRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'flex-start',
+      gap: Spacing.xs,
+    },
+    title: {
+      ...Typography.headlineLg,
+      color: colors.primary,
+      flex: 1,
+    },
+    typeLabel: {
+      ...Typography.labelCaps,
+      marginTop: Spacing.base,
+    },
+    cancelledBadge: {
+      ...Typography.labelCaps,
+      marginTop: Spacing.base,
+      color: colors.onErrorContainer,
+      backgroundColor: colors.errorContainer,
+      borderRadius: Radii.sm,
+      paddingHorizontal: Spacing.xs,
+      paddingVertical: 2,
+    },
+    card: {
+      padding: Spacing.sm,
+      gap: Spacing.xs,
+    },
+    cardTitle: {
+      ...Typography.headlineSm,
+      color: colors.primary,
+    },
+    row: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: Spacing.base,
+    },
+    meta: {
+      ...Typography.bodySm,
+      color: colors.onSurfaceVariant,
+    },
+    body: {
+      ...Typography.bodySm,
+      color: colors.onSurfaceVariant,
+    },
+    sectionTitle: {
+      ...Typography.headlineSm,
+      color: colors.primary,
+    },
+    sectionHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: Spacing.sm,
+    },
+  });

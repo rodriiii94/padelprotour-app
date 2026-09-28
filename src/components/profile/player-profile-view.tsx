@@ -1,11 +1,12 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import type { ReactNode } from 'react';
+import { useMemo, type ReactNode } from 'react';
 import { Linking, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import type { PlayerProfile } from '@/api/types';
 import { Avatar } from '@/components/ui/avatar';
 import { GlassPanel } from '@/components/ui/glass-panel';
+import { useColors } from '@/hooks/use-theme';
 import {
   ACHIEVEMENT_ORDER,
   ACHIEVEMENTS,
@@ -19,7 +20,7 @@ import {
   formatMonthYear,
   subtitleFor,
 } from '@/lib/profile';
-import { Colors, FontFamilies, Radii, Spacing, Typography } from '@/theme/tokens';
+import { FontFamilies, Radii, Spacing, Typography, type ColorPalette } from '@/theme/tokens';
 
 /** La ficha de un jugador. La misma vista sirve para tu perfil y para el de cualquier otro. */
 export function PlayerProfileView({
@@ -31,6 +32,8 @@ export function PlayerProfileView({
   action?: ReactNode;
 }) {
   const router = useRouter();
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const { stats, usual_partner: partner } = profile;
   const subtitle = subtitleFor(profile);
   const socials = filledSocialLinks(profile.social_links);
@@ -110,7 +113,7 @@ export function PlayerProfileView({
           <View style={styles.chips}>
             {unlocked.map((key) => (
               <View key={key} style={styles.achievement} accessibilityLabel={ACHIEVEMENTS[key].description}>
-                <MaterialIcons name={ACHIEVEMENTS[key].icon} size={18} color={Colors.primaryContainer} />
+                <MaterialIcons name={ACHIEVEMENTS[key].icon} size={18} color={colors.primaryContainer} />
                 <Text style={styles.achievementLabel}>{ACHIEVEMENTS[key].label}</Text>
               </View>
             ))}
@@ -126,7 +129,7 @@ export function PlayerProfileView({
                 <Text style={styles.partnerName}>{partner.name}</Text>
                 <Text style={styles.meta}>{partner.matches} partidos juntos</Text>
               </View>
-              <MaterialIcons name="chevron-right" size={22} color={Colors.onSurfaceVariant} />
+              <MaterialIcons name="chevron-right" size={22} color={colors.onSurfaceVariant} />
             </GlassPanel>
           </Pressable>
         </Section>
@@ -171,7 +174,7 @@ export function PlayerProfileView({
                 style={styles.socialRow}>
                 <Text style={styles.socialNetwork}>{SOCIAL_NETWORKS[network].label}</Text>
                 <Text style={styles.socialHandle}>@{handle}</Text>
-                <MaterialIcons name="open-in-new" size={16} color={Colors.onSurfaceVariant} />
+                <MaterialIcons name="open-in-new" size={16} color={colors.onSurfaceVariant} />
               </Pressable>
             ))}
           </GlassPanel>
@@ -184,6 +187,9 @@ export function PlayerProfileView({
 }
 
 function Section({ title, children }: { title: string; children: ReactNode }) {
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+
   return (
     <View style={styles.section}>
       <Text style={styles.sectionTitle}>{title}</Text>
@@ -193,6 +199,9 @@ function Section({ title, children }: { title: string; children: ReactNode }) {
 }
 
 function Stat({ value, label }: { value: string; label: string }) {
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+
   return (
     <View style={styles.stat}>
       <Text style={styles.statValue}>{value}</Text>
@@ -201,160 +210,161 @@ function Stat({ value, label }: { value: string; label: string }) {
   );
 }
 
-const styles = StyleSheet.create({
-  flex: {
-    flex: 1,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.sm,
-  },
-  headerText: {
-    flex: 1,
-    gap: 2,
-  },
-  name: {
-    ...Typography.headlineMd,
-    color: Colors.primary,
-  },
-  meta: {
-    ...Typography.bodySm,
-    color: Colors.onSurfaceVariant,
-  },
-  followRow: {
-    flexDirection: 'row',
-    gap: Spacing.sm,
-  },
-  followCount: {
-    ...Typography.bodyMd,
-    color: Colors.onSurfaceVariant,
-  },
-  followNumber: {
-    fontFamily: FontFamilies.bodyBold,
-    color: Colors.onSurface,
-  },
-  motto: {
-    ...Typography.bodyMd,
-    fontStyle: 'italic',
-    color: Colors.secondary,
-  },
-  body: {
-    ...Typography.bodyMd,
-    color: Colors.onSurface,
-  },
-  chips: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: Spacing.xs,
-  },
-  chip: {
-    ...Typography.bodySm,
-    color: Colors.onSurface,
-    backgroundColor: Colors.glassFill,
-    borderWidth: 1,
-    borderColor: Colors.glassBorder,
-    borderRadius: Radii.full,
-    paddingHorizontal: Spacing.sm,
-    paddingVertical: Spacing.base,
-    overflow: 'hidden',
-  },
-  card: {
-    padding: Spacing.sm,
-    gap: Spacing.xs,
-  },
-  section: {
-    gap: Spacing.xs,
-  },
-  sectionTitle: {
-    ...Typography.headlineSm,
-    color: Colors.primary,
-  },
-  statsRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  stat: {
-    flex: 1,
-    alignItems: 'center',
-    gap: 2,
-  },
-  statValue: {
-    fontFamily: FontFamilies.display,
-    fontSize: 26,
-    color: Colors.primaryContainer,
-  },
-  statLabel: {
-    ...Typography.bodySm,
-    fontSize: 12,
-    color: Colors.onSurfaceVariant,
-  },
-  achievement: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.base,
-    backgroundColor: Colors.glassFill,
-    borderWidth: 1,
-    borderColor: Colors.primaryContainer,
-    borderRadius: Radii.full,
-    paddingHorizontal: Spacing.xs,
-    paddingVertical: Spacing.base,
-  },
-  achievementLabel: {
-    ...Typography.bodySm,
-    color: Colors.onSurface,
-  },
-  partnerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  partnerName: {
-    ...Typography.headlineSm,
-    color: Colors.primary,
-  },
-  gridRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.base,
-  },
-  gridLabel: {
-    width: 64,
-  },
-  gridDay: {
-    flex: 1,
-    textAlign: 'center',
-    ...Typography.bodySm,
-    color: Colors.onSurfaceVariant,
-  },
-  gridCell: {
-    flex: 1,
-    height: 24,
-    borderRadius: Radii.DEFAULT,
-    backgroundColor: Colors.glassFill,
-    borderWidth: 1,
-    borderColor: Colors.glassBorder,
-  },
-  gridCellOn: {
-    backgroundColor: Colors.primaryContainer,
-    borderColor: Colors.primaryContainer,
-  },
-  socialRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.xs,
-    paddingVertical: Spacing.base,
-  },
-  socialNetwork: {
-    ...Typography.bodySm,
-    color: Colors.onSurfaceVariant,
-    width: 84,
-  },
-  socialHandle: {
-    ...Typography.bodyMd,
-    color: Colors.primary,
-    flex: 1,
-  },
-  since: {
-    textAlign: 'center',
-  },
-});
+const makeStyles = (colors: ColorPalette) =>
+  StyleSheet.create({
+    flex: {
+      flex: 1,
+    },
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: Spacing.sm,
+    },
+    headerText: {
+      flex: 1,
+      gap: 2,
+    },
+    name: {
+      ...Typography.headlineMd,
+      color: colors.primary,
+    },
+    meta: {
+      ...Typography.bodySm,
+      color: colors.onSurfaceVariant,
+    },
+    followRow: {
+      flexDirection: 'row',
+      gap: Spacing.sm,
+    },
+    followCount: {
+      ...Typography.bodyMd,
+      color: colors.onSurfaceVariant,
+    },
+    followNumber: {
+      fontFamily: FontFamilies.bodyBold,
+      color: colors.onSurface,
+    },
+    motto: {
+      ...Typography.bodyMd,
+      fontStyle: 'italic',
+      color: colors.secondary,
+    },
+    body: {
+      ...Typography.bodyMd,
+      color: colors.onSurface,
+    },
+    chips: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: Spacing.xs,
+    },
+    chip: {
+      ...Typography.bodySm,
+      color: colors.onSurface,
+      backgroundColor: colors.glassFill,
+      borderWidth: 1,
+      borderColor: colors.glassBorder,
+      borderRadius: Radii.full,
+      paddingHorizontal: Spacing.sm,
+      paddingVertical: Spacing.base,
+      overflow: 'hidden',
+    },
+    card: {
+      padding: Spacing.sm,
+      gap: Spacing.xs,
+    },
+    section: {
+      gap: Spacing.xs,
+    },
+    sectionTitle: {
+      ...Typography.headlineSm,
+      color: colors.primary,
+    },
+    statsRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+    },
+    stat: {
+      flex: 1,
+      alignItems: 'center',
+      gap: 2,
+    },
+    statValue: {
+      fontFamily: FontFamilies.display,
+      fontSize: 26,
+      color: colors.primaryContainer,
+    },
+    statLabel: {
+      ...Typography.bodySm,
+      fontSize: 12,
+      color: colors.onSurfaceVariant,
+    },
+    achievement: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: Spacing.base,
+      backgroundColor: colors.glassFill,
+      borderWidth: 1,
+      borderColor: colors.primaryContainer,
+      borderRadius: Radii.full,
+      paddingHorizontal: Spacing.xs,
+      paddingVertical: Spacing.base,
+    },
+    achievementLabel: {
+      ...Typography.bodySm,
+      color: colors.onSurface,
+    },
+    partnerRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
+    partnerName: {
+      ...Typography.headlineSm,
+      color: colors.primary,
+    },
+    gridRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: Spacing.base,
+    },
+    gridLabel: {
+      width: 64,
+    },
+    gridDay: {
+      flex: 1,
+      textAlign: 'center',
+      ...Typography.bodySm,
+      color: colors.onSurfaceVariant,
+    },
+    gridCell: {
+      flex: 1,
+      height: 24,
+      borderRadius: Radii.DEFAULT,
+      backgroundColor: colors.glassFill,
+      borderWidth: 1,
+      borderColor: colors.glassBorder,
+    },
+    gridCellOn: {
+      backgroundColor: colors.primaryContainer,
+      borderColor: colors.primaryContainer,
+    },
+    socialRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: Spacing.xs,
+      paddingVertical: Spacing.base,
+    },
+    socialNetwork: {
+      ...Typography.bodySm,
+      color: colors.onSurfaceVariant,
+      width: 84,
+    },
+    socialHandle: {
+      ...Typography.bodyMd,
+      color: colors.primary,
+      flex: 1,
+    },
+    since: {
+      textAlign: 'center',
+    },
+  });

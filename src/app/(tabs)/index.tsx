@@ -10,7 +10,8 @@ import { GlassPanel } from '@/components/ui/glass-panel';
 import { Screen } from '@/components/ui/screen';
 import { useAuth } from '@/hooks/use-auth';
 import { useMyCompetitions } from '@/hooks/use-my-competitions';
-import { Colors, FontFamilies, Radii, Spacing, Typography } from '@/theme/tokens';
+import { useColors } from '@/hooks/use-theme';
+import { FontFamilies, Radii, Spacing, Typography, type ColorPalette } from '@/theme/tokens';
 
 type Role = 'jugador' | 'organizador';
 
@@ -19,6 +20,8 @@ export default function HomeScreen() {
   const { user } = useAuth();
   const [role, setRole] = useState<Role>('jugador');
   const { competitions, isLoading, error, refetch } = useMyCompetitions();
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
 
   useFocusEffect(
     useCallback(() => {
@@ -67,7 +70,7 @@ export default function HomeScreen() {
       )}
 
       {isLoading && competitions.length === 0 && (
-        <ActivityIndicator color={Colors.primaryContainer} style={styles.spinner} />
+        <ActivityIndicator color={colors.primaryContainer} style={styles.spinner} />
       )}
 
       {error && (
@@ -107,6 +110,8 @@ function RoleButton({
   active: boolean;
   onPress: () => void;
 }) {
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   return (
     <Pressable
       onPress={onPress}
@@ -116,68 +121,69 @@ function RoleButton({
   );
 }
 
-const styles = StyleSheet.create({
-  greeting: {
-    ...Typography.headlineSm,
-    color: Colors.primary,
-  },
-  level: {
-    ...Typography.bodySm,
-    color: Colors.primaryContainer,
-    marginTop: Spacing.base,
-  },
-  roleSelector: {
-    flexDirection: 'row',
-    backgroundColor: Colors.glassFill,
-    borderWidth: 1,
-    borderColor: Colors.glassBorder,
-    borderRadius: Radii.full,
-    padding: 4,
-  },
-  roleButton: {
-    flex: 1,
-    paddingVertical: Spacing.xs,
-    borderRadius: Radii.full,
-    alignItems: 'center',
-  },
-  roleButtonActive: {
-    backgroundColor: Colors.primaryContainer,
-  },
-  roleButtonLabel: {
-    ...Typography.bodySm,
-    color: Colors.onSurfaceVariant,
-  },
-  roleButtonLabelActive: {
-    color: Colors.onPrimary,
-    fontFamily: FontFamilies.bodyBold,
-  },
-  statCard: {
-    padding: Spacing.sm,
-    gap: Spacing.base,
-  },
-  statLabel: {
-    ...Typography.labelCaps,
-    color: Colors.onSurfaceVariant,
-  },
-  statValue: {
-    ...Typography.display,
-    fontSize: 40,
-    color: Colors.primary,
-  },
-  spinner: {
-    marginTop: Spacing.lg,
-  },
-  messageCard: {
-    padding: Spacing.sm,
-    gap: Spacing.sm,
-  },
-  messageText: {
-    ...Typography.bodySm,
-    color: Colors.onSurfaceVariant,
-  },
-  cardsGrid:
-    Platform.OS === 'web'
-      ? { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.sm }
-      : { gap: Spacing.lg },
-  cardsGridItem: Platform.OS === 'web' ? { width: 320 } : {},
-});
+const makeStyles = (colors: ColorPalette) =>
+  StyleSheet.create({
+    greeting: {
+      ...Typography.headlineSm,
+      color: colors.primary,
+    },
+    level: {
+      ...Typography.bodySm,
+      color: colors.primaryContainer,
+      marginTop: Spacing.base,
+    },
+    roleSelector: {
+      flexDirection: 'row',
+      backgroundColor: colors.glassFill,
+      borderWidth: 1,
+      borderColor: colors.glassBorder,
+      borderRadius: Radii.full,
+      padding: 4,
+    },
+    roleButton: {
+      flex: 1,
+      paddingVertical: Spacing.xs,
+      borderRadius: Radii.full,
+      alignItems: 'center',
+    },
+    roleButtonActive: {
+      backgroundColor: colors.primaryContainer,
+    },
+    roleButtonLabel: {
+      ...Typography.bodySm,
+      color: colors.onSurfaceVariant,
+    },
+    roleButtonLabelActive: {
+      color: colors.onPrimary,
+      fontFamily: FontFamilies.bodyBold,
+    },
+    statCard: {
+      padding: Spacing.sm,
+      gap: Spacing.base,
+    },
+    statLabel: {
+      ...Typography.labelCaps,
+      color: colors.onSurfaceVariant,
+    },
+    statValue: {
+      ...Typography.display,
+      fontSize: 40,
+      color: colors.primary,
+    },
+    spinner: {
+      marginTop: Spacing.lg,
+    },
+    messageCard: {
+      padding: Spacing.sm,
+      gap: Spacing.sm,
+    },
+    messageText: {
+      ...Typography.bodySm,
+      color: colors.onSurfaceVariant,
+    },
+    cardsGrid:
+      Platform.OS === 'web'
+        ? { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.sm }
+        : { gap: Spacing.lg },
+    cardsGridItem: Platform.OS === 'web' ? { width: 320 } : {},
+  });

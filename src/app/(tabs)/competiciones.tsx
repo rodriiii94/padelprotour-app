@@ -1,5 +1,5 @@
 import { useFocusEffect } from 'expo-router';
-import { useCallback } from 'react';
+import { useCallback, useMemo } from 'react';
 import { ActivityIndicator, Platform, RefreshControl, StyleSheet, Text, View } from 'react-native';
 
 import { CompetitionCard } from '@/components/ui/competition-card';
@@ -7,11 +7,14 @@ import { Button } from '@/components/ui/button';
 import { GlassPanel } from '@/components/ui/glass-panel';
 import { Screen } from '@/components/ui/screen';
 import { useCompetitions } from '@/hooks/use-competitions';
-import { Colors, Spacing, Typography } from '@/theme/tokens';
+import { useColors } from '@/hooks/use-theme';
+import { Spacing, Typography, type ColorPalette } from '@/theme/tokens';
 
 export default function CompeticionesScreen() {
   const { competitions, isLoading, isLoadingMore, hasMore, error, refetch, loadMore } =
     useCompetitions();
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
 
   useFocusEffect(
     useCallback(() => {
@@ -25,13 +28,13 @@ export default function CompeticionesScreen() {
         <RefreshControl
           refreshing={isLoading}
           onRefresh={refetch}
-          tintColor={Colors.primaryContainer}
+          tintColor={colors.primaryContainer}
         />
       }>
       <Text style={styles.title}>Competiciones</Text>
 
       {isLoading && competitions.length === 0 && (
-        <ActivityIndicator color={Colors.primaryContainer} style={styles.spinner} />
+        <ActivityIndicator color={colors.primaryContainer} style={styles.spinner} />
       )}
 
       {error && (
@@ -67,25 +70,26 @@ export default function CompeticionesScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  title: {
-    ...Typography.headlineMd,
-    color: Colors.primary,
-  },
-  spinner: {
-    marginTop: Spacing.lg,
-  },
-  card: {
-    padding: Spacing.sm,
-    gap: Spacing.sm,
-  },
-  body: {
-    ...Typography.bodySm,
-    color: Colors.onSurfaceVariant,
-  },
-  cardsGrid:
-    Platform.OS === 'web'
-      ? { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.sm }
-      : { gap: Spacing.lg },
-  cardsGridItem: Platform.OS === 'web' ? { width: 320 } : {},
-});
+const makeStyles = (colors: ColorPalette) =>
+  StyleSheet.create({
+    title: {
+      ...Typography.headlineMd,
+      color: colors.primary,
+    },
+    spinner: {
+      marginTop: Spacing.lg,
+    },
+    card: {
+      padding: Spacing.sm,
+      gap: Spacing.sm,
+    },
+    body: {
+      ...Typography.bodySm,
+      color: colors.onSurfaceVariant,
+    },
+    cardsGrid:
+      Platform.OS === 'web'
+        ? { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.sm }
+        : { gap: Spacing.lg },
+    cardsGridItem: Platform.OS === 'web' ? { width: 320 } : {},
+  });

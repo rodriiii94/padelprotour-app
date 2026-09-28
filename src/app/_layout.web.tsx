@@ -13,10 +13,10 @@ import { StyleSheet, View } from 'react-native';
 
 import { WebBottomBar, WebSidebar } from '@/components/ui/web-sidebar';
 import { AuthProvider, useAuth } from '@/hooks/use-auth';
+import { ThemeProvider, useColors } from '@/hooks/use-theme';
 import { Sentry } from '@/lib/sentry';
 import { takePendingInvite } from '@/lib/invite';
 import { useIsNarrowWeb } from '@/hooks/use-is-narrow-web';
-import { Colors } from '@/theme/tokens';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -49,16 +49,26 @@ function RootLayoutWeb() {
   }
 
   return (
-    <AuthProvider>
-      {pageHead}
-      <View style={styles.root}>
-        <AuthGateWeb />
-      </View>
-    </AuthProvider>
+    <ThemeProvider>
+      <AuthProvider>
+        {pageHead}
+        <RootLayoutWebBody />
+      </AuthProvider>
+    </ThemeProvider>
   );
 }
 
 export default Sentry.wrap(RootLayoutWeb);
+
+function RootLayoutWebBody() {
+  const colors = useColors();
+
+  return (
+    <View style={[styles.root, { backgroundColor: colors.background }]}>
+      <AuthGateWeb />
+    </View>
+  );
+}
 
 function AuthGateWeb() {
   const { user, isLoading } = useAuth();
@@ -145,7 +155,6 @@ function PostLoginRedirect() {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: Colors.background,
   },
   authedRoot: {
     flex: 1,

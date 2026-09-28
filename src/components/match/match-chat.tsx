@@ -1,5 +1,5 @@
 import { MaterialIcons } from '@expo/vector-icons';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AppState, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { deleteMatchMessage, listMatchMessages, sendMatchMessage } from '@/api/categories';
@@ -8,8 +8,9 @@ import { ActionChip } from '@/components/ui/action-chip';
 import { GlassPanel } from '@/components/ui/glass-panel';
 import { SectionLabel } from '@/components/ui/section-label';
 import { TextField } from '@/components/ui/text-field';
+import { useColors } from '@/hooks/use-theme';
 import { confirmAction } from '@/lib/confirm';
-import { Colors, FontFamilies, Radii, Spacing, Typography } from '@/theme/tokens';
+import { FontFamilies, Radii, Spacing, Typography, type ColorPalette } from '@/theme/tokens';
 
 const POLL_MS = 6000;
 
@@ -46,6 +47,8 @@ export function MatchChat({
   const [isSending, setIsSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const newestFirstLoaded = useRef(false);
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
 
   const fetchLatest = useCallback(async () => {
     try {
@@ -167,7 +170,7 @@ export function MatchChat({
                       onPress={() => remove(message)}
                       hitSlop={8}
                       accessibilityLabel="Borrar mensaje">
-                      <MaterialIcons name="delete-outline" size={14} color={Colors.onSurfaceVariant} />
+                      <MaterialIcons name="delete-outline" size={14} color={colors.onSurfaceVariant} />
                     </Pressable>
                   )}
                 </View>
@@ -202,78 +205,80 @@ export function MatchChat({
   );
 }
 
-const styles = StyleSheet.create({
-  panel: {
-    padding: Spacing.sm,
-    gap: Spacing.sm,
-  },
-  hint: {
-    ...Typography.bodySm,
-    color: Colors.onSurfaceVariant,
-  },
-  empty: {
-    ...Typography.bodySm,
-    color: Colors.onSurfaceVariant,
-    fontStyle: 'italic',
-  },
-  list: {
-    gap: Spacing.xs,
-  },
-  row: {
-    flexDirection: 'row',
-  },
-  rowMine: {
-    justifyContent: 'flex-end',
-  },
-  bubble: {
-    maxWidth: '86%',
-    paddingHorizontal: Spacing.sm,
-    paddingVertical: Spacing.xs,
-    borderRadius: Radii.lg,
-    gap: 2,
-  },
-  bubbleMine: {
-    backgroundColor: 'rgba(182, 247, 0, 0.14)',
-    borderWidth: 1,
-    borderColor: 'rgba(182, 247, 0, 0.35)',
-    borderBottomRightRadius: Radii.sm,
-  },
-  bubbleOther: {
-    backgroundColor: Colors.glassFill,
-    borderWidth: 1,
-    borderColor: Colors.glassBorder,
-    borderBottomLeftRadius: Radii.sm,
-  },
-  author: {
-    fontFamily: FontFamilies.bodyBold,
-    fontSize: 12,
-    color: Colors.secondary,
-  },
-  body: {
-    ...Typography.bodyMd,
-    color: Colors.onSurface,
-  },
-  meta: {
-    flexDirection: 'row',
-    alignSelf: 'flex-end',
-    alignItems: 'center',
-    gap: 6,
-  },
-  time: {
-    ...Typography.bodySm,
-    fontSize: 11,
-    color: Colors.onSurfaceVariant,
-  },
-  error: {
-    ...Typography.bodySm,
-    color: Colors.error,
-  },
-  composer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.xs,
-  },
-  input: {
-    flex: 1,
-  },
-});
+const makeStyles = (colors: ColorPalette) =>
+  StyleSheet.create({
+    panel: {
+      padding: Spacing.sm,
+      gap: Spacing.sm,
+    },
+    hint: {
+      ...Typography.bodySm,
+      color: colors.onSurfaceVariant,
+    },
+    empty: {
+      ...Typography.bodySm,
+      color: colors.onSurfaceVariant,
+      fontStyle: 'italic',
+    },
+    list: {
+      gap: Spacing.xs,
+    },
+    row: {
+      flexDirection: 'row',
+    },
+    rowMine: {
+      justifyContent: 'flex-end',
+    },
+    bubble: {
+      maxWidth: '86%',
+      paddingHorizontal: Spacing.sm,
+      paddingVertical: Spacing.xs,
+      borderRadius: Radii.lg,
+      gap: 2,
+    },
+    bubbleMine: {
+      // primaryContainer no cambia entre temas, así que este tinte vale igual en los dos.
+      backgroundColor: colors.primaryContainer + '24',
+      borderWidth: 1,
+      borderColor: colors.primaryContainer + '59',
+      borderBottomRightRadius: Radii.sm,
+    },
+    bubbleOther: {
+      backgroundColor: colors.glassFill,
+      borderWidth: 1,
+      borderColor: colors.glassBorder,
+      borderBottomLeftRadius: Radii.sm,
+    },
+    author: {
+      fontFamily: FontFamilies.bodyBold,
+      fontSize: 12,
+      color: colors.secondary,
+    },
+    body: {
+      ...Typography.bodyMd,
+      color: colors.onSurface,
+    },
+    meta: {
+      flexDirection: 'row',
+      alignSelf: 'flex-end',
+      alignItems: 'center',
+      gap: 6,
+    },
+    time: {
+      ...Typography.bodySm,
+      fontSize: 11,
+      color: colors.onSurfaceVariant,
+    },
+    error: {
+      ...Typography.bodySm,
+      color: colors.error,
+    },
+    composer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: Spacing.xs,
+    },
+    input: {
+      flex: 1,
+    },
+  });

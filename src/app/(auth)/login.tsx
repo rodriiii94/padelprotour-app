@@ -1,5 +1,5 @@
 import { Link } from 'expo-router';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { StyleSheet, Text } from 'react-native';
 
 import { resendVerification } from '@/api/auth';
@@ -10,10 +10,13 @@ import { Button } from '@/components/ui/button';
 import { GoogleSignInButton } from '@/components/ui/google-sign-in-button';
 import { TextField } from '@/components/ui/text-field';
 import { useAuth } from '@/hooks/use-auth';
-import { Colors, Spacing, Typography } from '@/theme/tokens';
+import { useColors } from '@/hooks/use-theme';
+import { Spacing, Typography, type ColorPalette } from '@/theme/tokens';
 
 export default function LoginScreen() {
   const { login, loginWithGoogle } = useAuth();
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   // Cuenta demo del seeder, solo en desarrollo: en producción el formulario va vacío.
   const [email, setEmail] = useState(__DEV__ ? 'demo@padelprotour.test' : '');
   const [password, setPassword] = useState(__DEV__ ? 'password' : '');
@@ -107,23 +110,24 @@ export default function LoginScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  error: {
-    ...Typography.bodySm,
-    color: Colors.error,
-  },
-  info: {
-    ...Typography.bodySm,
-    color: Colors.onSurfaceVariant,
-  },
-  submit: {
-    marginTop: Spacing.base,
-  },
-  link: {
-    alignSelf: 'center',
-  },
-  linkText: {
-    ...Typography.bodyMd,
-    color: Colors.primaryContainer,
-  },
-});
+const makeStyles = (colors: ColorPalette) =>
+  StyleSheet.create({
+    error: {
+      ...Typography.bodySm,
+      color: colors.error,
+    },
+    info: {
+      ...Typography.bodySm,
+      color: colors.onSurfaceVariant,
+    },
+    submit: {
+      marginTop: Spacing.base,
+    },
+    link: {
+      alignSelf: 'center',
+    },
+    linkText: {
+      ...Typography.bodyMd,
+      color: colors.primaryContainer,
+    },
+  });

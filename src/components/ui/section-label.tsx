@@ -2,7 +2,8 @@ import { MaterialIcons } from '@expo/vector-icons';
 import type { ComponentProps } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
-import { Colors, FontFamilies } from '@/theme/tokens';
+import { useColors } from '@/hooks/use-theme';
+import { FontFamilies } from '@/theme/tokens';
 
 export type IconName = ComponentProps<typeof MaterialIcons>['name'];
 
@@ -16,7 +17,8 @@ export function SectionLabel({
   label: string;
   tone?: 'default' | 'danger';
 }) {
-  const color = tone === 'danger' ? Colors.error : Colors.onSurfaceVariant;
+  const colors = useColors();
+  const color = tone === 'danger' ? colors.error : colors.onSurfaceVariant;
   return (
     <View style={styles.row}>
       <MaterialIcons name={icon} size={16} color={color} />

@@ -1,6 +1,6 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import {
@@ -22,6 +22,7 @@ import { SectionLabel, type IconName } from '@/components/ui/section-label';
 import { SegmentedControl } from '@/components/ui/segmented-control';
 import { TextField } from '@/components/ui/text-field';
 import { useAuth } from '@/hooks/use-auth';
+import { useColors } from '@/hooks/use-theme';
 import { pickAvatarPhoto } from '@/lib/avatar-photo';
 import {
   AVAILABILITY_DAYS,
@@ -36,7 +37,7 @@ import {
   availabilitySlot,
   formatLongDate,
 } from '@/lib/profile';
-import { Colors, FontFamilies, Radii, Spacing, Typography } from '@/theme/tokens';
+import { FontFamilies, Radii, Spacing, Typography, type ColorPalette } from '@/theme/tokens';
 
 type FormState = {
   name: string;
@@ -96,6 +97,8 @@ export default function EditarPerfilScreen() {
   const [form, setForm] = useState<FormState>(() => initialForm(user));
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
 
   const nameLockedUntil = user?.name_change_available_at ?? null;
 
@@ -186,7 +189,7 @@ export default function EditarPerfilScreen() {
     <Screen>
       <View style={styles.header}>
         <Pressable onPress={close} hitSlop={12}>
-          <MaterialIcons name="close" size={24} color={Colors.onSurface} />
+          <MaterialIcons name="close" size={24} color={colors.onSurface} />
         </Pressable>
         <Text style={styles.title}>Editar perfil</Text>
       </View>
@@ -215,7 +218,7 @@ export default function EditarPerfilScreen() {
         />
         <View style={styles.hintRow}>
           {nameLockedUntil ? (
-            <MaterialIcons name="lock-clock" size={14} color={Colors.secondary} />
+            <MaterialIcons name="lock-clock" size={14} color={colors.secondary} />
           ) : null}
           <Text style={[styles.hint, nameLockedUntil ? styles.hintLocked : null]}>
             {nameLockedUntil
@@ -435,6 +438,9 @@ function Group({
   title: string;
   children: React.ReactNode;
 }) {
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+
   return (
     <GlassPanel style={styles.card}>
       <SectionLabel icon={icon} label={title} />
@@ -443,144 +449,146 @@ function Group({
   );
 }
 
-const styles = StyleSheet.create({
-  flex: {
-    flex: 1,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.sm,
-  },
-  title: {
-    ...Typography.headlineMd,
-    color: Colors.primary,
-  },
-  card: {
-    padding: Spacing.sm,
-    gap: Spacing.sm,
-  },
-  photoActions: {
-    flexDirection: 'row',
-    gap: Spacing.xs,
-  },
-  hero: {
-    alignItems: 'center',
-    gap: Spacing.xs,
-  },
-  heroName: {
-    ...Typography.headlineMd,
-    color: Colors.primary,
-  },
-  hintRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  hintLocked: {
-    color: Colors.secondary,
-    flex: 1,
-  },
-  twoCols: {
-    flexDirection: 'row',
-    gap: Spacing.xs,
-  },
-  col: {
-    flex: 1,
-    minWidth: 0,
-  },
-  actions: {
-    flexDirection: 'row',
-    gap: Spacing.xs,
-  },
-  hint: {
-    ...Typography.bodySm,
-    fontSize: 12,
-    color: Colors.onSurfaceVariant,
-  },
-  error: {
-    ...Typography.bodySm,
-    color: Colors.error,
-  },
-  disabledField: {
-    opacity: 0.5,
-  },
-  multiline: {
-    minHeight: 88,
-    textAlignVertical: 'top',
-  },
-  swatches: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'center',
-    gap: Spacing.xs,
-  },
-  swatch: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    borderWidth: 2,
-    borderColor: 'transparent',
-  },
-  swatchActive: {
-    borderColor: Colors.primary,
-  },
-  emojiButton: {
-    width: 44,
-    height: 44,
-    borderRadius: Radii.md,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: Colors.glassFill,
-    borderWidth: 1,
-    borderColor: Colors.glassBorder,
-  },
-  emojiButtonActive: {
-    borderColor: Colors.primaryContainer,
-    backgroundColor: 'rgba(182, 247, 0, 0.15)',
-  },
-  emoji: {
-    fontSize: 22,
-  },
-  emojiInitials: {
-    fontFamily: FontFamilies.headline,
-    fontSize: 16,
-    color: Colors.onSurface,
-  },
-  gridRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.base,
-  },
-  gridLabel: {
-    width: 64,
-  },
-  gridDay: {
-    flex: 1,
-    textAlign: 'center',
-    ...Typography.bodySm,
-    color: Colors.onSurfaceVariant,
-  },
-  gridCell: {
-    flex: 1,
-    height: 32,
-    borderRadius: Radii.DEFAULT,
-    backgroundColor: Colors.glassFill,
-    borderWidth: 1,
-    borderColor: Colors.glassBorder,
-  },
-  gridCellOn: {
-    backgroundColor: Colors.primaryContainer,
-    borderColor: Colors.primaryContainer,
-  },
-  socialRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.xs,
-  },
-  socialLabel: {
-    ...Typography.bodySm,
-    color: Colors.onSurfaceVariant,
-    width: 84,
-  },
-});
+const makeStyles = (colors: ColorPalette) =>
+  StyleSheet.create({
+    flex: {
+      flex: 1,
+    },
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: Spacing.sm,
+    },
+    title: {
+      ...Typography.headlineMd,
+      color: colors.primary,
+    },
+    card: {
+      padding: Spacing.sm,
+      gap: Spacing.sm,
+    },
+    photoActions: {
+      flexDirection: 'row',
+      gap: Spacing.xs,
+    },
+    hero: {
+      alignItems: 'center',
+      gap: Spacing.xs,
+    },
+    heroName: {
+      ...Typography.headlineMd,
+      color: colors.primary,
+    },
+    hintRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+    },
+    hintLocked: {
+      color: colors.secondary,
+      flex: 1,
+    },
+    twoCols: {
+      flexDirection: 'row',
+      gap: Spacing.xs,
+    },
+    col: {
+      flex: 1,
+      minWidth: 0,
+    },
+    actions: {
+      flexDirection: 'row',
+      gap: Spacing.xs,
+    },
+    hint: {
+      ...Typography.bodySm,
+      fontSize: 12,
+      color: colors.onSurfaceVariant,
+    },
+    error: {
+      ...Typography.bodySm,
+      color: colors.error,
+    },
+    disabledField: {
+      opacity: 0.5,
+    },
+    multiline: {
+      minHeight: 88,
+      textAlignVertical: 'top',
+    },
+    swatches: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      justifyContent: 'center',
+      gap: Spacing.xs,
+    },
+    swatch: {
+      width: 36,
+      height: 36,
+      borderRadius: 18,
+      borderWidth: 2,
+      borderColor: 'transparent',
+    },
+    swatchActive: {
+      borderColor: colors.primary,
+    },
+    emojiButton: {
+      width: 44,
+      height: 44,
+      borderRadius: Radii.md,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: colors.glassFill,
+      borderWidth: 1,
+      borderColor: colors.glassBorder,
+    },
+    emojiButtonActive: {
+      borderColor: colors.primaryContainer,
+      // primaryContainer no cambia entre temas, así que este tinte vale igual en los dos.
+      backgroundColor: colors.primaryContainer + '26',
+    },
+    emoji: {
+      fontSize: 22,
+    },
+    emojiInitials: {
+      fontFamily: FontFamilies.headline,
+      fontSize: 16,
+      color: colors.onSurface,
+    },
+    gridRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: Spacing.base,
+    },
+    gridLabel: {
+      width: 64,
+    },
+    gridDay: {
+      flex: 1,
+      textAlign: 'center',
+      ...Typography.bodySm,
+      color: colors.onSurfaceVariant,
+    },
+    gridCell: {
+      flex: 1,
+      height: 32,
+      borderRadius: Radii.DEFAULT,
+      backgroundColor: colors.glassFill,
+      borderWidth: 1,
+      borderColor: colors.glassBorder,
+    },
+    gridCellOn: {
+      backgroundColor: colors.primaryContainer,
+      borderColor: colors.primaryContainer,
+    },
+    socialRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: Spacing.xs,
+    },
+    socialLabel: {
+      ...Typography.bodySm,
+      color: colors.onSurfaceVariant,
+      width: 84,
+    },
+  });

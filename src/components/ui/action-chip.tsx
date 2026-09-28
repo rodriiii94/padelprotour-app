@@ -1,16 +1,20 @@
 import { MaterialIcons } from '@expo/vector-icons';
+import { useMemo } from 'react';
 import { Pressable, StyleSheet, Text } from 'react-native';
 
 import type { IconName } from '@/components/ui/section-label';
-import { Colors, FontFamilies, Radii, Spacing } from '@/theme/tokens';
+import { useColors } from '@/hooks/use-theme';
+import { FontFamilies, Radii, Spacing, type ColorPalette } from '@/theme/tokens';
 
 type Tone = 'default' | 'danger' | 'accent';
 
-const TONES: Record<Tone, { color: string; border: string; background: string }> = {
-  default: { color: Colors.onSurface, border: Colors.glassBorder, background: Colors.glassFill },
-  danger: { color: Colors.error, border: 'rgba(255, 180, 171, 0.35)', background: 'rgba(147, 0, 10, 0.12)' },
-  accent: { color: Colors.primaryContainer, border: 'rgba(182, 247, 0, 0.4)', background: 'rgba(182, 247, 0, 0.08)' },
-};
+const makeTones = (colors: ColorPalette): Record<Tone, { color: string; border: string; background: string }> => ({
+  default: { color: colors.onSurface, border: colors.glassBorder, background: colors.glassFill },
+  // primaryContainer/errorContainer no cambian entre temas (son rellenos de acento fijos),
+  // así que un tinte a partir de ellos vale igual en claro y en oscuro.
+  danger: { color: colors.error, border: colors.errorContainer + '59', background: colors.errorContainer + '1f' },
+  accent: { color: colors.primaryContainer, border: colors.primaryContainer + '66', background: colors.primaryContainer + '14' },
+});
 
 /** Botón de acción secundario: borde fino y fondo tenue, con icono opcional. */
 export function ActionChip({
@@ -29,7 +33,10 @@ export function ActionChip({
   /** true: ocupa el ancho disponible (filas de acciones). false: solo lo que mide. */
   fill?: boolean;
 }) {
-  const { color, border, background } = TONES[tone];
+  const colors = useColors();
+  const tones = useMemo(() => makeTones(colors), [colors]);
+  const { color, border, background } = tones[tone];
+
   return (
     <Pressable
       onPress={onPress}

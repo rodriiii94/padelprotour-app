@@ -11,9 +11,9 @@ import { useEffect } from 'react';
 import { StatusBar, StyleSheet, View } from 'react-native';
 
 import { AuthProvider, useAuth } from '@/hooks/use-auth';
+import { ThemeProvider, useColors, useTheme } from '@/hooks/use-theme';
 import { usePendingInviteRedirect } from '@/lib/invite';
 import { Sentry } from '@/lib/sentry';
-import { Colors } from '@/theme/tokens';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -38,16 +38,29 @@ function RootLayout() {
   }
 
   return (
-    <AuthProvider>
-      <StatusBar barStyle="light-content" />
-      <View style={styles.root}>
-        <AuthGate />
-      </View>
-    </AuthProvider>
+    <ThemeProvider>
+      <AuthProvider>
+        <RootLayoutBody />
+      </AuthProvider>
+    </ThemeProvider>
   );
 }
 
 export default Sentry.wrap(RootLayout);
+
+function RootLayoutBody() {
+  const { scheme } = useTheme();
+  const colors = useColors();
+
+  return (
+    <>
+      <StatusBar barStyle={scheme === 'light' ? 'dark-content' : 'light-content'} />
+      <View style={[styles.root, { backgroundColor: colors.background }]}>
+        <AuthGate />
+      </View>
+    </>
+  );
+}
 
 function AuthGate() {
   const { user, isLoading } = useAuth();
@@ -91,6 +104,5 @@ function PendingInviteRedirect() {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: Colors.background,
   },
 });

@@ -1,10 +1,50 @@
 /**
  * Design tokens translated 1:1 from the PadelProTour Elite design system
- * (~/dev/stitch_padelprotour_liga_de_parejas/padelprotour_elite/DESIGN.md).
- * Single dark theme — there is no light mode in this design system.
+ * (~/dev/stitch_padelprotour_liga_de_parejas/padelprotour_elite/DESIGN.md),
+ * plus a LightColors counterpart added on top of it (the original had a
+ * single dark theme only). The brand fills (primaryContainer,
+ * secondaryContainer, errorContainer and their `on*` pairs) stay the same
+ * in both themes — they're solid accent chips, not neutral surface tones.
+ * Only the neutral surface/text tones and the two plain-tint-on-background
+ * colors (primary, secondary, error) actually change with the theme.
+ *
+ * Don't import `DarkColors`/`LightColors` directly in components — use the
+ * `useColors()` hook from `@/theme/theme` so the UI reacts when the theme
+ * changes.
  */
 
-export const Colors = {
+export interface ColorPalette {
+  surface: string;
+  surfaceDim: string;
+  surfaceBright: string;
+  surfaceContainerLowest: string;
+  surfaceContainerLow: string;
+  surfaceContainer: string;
+  surfaceContainerHigh: string;
+  surfaceContainerHighest: string;
+  onSurface: string;
+  onSurfaceVariant: string;
+  outline: string;
+  outlineVariant: string;
+  background: string;
+  onBackground: string;
+  primary: string;
+  onPrimary: string;
+  primaryContainer: string;
+  onPrimaryContainer: string;
+  secondary: string;
+  onSecondary: string;
+  secondaryContainer: string;
+  onSecondaryContainer: string;
+  error: string;
+  onError: string;
+  errorContainer: string;
+  onErrorContainer: string;
+  glassFill: string;
+  glassBorder: string;
+}
+
+export const DarkColors: ColorPalette = {
   surface: '#111508',
   surfaceDim: '#111508',
   surfaceBright: '#363b2c',
@@ -38,7 +78,46 @@ export const Colors = {
 
   glassFill: 'rgba(255, 255, 255, 0.05)',
   glassBorder: 'rgba(255, 255, 255, 0.1)',
-} as const;
+};
+
+export const LightColors: ColorPalette = {
+  surface: '#fbfdf0',
+  surfaceDim: '#dbe0c9',
+  surfaceBright: '#fbfdf0',
+  surfaceContainerLowest: '#ffffff',
+  surfaceContainerLow: '#f5f8e6',
+  surfaceContainer: '#eff2e0',
+  surfaceContainerHigh: '#e9edda',
+  surfaceContainerHighest: '#e3e7d4',
+  onSurface: '#191d10',
+  onSurfaceVariant: '#424933',
+  outline: '#72795f',
+  outlineVariant: '#c2c9ad',
+
+  background: '#fbfdf0',
+  onBackground: '#191d10',
+
+  primary: '#191d10',
+  // El lima de marca (#b6f700) es casi ilegible como texto suelto sobre blanco: aquí se usa
+  // más oscuro tanto para eso como para el fondo de sus botones/chips, con texto blanco
+  // encima en vez de oscuro (ver onPrimary/onPrimaryContainer). En oscuro no cambia nada.
+  onPrimary: '#ffffff',
+  primaryContainer: '#4d7c0f',
+  onPrimaryContainer: '#ffffff',
+
+  secondary: '#8a5200',
+  onSecondary: '#4a2800',
+  secondaryContainer: '#fe9800',
+  onSecondaryContainer: '#643900',
+
+  error: '#ba1a1a',
+  onError: '#690005',
+  errorContainer: '#93000a',
+  onErrorContainer: '#ffdad6',
+
+  glassFill: 'rgba(0, 0, 0, 0.04)',
+  glassBorder: 'rgba(0, 0, 0, 0.08)',
+};
 
 export const Spacing = {
   base: 4,

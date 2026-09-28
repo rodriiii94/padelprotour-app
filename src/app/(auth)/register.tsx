@@ -1,5 +1,5 @@
 import { Link } from 'expo-router';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { MaterialIcons } from '@expo/vector-icons';
 import { StyleSheet, Text, View } from 'react-native';
 
@@ -9,10 +9,13 @@ import { Button } from '@/components/ui/button';
 import { GoogleSignInButton } from '@/components/ui/google-sign-in-button';
 import { TextField } from '@/components/ui/text-field';
 import { useAuth } from '@/hooks/use-auth';
-import { Colors, Spacing, Typography } from '@/theme/tokens';
+import { useColors } from '@/hooks/use-theme';
+import { Spacing, Typography, type ColorPalette } from '@/theme/tokens';
 
 export default function RegisterScreen() {
   const { register, loginWithGoogle } = useAuth();
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -44,7 +47,7 @@ export default function RegisterScreen() {
           </Link>
         }>
         <View style={styles.sentRow}>
-          <MaterialIcons name="mark-email-read" size={22} color={Colors.primaryContainer} />
+          <MaterialIcons name="mark-email-read" size={22} color={colors.primaryContainer} />
           <Text style={styles.info}>
             Pulsa el botón del correo para activar tu cuenta. Si no lo ves, mira en spam.
           </Text>
@@ -101,34 +104,35 @@ export default function RegisterScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  error: {
-    ...Typography.bodySm,
-    color: Colors.error,
-  },
-  info: {
-    ...Typography.bodySm,
-    color: Colors.onSurfaceVariant,
-    flex: 1,
-  },
-  hint: {
-    ...Typography.bodySm,
-    fontSize: 12,
-    color: Colors.onSurfaceVariant,
-  },
-  sentRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.xs,
-  },
-  submit: {
-    marginTop: Spacing.base,
-  },
-  link: {
-    alignSelf: 'center',
-  },
-  linkText: {
-    ...Typography.bodyMd,
-    color: Colors.primaryContainer,
-  },
-});
+const makeStyles = (colors: ColorPalette) =>
+  StyleSheet.create({
+    error: {
+      ...Typography.bodySm,
+      color: colors.error,
+    },
+    info: {
+      ...Typography.bodySm,
+      color: colors.onSurfaceVariant,
+      flex: 1,
+    },
+    hint: {
+      ...Typography.bodySm,
+      fontSize: 12,
+      color: colors.onSurfaceVariant,
+    },
+    sentRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: Spacing.xs,
+    },
+    submit: {
+      marginTop: Spacing.base,
+    },
+    link: {
+      alignSelf: 'center',
+    },
+    linkText: {
+      ...Typography.bodyMd,
+      color: colors.primaryContainer,
+    },
+  });

@@ -1,6 +1,6 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import { useLocalSearchParams } from 'expo-router';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import {
@@ -21,7 +21,8 @@ import { SectionLabel } from '@/components/ui/section-label';
 import { TextField } from '@/components/ui/text-field';
 import { useAuth } from '@/hooks/use-auth';
 import { useGoBack } from '@/hooks/use-go-back';
-import { Colors, Spacing, Typography } from '@/theme/tokens';
+import { useColors } from '@/hooks/use-theme';
+import { Spacing, Typography, type ColorPalette } from '@/theme/tokens';
 
 /** Every set result padel actually allows: 6 with a 2-game margin, 7-5, or a 7-6 tie-break. */
 const VALID_SET_SCORES: [number, number][] = [
@@ -125,6 +126,8 @@ export default function MatchDetailScreen() {
   }>();
   const goBack = useGoBack();
   const { user } = useAuth();
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const isOrganizer = isOrganizerParam === '1';
   const matchId = Number(id);
 
@@ -240,11 +243,11 @@ export default function MatchDetailScreen() {
     <Screen>
       <View style={styles.header}>
         <Pressable onPress={goBack} hitSlop={12}>
-          <MaterialIcons name="arrow-back" size={24} color={Colors.onSurface} />
+          <MaterialIcons name="arrow-back" size={24} color={colors.onSurface} />
         </Pressable>
       </View>
 
-      {isLoading && <ActivityIndicator color={Colors.primaryContainer} style={styles.spinner} />}
+      {isLoading && <ActivityIndicator color={colors.primaryContainer} style={styles.spinner} />}
 
       {match && (
         <>
@@ -434,60 +437,61 @@ export default function MatchDetailScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  header: {
-    flexDirection: 'row',
-  },
-  spinner: {
-    marginTop: Spacing.lg,
-  },
-  title: {
-    ...Typography.headlineLg,
-    color: Colors.primary,
-  },
-  meta: {
-    ...Typography.bodySm,
-    color: Colors.onSurfaceVariant,
-  },
-  card: {
-    padding: Spacing.sm,
-    gap: Spacing.sm,
-  },
-  cardTitle: {
-    ...Typography.headlineSm,
-    color: Colors.primary,
-  },
-  body: {
-    ...Typography.bodyMd,
-    color: Colors.onSurface,
-  },
-  scoreboard: {
-    padding: Spacing.sm,
-  },
-  scoreboardHeader: {
-    flexDirection: 'row',
-    marginBottom: Spacing.xs,
-  },
-  setLabel: {
-    ...Typography.bodySm,
-    color: Colors.onSurfaceVariant,
-    width: 44,
-  },
-  actionsRow: {
-    flexDirection: 'row',
-    gap: Spacing.xs,
-  },
-  setInputRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.xs,
-  },
-  setInput: {
-    width: 56,
-    textAlign: 'center',
-  },
-  errorText: {
-    ...Typography.bodySm,
-    color: Colors.error,
-  },
-});
+const makeStyles = (colors: ColorPalette) =>
+  StyleSheet.create({
+    header: {
+      flexDirection: 'row',
+    },
+    spinner: {
+      marginTop: Spacing.lg,
+    },
+    title: {
+      ...Typography.headlineLg,
+      color: colors.primary,
+    },
+    meta: {
+      ...Typography.bodySm,
+      color: colors.onSurfaceVariant,
+    },
+    card: {
+      padding: Spacing.sm,
+      gap: Spacing.sm,
+    },
+    cardTitle: {
+      ...Typography.headlineSm,
+      color: colors.primary,
+    },
+    body: {
+      ...Typography.bodyMd,
+      color: colors.onSurface,
+    },
+    scoreboard: {
+      padding: Spacing.sm,
+    },
+    scoreboardHeader: {
+      flexDirection: 'row',
+      marginBottom: Spacing.xs,
+    },
+    setLabel: {
+      ...Typography.bodySm,
+      color: colors.onSurfaceVariant,
+      width: 44,
+    },
+    actionsRow: {
+      flexDirection: 'row',
+      gap: Spacing.xs,
+    },
+    setInputRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: Spacing.xs,
+    },
+    setInput: {
+      width: 56,
+      textAlign: 'center',
+    },
+    errorText: {
+      ...Typography.bodySm,
+      color: colors.error,
+    },
+  });

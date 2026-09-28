@@ -1,13 +1,14 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import { Link } from 'expo-router';
-import { useState, type ReactNode } from 'react';
+import { useMemo, useState, type ReactNode } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { GlassPanel } from '@/components/ui/glass-panel';
 import { LabeledField } from '@/components/ui/labeled-field';
 import { Screen } from '@/components/ui/screen';
 import { TextField } from '@/components/ui/text-field';
-import { Colors, Radii, Spacing, Typography } from '@/theme/tokens';
+import { useColors } from '@/hooks/use-theme';
+import { Radii, Spacing, Typography, type ColorPalette } from '@/theme/tokens';
 
 export { LabeledField };
 
@@ -23,12 +24,15 @@ export function AuthShell({
   children: ReactNode;
   footer?: ReactNode;
 }) {
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+
   return (
     <Screen>
       <View style={styles.wrap}>
         <View style={styles.brand}>
           <View style={styles.mark}>
-            <MaterialIcons name="sports-tennis" size={34} color={Colors.onPrimary} />
+            <MaterialIcons name="sports-tennis" size={34} color={colors.onPrimary} />
           </View>
           <Text style={styles.wordmark}>PadelProTour</Text>
           <Text style={styles.tagline}>Tus ligas y torneos de pádel</Text>
@@ -66,6 +70,8 @@ export function PasswordField({
   onSubmitEditing?: () => void;
 }) {
   const [visible, setVisible] = useState(false);
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
 
   return (
     <View style={styles.passwordWrap}>
@@ -88,7 +94,7 @@ export function PasswordField({
         <MaterialIcons
           name={visible ? 'visibility-off' : 'visibility'}
           size={20}
-          color={Colors.onSurfaceVariant}
+          color={colors.onSurfaceVariant}
         />
       </Pressable>
     </View>
@@ -97,6 +103,9 @@ export function PasswordField({
 
 /** Separador "o" entre el acceso con email y el acceso social. */
 export function OrDivider() {
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+
   // Sin Google configurado no hay nada al otro lado del separador.
   if (!process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID) return null;
 
@@ -109,86 +118,87 @@ export function OrDivider() {
   );
 }
 
-const styles = StyleSheet.create({
-  wrap: {
-    width: '100%',
-    maxWidth: 420,
-    alignSelf: 'center',
-    gap: Spacing.md,
-    paddingTop: Spacing.md,
-  },
-  brand: {
-    alignItems: 'center',
-    gap: Spacing.xs,
-  },
-  mark: {
-    width: 68,
-    height: 68,
-    borderRadius: Radii.xl,
-    backgroundColor: Colors.primaryContainer,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  wordmark: {
-    ...Typography.display,
-    fontSize: 30,
-    lineHeight: 36,
-    color: Colors.primary,
-    textAlign: 'center',
-  },
-  tagline: {
-    ...Typography.bodySm,
-    color: Colors.onSurfaceVariant,
-    textAlign: 'center',
-  },
-  card: {
-    padding: Spacing.md,
-    gap: Spacing.sm,
-  },
-  heading: {
-    gap: 4,
-    marginBottom: Spacing.base,
-  },
-  title: {
-    ...Typography.headlineMd,
-    color: Colors.primary,
-  },
-  subtitle: {
-    ...Typography.bodySm,
-    color: Colors.onSurfaceVariant,
-  },
-  passwordWrap: {
-    justifyContent: 'center',
-  },
-  passwordInput: {
-    paddingRight: 44,
-  },
-  eye: {
-    position: 'absolute',
-    right: Spacing.sm,
-    zIndex: 2,
-  },
-  orRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.xs,
-  },
-  orLine: {
-    flex: 1,
-    height: StyleSheet.hairlineWidth,
-    backgroundColor: Colors.glassBorder,
-  },
-  orText: {
-    ...Typography.bodySm,
-    color: Colors.onSurfaceVariant,
-  },
-  footer: {
-    alignItems: 'center',
-    gap: Spacing.xs,
-  },
-  legal: {
-    ...Typography.bodySm,
-    fontSize: 12,
-    color: Colors.onSurfaceVariant,
-  },
-});
+const makeStyles = (colors: ColorPalette) =>
+  StyleSheet.create({
+    wrap: {
+      width: '100%',
+      maxWidth: 420,
+      alignSelf: 'center',
+      gap: Spacing.md,
+      paddingTop: Spacing.md,
+    },
+    brand: {
+      alignItems: 'center',
+      gap: Spacing.xs,
+    },
+    mark: {
+      width: 68,
+      height: 68,
+      borderRadius: Radii.xl,
+      backgroundColor: colors.primaryContainer,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    wordmark: {
+      ...Typography.display,
+      fontSize: 30,
+      lineHeight: 36,
+      color: colors.primary,
+      textAlign: 'center',
+    },
+    tagline: {
+      ...Typography.bodySm,
+      color: colors.onSurfaceVariant,
+      textAlign: 'center',
+    },
+    card: {
+      padding: Spacing.md,
+      gap: Spacing.sm,
+    },
+    heading: {
+      gap: 4,
+      marginBottom: Spacing.base,
+    },
+    title: {
+      ...Typography.headlineMd,
+      color: colors.primary,
+    },
+    subtitle: {
+      ...Typography.bodySm,
+      color: colors.onSurfaceVariant,
+    },
+    passwordWrap: {
+      justifyContent: 'center',
+    },
+    passwordInput: {
+      paddingRight: 44,
+    },
+    eye: {
+      position: 'absolute',
+      right: Spacing.sm,
+      zIndex: 2,
+    },
+    orRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: Spacing.xs,
+    },
+    orLine: {
+      flex: 1,
+      height: StyleSheet.hairlineWidth,
+      backgroundColor: colors.glassBorder,
+    },
+    orText: {
+      ...Typography.bodySm,
+      color: colors.onSurfaceVariant,
+    },
+    footer: {
+      alignItems: 'center',
+      gap: Spacing.xs,
+    },
+    legal: {
+      ...Typography.bodySm,
+      fontSize: 12,
+      color: colors.onSurfaceVariant,
+    },
+  });

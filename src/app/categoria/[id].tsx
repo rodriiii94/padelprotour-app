@@ -1,6 +1,6 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
-import { useCallback, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { searchUsers } from '@/api/categories';
@@ -25,7 +25,8 @@ import { TextField } from '@/components/ui/text-field';
 import { useAuth } from '@/hooks/use-auth';
 import { useGoBack } from '@/hooks/use-go-back';
 import { useCategoryDetail } from '@/hooks/use-category-detail';
-import { Colors, FontFamilies, Radii, Spacing, Typography } from '@/theme/tokens';
+import { useColors } from '@/hooks/use-theme';
+import { FontFamilies, Radii, Spacing, Typography, type ColorPalette } from '@/theme/tokens';
 
 const STATUS_LABEL: Record<RegistrationStatus, string> = {
   pending: 'Pendiente',
@@ -34,12 +35,12 @@ const STATUS_LABEL: Record<RegistrationStatus, string> = {
   rejected: 'Rechazada',
 };
 
-const STATUS_COLOR: Record<RegistrationStatus, string> = {
-  pending: Colors.secondaryContainer,
-  confirmed: Colors.primaryContainer,
-  waitlisted: Colors.onSurfaceVariant,
-  rejected: Colors.error,
-};
+const makeStatusColor = (colors: ColorPalette): Record<RegistrationStatus, string> => ({
+  pending: colors.secondaryContainer,
+  confirmed: colors.primaryContainer,
+  waitlisted: colors.onSurfaceVariant,
+  rejected: colors.error,
+});
 
 const dateFormatter = new Intl.DateTimeFormat('es-ES', {
   day: 'numeric',
@@ -86,6 +87,9 @@ export default function CategoryDetailScreen() {
   const goBack = useGoBack();
   const { user } = useAuth();
   const categoryId = Number(id);
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+  const statusColor = useMemo(() => makeStatusColor(colors), [colors]);
   const {
     category,
     competition,
@@ -128,11 +132,11 @@ export default function CategoryDetailScreen() {
     <Screen>
       <View style={styles.header}>
         <Pressable onPress={goBack} hitSlop={12}>
-          <MaterialIcons name="arrow-back" size={24} color={Colors.onSurface} />
+          <MaterialIcons name="arrow-back" size={24} color={colors.onSurface} />
         </Pressable>
       </View>
 
-      {isLoading && <ActivityIndicator color={Colors.primaryContainer} style={styles.spinner} />}
+      {isLoading && <ActivityIndicator color={colors.primaryContainer} style={styles.spinner} />}
 
       {error && (
         <GlassPanel style={styles.card}>
@@ -161,8 +165,8 @@ export default function CategoryDetailScreen() {
               <View style={styles.rowBetween}>
                 <SectionLabel icon="how-to-reg" label="Tu inscripción" />
                 <View
-                  style={[styles.statusPill, { borderColor: STATUS_COLOR[myRegistration.status] + '80' }]}>
-                  <Text style={[styles.statusPillLabel, { color: STATUS_COLOR[myRegistration.status] }]}>
+                  style={[styles.statusPill, { borderColor: statusColor[myRegistration.status] + '80' }]}>
+                  <Text style={[styles.statusPillLabel, { color: statusColor[myRegistration.status] }]}>
                     {STATUS_LABEL[myRegistration.status]}
                   </Text>
                 </View>
@@ -288,9 +292,11 @@ export default function CategoryDetailScreen() {
 }
 
 function InfoPill({ icon, label }: { icon: 'sports-tennis' | 'groups'; label: string }) {
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   return (
     <View style={styles.infoPill}>
-      <MaterialIcons name={icon} size={14} color={Colors.onSurfaceVariant} />
+      <MaterialIcons name={icon} size={14} color={colors.onSurfaceVariant} />
       <Text style={styles.infoPillLabel}>{label}</Text>
     </View>
   );
@@ -313,6 +319,8 @@ function JoinSection({
   const [results, setResults] = useState<PublicUserSummary[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [searchError, setSearchError] = useState<string | null>(null);
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
 
   async function handleSearch() {
     if (query.trim().length < 2) return;
@@ -402,6 +410,9 @@ function RegistrationRow({
   onConfirm: () => void;
   onReject: () => void;
 }) {
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+  const statusColor = useMemo(() => makeStatusColor(colors), [colors]);
   const fallbackLabel = registration.pair_id
     ? `Pareja #${registration.pair_id}`
     : `Jugador #${registration.player_id}`;
@@ -410,7 +421,7 @@ function RegistrationRow({
     <GlassPanel style={styles.card}>
       <View style={styles.rowBetween}>
         <View style={[styles.row, { flex: 1 }]}>
-          <MaterialIcons name="groups" size={20} color={Colors.onSurfaceVariant} />
+          <MaterialIcons name="groups" size={20} color={colors.onSurfaceVariant} />
           <View style={{ flex: 1 }}>
             {registration.pair ? (
               registration.pair.name ? (
@@ -435,9 +446,9 @@ function RegistrationRow({
         <View
           style={[
             styles.statusPill,
-            { borderColor: STATUS_COLOR[registration.status] + '80' },
+            { borderColor: statusColor[registration.status] + '80' },
           ]}>
-          <Text style={[styles.statusPillLabel, { color: STATUS_COLOR[registration.status] }]}>
+          <Text style={[styles.statusPillLabel, { color: statusColor[registration.status] }]}>
             {STATUS_LABEL[registration.status]}
           </Text>
         </View>
@@ -464,6 +475,8 @@ function MatchRow({
   currentUserId?: number;
 }) {
   const router = useRouter();
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
 
   return (
     <Pressable
@@ -472,7 +485,7 @@ function MatchRow({
       <View style={styles.matchHeader}>
         <MatchStatusBadge status={match.status} small />
         <View style={styles.matchWhen}>
-          <MaterialIcons name="location-on" size={13} color={Colors.onSurfaceVariant} />
+          <MaterialIcons name="location-on" size={13} color={colors.onSurfaceVariant} />
           <Text style={styles.matchMeta} numberOfLines={1}>
             {match.court ?? 'Pista sin asignar'}
             {match.scheduled_at ? ` · ${dateFormatter.format(new Date(match.scheduled_at))}` : ''}
@@ -495,6 +508,8 @@ function PhaseSection({
   isOrganizer: boolean;
   currentUserId?: number;
 }) {
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   return (
     <GlassPanel style={styles.card}>
       <SectionLabel icon="event" label={phase.name} />
@@ -517,186 +532,187 @@ const PODIUM: Record<number, string> = {
   3: '#d99a6c',
 };
 
-const styles = StyleSheet.create({
-  rankingCard: {
-    paddingHorizontal: Spacing.sm,
-    paddingVertical: Spacing.base,
-  },
-  rankingRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.sm,
-    paddingVertical: Spacing.xs + 2,
-  },
-  rankingDivider: {
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: Colors.glassBorder,
-  },
-  rankingBadge: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: Colors.glassBorder,
-    backgroundColor: Colors.glassFill,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  rankingPosition: {
-    fontFamily: FontFamilies.display,
-    fontSize: 14,
-    color: Colors.onSurfaceVariant,
-  },
-  rankingName: {
-    flex: 1,
-    minWidth: 0,
-    ...Typography.bodyMd,
-    color: Colors.onSurface,
-  },
-  rankingNameFirst: {
-    fontFamily: FontFamilies.bodyBold,
-    color: Colors.primary,
-  },
-  rankingPointsWrap: {
-    flexDirection: 'row',
-    alignItems: 'baseline',
-    gap: 4,
-  },
-  rankingPoints: {
-    fontFamily: FontFamilies.display,
-    fontSize: 20,
-    color: Colors.primaryContainer,
-  },
-  rankingPointsUnit: {
-    ...Typography.bodySm,
-    fontSize: 12,
-    color: Colors.onSurfaceVariant,
-  },
-  matchCard: {
-    paddingVertical: Spacing.xs,
-  },
-  matchCardGap: {
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: Colors.glassBorder,
-    paddingTop: Spacing.xs + 2,
-  },
-  matchPressed: {
-    opacity: 0.7,
-  },
-  matchHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: Spacing.xs,
-    marginBottom: 2,
-  },
-  matchWhen: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    flexShrink: 1,
-  },
-  registrationName: {
-    fontFamily: FontFamilies.bodyBold,
-    fontSize: 16,
-    lineHeight: 22,
-    color: Colors.primary,
-    flexShrink: 1,
-  },
-  pills: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: Spacing.xs,
-  },
-  infoPill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    paddingVertical: 6,
-    paddingHorizontal: Spacing.xs + 4,
-    borderRadius: Radii.full,
-    borderWidth: 1,
-    borderColor: Colors.glassBorder,
-    backgroundColor: Colors.glassFill,
-  },
-  infoPillLabel: {
-    ...Typography.bodySm,
-    color: Colors.onSurfaceVariant,
-  },
-  header: {
-    flexDirection: 'row',
-  },
-  spinner: {
-    marginTop: Spacing.lg,
-  },
-  title: {
-    ...Typography.headlineLg,
-    color: Colors.primary,
-  },
-  meta: {
-    ...Typography.bodySm,
-    color: Colors.onSurfaceVariant,
-  },
-  body: {
-    ...Typography.bodySm,
-    color: Colors.onSurfaceVariant,
-  },
-  card: {
-    padding: Spacing.sm,
-    gap: Spacing.xs,
-  },
-  cardTitle: {
-    ...Typography.headlineSm,
-    color: Colors.primary,
-    flexShrink: 1,
-  },
-  section: {
-    gap: Spacing.sm,
-  },
-  sectionTitle: {
-    ...Typography.headlineSm,
-    color: Colors.primary,
-  },
-  list: {
-    gap: Spacing.sm,
-  },
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.base,
-  },
-  rowBetween: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    gap: Spacing.sm,
-  },
-  actionsRow: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    gap: Spacing.xs,
-    marginTop: Spacing.xs,
-    paddingTop: Spacing.xs,
-    borderTopWidth: 1,
-    borderTopColor: Colors.glassBorder,
-  },
-  statusPill: {
-    borderWidth: 1,
-    borderRadius: Radii.full,
-    paddingHorizontal: Spacing.xs,
-    paddingVertical: 3,
-  },
-  statusPillLabel: {
-    ...Typography.labelCaps,
-    fontSize: 11,
-  },
-  matchMeta: {
-    ...Typography.bodySm,
-    color: Colors.onSurfaceVariant,
-    fontSize: 13,
-  },
-  error: {
-    ...Typography.bodySm,
-    color: Colors.error,
-  },
-});
+const makeStyles = (colors: ColorPalette) =>
+  StyleSheet.create({
+    rankingCard: {
+      paddingHorizontal: Spacing.sm,
+      paddingVertical: Spacing.base,
+    },
+    rankingRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: Spacing.sm,
+      paddingVertical: Spacing.xs + 2,
+    },
+    rankingDivider: {
+      borderTopWidth: StyleSheet.hairlineWidth,
+      borderTopColor: colors.glassBorder,
+    },
+    rankingBadge: {
+      width: 32,
+      height: 32,
+      borderRadius: 16,
+      borderWidth: 1,
+      borderColor: colors.glassBorder,
+      backgroundColor: colors.glassFill,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    rankingPosition: {
+      fontFamily: FontFamilies.display,
+      fontSize: 14,
+      color: colors.onSurfaceVariant,
+    },
+    rankingName: {
+      flex: 1,
+      minWidth: 0,
+      ...Typography.bodyMd,
+      color: colors.onSurface,
+    },
+    rankingNameFirst: {
+      fontFamily: FontFamilies.bodyBold,
+      color: colors.primary,
+    },
+    rankingPointsWrap: {
+      flexDirection: 'row',
+      alignItems: 'baseline',
+      gap: 4,
+    },
+    rankingPoints: {
+      fontFamily: FontFamilies.display,
+      fontSize: 20,
+      color: colors.primaryContainer,
+    },
+    rankingPointsUnit: {
+      ...Typography.bodySm,
+      fontSize: 12,
+      color: colors.onSurfaceVariant,
+    },
+    matchCard: {
+      paddingVertical: Spacing.xs,
+    },
+    matchCardGap: {
+      borderTopWidth: StyleSheet.hairlineWidth,
+      borderTopColor: colors.glassBorder,
+      paddingTop: Spacing.xs + 2,
+    },
+    matchPressed: {
+      opacity: 0.7,
+    },
+    matchHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      gap: Spacing.xs,
+      marginBottom: 2,
+    },
+    matchWhen: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
+      flexShrink: 1,
+    },
+    registrationName: {
+      fontFamily: FontFamilies.bodyBold,
+      fontSize: 16,
+      lineHeight: 22,
+      color: colors.primary,
+      flexShrink: 1,
+    },
+    pills: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: Spacing.xs,
+    },
+    infoPill: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+      paddingVertical: 6,
+      paddingHorizontal: Spacing.xs + 4,
+      borderRadius: Radii.full,
+      borderWidth: 1,
+      borderColor: colors.glassBorder,
+      backgroundColor: colors.glassFill,
+    },
+    infoPillLabel: {
+      ...Typography.bodySm,
+      color: colors.onSurfaceVariant,
+    },
+    header: {
+      flexDirection: 'row',
+    },
+    spinner: {
+      marginTop: Spacing.lg,
+    },
+    title: {
+      ...Typography.headlineLg,
+      color: colors.primary,
+    },
+    meta: {
+      ...Typography.bodySm,
+      color: colors.onSurfaceVariant,
+    },
+    body: {
+      ...Typography.bodySm,
+      color: colors.onSurfaceVariant,
+    },
+    card: {
+      padding: Spacing.sm,
+      gap: Spacing.xs,
+    },
+    cardTitle: {
+      ...Typography.headlineSm,
+      color: colors.primary,
+      flexShrink: 1,
+    },
+    section: {
+      gap: Spacing.sm,
+    },
+    sectionTitle: {
+      ...Typography.headlineSm,
+      color: colors.primary,
+    },
+    list: {
+      gap: Spacing.sm,
+    },
+    row: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: Spacing.base,
+    },
+    rowBetween: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      gap: Spacing.sm,
+    },
+    actionsRow: {
+      flexDirection: 'row',
+      justifyContent: 'flex-end',
+      gap: Spacing.xs,
+      marginTop: Spacing.xs,
+      paddingTop: Spacing.xs,
+      borderTopWidth: 1,
+      borderTopColor: colors.glassBorder,
+    },
+    statusPill: {
+      borderWidth: 1,
+      borderRadius: Radii.full,
+      paddingHorizontal: Spacing.xs,
+      paddingVertical: 3,
+    },
+    statusPillLabel: {
+      ...Typography.labelCaps,
+      fontSize: 11,
+    },
+    matchMeta: {
+      ...Typography.bodySm,
+      color: colors.onSurfaceVariant,
+      fontSize: 13,
+    },
+    error: {
+      ...Typography.bodySm,
+      color: colors.error,
+    },
+  });

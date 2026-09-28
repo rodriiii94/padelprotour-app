@@ -1,10 +1,12 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import { usePathname, useRouter } from 'expo-router';
+import { useMemo } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useAuth } from '@/hooks/use-auth';
-import { Colors, FontFamilies, Radii, Spacing, Typography } from '@/theme/tokens';
+import { useColors } from '@/hooks/use-theme';
+import { FontFamilies, Radii, Spacing, Typography, type ColorPalette } from '@/theme/tokens';
 
 const NAV_ITEMS: {
   href: '/' | '/buscar' | '/competiciones' | '/perfil';
@@ -22,6 +24,8 @@ export function WebBottomBar() {
   const router = useRouter();
   const pathname = usePathname();
   const insets = useSafeAreaInsets();
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
 
   return (
     <View style={[styles.bottomBar, { paddingBottom: Spacing.xs + insets.bottom }]}>
@@ -36,7 +40,7 @@ export function WebBottomBar() {
             <MaterialIcons
               name={item.icon}
               size={24}
-              color={active ? Colors.primaryContainer : Colors.onSurfaceVariant}
+              color={active ? colors.primaryContainer : colors.onSurfaceVariant}
             />
             <Text style={[styles.bottomLabel, active && styles.bottomLabelActive]}>{item.label}</Text>
           </Pressable>
@@ -51,6 +55,8 @@ export function WebSidebar() {
   const router = useRouter();
   const pathname = usePathname();
   const { user, logout } = useAuth();
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
 
   return (
     <View style={styles.sidebar}>
@@ -68,7 +74,7 @@ export function WebSidebar() {
                 <MaterialIcons
                   name={item.icon}
                   size={20}
-                  color={active ? Colors.onPrimaryContainer : Colors.onSurfaceVariant}
+                  color={active ? colors.onPrimaryContainer : colors.onSurfaceVariant}
                 />
                 <Text style={[styles.navLabel, active && styles.navLabelActive]}>{item.label}</Text>
               </Pressable>
@@ -87,101 +93,102 @@ export function WebSidebar() {
           </Text>
         </View>
         <Pressable onPress={logout} style={styles.logoutButton} accessibilityLabel="Cerrar sesión">
-          <MaterialIcons name="logout" size={18} color={Colors.onSurfaceVariant} />
+          <MaterialIcons name="logout" size={18} color={colors.onSurfaceVariant} />
         </Pressable>
       </View>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  sidebar: {
-    width: 240,
-    flexDirection: 'column',
-    justifyContent: 'space-between',
-    backgroundColor: Colors.surfaceContainerLow,
-    borderRightWidth: 1,
-    borderRightColor: Colors.glassBorder,
-    paddingVertical: Spacing.lg,
-    paddingHorizontal: Spacing.sm,
-  },
-  brand: {
-    ...Typography.headlineSm,
-    color: Colors.primary,
-    paddingHorizontal: Spacing.xs,
-    marginBottom: Spacing.lg,
-  },
-  nav: {
-    gap: Spacing.base,
-  },
-  navItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.xs,
-    paddingVertical: Spacing.xs,
-    paddingHorizontal: Spacing.xs,
-    borderRadius: Radii.md,
-  },
-  navItemActive: {
-    backgroundColor: Colors.primaryContainer,
-  },
-  navLabel: {
-    ...Typography.bodyMd,
-    color: Colors.onSurfaceVariant,
-  },
-  navLabelActive: {
-    color: Colors.onPrimaryContainer,
-    fontFamily: FontFamilies.bodyBold,
-  },
-  footer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.xs,
-    paddingHorizontal: Spacing.xs,
-    paddingTop: Spacing.sm,
-    borderTopWidth: 1,
-    borderTopColor: Colors.glassBorder,
-  },
-  userInfo: {
-    flex: 1,
-  },
-  userName: {
-    ...Typography.bodySm,
-    color: Colors.primary,
-  },
-  userEmail: {
-    ...Typography.bodySm,
-    color: Colors.onSurfaceVariant,
-    fontSize: 12,
-  },
-  logoutButton: {
-    padding: Spacing.base,
-  },
-  bottomBar: {
-    // Sticky, no fixed: queda al final del contenido y se pega al borde inferior de la
-    // ventana mientras se hace scroll, sin tapar el último trozo de la página.
-    position: 'sticky' as 'relative',
-    bottom: 0,
-    zIndex: 10,
-    flexDirection: 'row',
-    backgroundColor: Colors.surfaceContainerLow,
-    borderTopWidth: 1,
-    borderTopColor: Colors.glassBorder,
-    paddingTop: Spacing.xs,
-  },
-  bottomItem: {
-    flex: 1,
-    alignItems: 'center',
-    gap: 2,
-    paddingVertical: Spacing.base,
-  },
-  bottomLabel: {
-    ...Typography.bodySm,
-    fontSize: 12,
-    color: Colors.onSurfaceVariant,
-  },
-  bottomLabelActive: {
-    color: Colors.primaryContainer,
-    fontFamily: FontFamilies.bodyBold,
-  },
-});
+const makeStyles = (colors: ColorPalette) =>
+  StyleSheet.create({
+    sidebar: {
+      width: 240,
+      flexDirection: 'column',
+      justifyContent: 'space-between',
+      backgroundColor: colors.surfaceContainerLow,
+      borderRightWidth: 1,
+      borderRightColor: colors.glassBorder,
+      paddingVertical: Spacing.lg,
+      paddingHorizontal: Spacing.sm,
+    },
+    brand: {
+      ...Typography.headlineSm,
+      color: colors.primary,
+      paddingHorizontal: Spacing.xs,
+      marginBottom: Spacing.lg,
+    },
+    nav: {
+      gap: Spacing.base,
+    },
+    navItem: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: Spacing.xs,
+      paddingVertical: Spacing.xs,
+      paddingHorizontal: Spacing.xs,
+      borderRadius: Radii.md,
+    },
+    navItemActive: {
+      backgroundColor: colors.primaryContainer,
+    },
+    navLabel: {
+      ...Typography.bodyMd,
+      color: colors.onSurfaceVariant,
+    },
+    navLabelActive: {
+      color: colors.onPrimaryContainer,
+      fontFamily: FontFamilies.bodyBold,
+    },
+    footer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: Spacing.xs,
+      paddingHorizontal: Spacing.xs,
+      paddingTop: Spacing.sm,
+      borderTopWidth: 1,
+      borderTopColor: colors.glassBorder,
+    },
+    userInfo: {
+      flex: 1,
+    },
+    userName: {
+      ...Typography.bodySm,
+      color: colors.primary,
+    },
+    userEmail: {
+      ...Typography.bodySm,
+      color: colors.onSurfaceVariant,
+      fontSize: 12,
+    },
+    logoutButton: {
+      padding: Spacing.base,
+    },
+    bottomBar: {
+      // Sticky, no fixed: queda al final del contenido y se pega al borde inferior de la
+      // ventana mientras se hace scroll, sin tapar el último trozo de la página.
+      position: 'sticky' as 'relative',
+      bottom: 0,
+      zIndex: 10,
+      flexDirection: 'row',
+      backgroundColor: colors.surfaceContainerLow,
+      borderTopWidth: 1,
+      borderTopColor: colors.glassBorder,
+      paddingTop: Spacing.xs,
+    },
+    bottomItem: {
+      flex: 1,
+      alignItems: 'center',
+      gap: 2,
+      paddingVertical: Spacing.base,
+    },
+    bottomLabel: {
+      ...Typography.bodySm,
+      fontSize: 12,
+      color: colors.onSurfaceVariant,
+    },
+    bottomLabelActive: {
+      color: colors.primaryContainer,
+      fontFamily: FontFamilies.bodyBold,
+    },
+  });

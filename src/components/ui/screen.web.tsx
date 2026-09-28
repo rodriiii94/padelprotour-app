@@ -83,7 +83,12 @@ const makeStyles = (colors: ColorPalette, width: number, height: number) =>
       gap: Spacing.lg,
     },
     glowLayer: {
-      position: 'fixed' as 'absolute',
+      // `fixed` (no `absolute`) le quita a Safari su desenfoque nativo bajo la barra de
+      // estado en iOS y deja ver el círculo a pantalla completa y sin difuminar -- por
+      // detrás del reloj/batería, mucho más sólido de lo que debería. Con `absolute` (lo
+      // que ya traía) y el tamaño en píxeles reales (no en "%"), el fondo no se estira en
+      // páginas largas y Safari lo sigue desenfocando como siempre bajo la barra de estado.
+      position: 'absolute',
       top: 0,
       left: 0,
       width,

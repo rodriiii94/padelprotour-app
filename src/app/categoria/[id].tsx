@@ -240,6 +240,7 @@ export default function CategoryDetailScreen() {
                     phase={phase}
                     matches={matchesByPhase[phase.id] ?? []}
                     isOrganizer={isOrganizer}
+                    currentUserId={user?.id}
                   />
                 ))}
               </View>
@@ -455,10 +456,12 @@ function MatchRow({
   match,
   isFirst,
   isOrganizer,
+  currentUserId,
 }: {
   match: Match;
   isFirst: boolean;
   isOrganizer: boolean;
+  currentUserId?: number;
 }) {
   const router = useRouter();
 
@@ -476,7 +479,7 @@ function MatchRow({
           </Text>
         </View>
       </View>
-      <ScoreRows match={match} compact />
+      <ScoreRows match={match} compact currentUserId={currentUserId} />
     </Pressable>
   );
 }
@@ -485,16 +488,24 @@ function PhaseSection({
   phase,
   matches,
   isOrganizer,
+  currentUserId,
 }: {
   phase: Phase;
   matches: Match[];
   isOrganizer: boolean;
+  currentUserId?: number;
 }) {
   return (
     <GlassPanel style={styles.card}>
       <SectionLabel icon="event" label={phase.name} />
       {matches.map((match, index) => (
-        <MatchRow key={match.id} match={match} isFirst={index === 0} isOrganizer={isOrganizer} />
+        <MatchRow
+          key={match.id}
+          match={match}
+          isFirst={index === 0}
+          isOrganizer={isOrganizer}
+          currentUserId={currentUserId}
+        />
       ))}
     </GlassPanel>
   );

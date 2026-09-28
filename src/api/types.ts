@@ -220,11 +220,15 @@ export interface Match {
   side1_player2_id: number;
   side2_player1_id: number;
   side2_player2_id: number;
-  /** Embedded on GET (index/show and round-robin generation) only. */
-  side1_player1?: UserSummary;
-  side1_player2?: UserSummary;
-  side2_player1?: UserSummary;
-  side2_player2?: UserSummary;
+  /**
+   * Embedded on GET (index/show, result-proposal responses and round-robin
+   * generation) only — richer than the plain UserSummary in Pair/Registration,
+   * avatar included, so the calendar can show a photo next to each name.
+   */
+  side1_player1?: PublicUserSummary;
+  side1_player2?: PublicUserSummary;
+  side2_player1?: PublicUserSummary;
+  side2_player2?: PublicUserSummary;
   scheduled_at: string | null;
   court: string | null;
   status: MatchStatus;

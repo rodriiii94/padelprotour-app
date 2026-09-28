@@ -257,7 +257,7 @@ export default function MatchDetailScreen() {
             <View style={styles.scoreboardHeader}>
               <MatchStatusBadge status={match.status} />
             </View>
-            <ScoreRows match={match} />
+            <ScoreRows match={match} currentUserId={user?.id} />
           </GlassPanel>
 
           {error && (

@@ -1,7 +1,8 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import { StyleSheet, Text, View } from 'react-native';
 
-import type { Match } from '@/api/types';
+import type { Match, PublicUserSummary } from '@/api/types';
+import { Avatar } from '@/components/ui/avatar';
 import { PlayerNames } from '@/components/ui/player-names';
 import { Colors, FontFamilies, Radii, Spacing, Typography } from '@/theme/tokens';
 
@@ -24,25 +25,51 @@ export function MatchStatusBadge({ status, small = false }: { status: Match['sta
   );
 }
 
-function sidePlayers(match: Match, side: 1 | 2): { id: number; name: string }[] {
+function sidePlayers(match: Match, side: 1 | 2): PublicUserSummary[] {
   const ids =
     side === 1
       ? [match.side1_player1_id, match.side1_player2_id]
       : [match.side2_player1_id, match.side2_player2_id];
   const summaries =
     side === 1 ? [match.side1_player1, match.side1_player2] : [match.side2_player1, match.side2_player2];
-  return ids.map((id, index) => ({ id, name: summaries[index]?.name ?? `Jugador #${id}` }));
+  return ids.map((id, index) => summaries[index] ?? emptyPlayer(id));
+}
+
+function emptyPlayer(id: number): PublicUserSummary {
+  return {
+    id,
+    name: `Jugador #${id}`,
+    level: null,
+    club: null,
+    city: null,
+    avatar_color: null,
+    avatar_emoji: null,
+    avatar_url: null,
+  };
 }
 
 /**
  * Las dos parejas, una fila cada una, con los juegos de cada set en columnas. La pareja
  * ganadora (partido finalizado) lleva trofeo y nombre destacado; el set ganado, en verde.
+ * Cada nombre lleva su foto de perfil al lado, y el del usuario que ha iniciado sesión
+ * sale en negrita para poder identificar sus partidos de un vistazo.
  */
-export function ScoreRows({ match, compact = false }: { match: Match; compact?: boolean }) {
+export function ScoreRows({
+  match,
+  compact = false,
+  currentUserId,
+}: {
+  match: Match;
+  compact?: boolean;
+  currentUserId?: number;
+}) {
+  const avatarSize = compact ? 22 : 28;
+
   return (
     <View>
       {([1, 2] as const).map((side) => {
         const isWinner = match.status === 'completed' && match.winner_side === side;
+        const players = sidePlayers(match, side);
         return (
           <View
             key={side}
@@ -54,10 +81,24 @@ export function ScoreRows({ match, compact = false }: { match: Match; compact?: 
                 <View style={styles.dot} />
               )}
             </View>
+            <View style={styles.avatars}>
+              {players.map((player, index) => (
+                <View key={player.id} style={[index > 0 && { marginLeft: -avatarSize * 0.35 }, { zIndex: -index }]}>
+                  <Avatar
+                    name={player.name}
+                    imageUrl={player.avatar_url}
+                    color={player.avatar_color}
+                    emoji={player.avatar_emoji}
+                    size={avatarSize}
+                  />
+                </View>
+              ))}
+            </View>
             <View style={styles.names}>
               <PlayerNames
                 style={[styles.name, compact && styles.nameCompact, isWinner && styles.nameWinner]}
-                players={sidePlayers(match, side)}
+                players={players}
+                boldIds={currentUserId != null ? [currentUserId] : undefined}
               />
             </View>
             {(match.match_sets ?? []).map((set) => {
@@ -120,6 +161,9 @@ const styles = StyleSheet.create({
     height: 6,
     borderRadius: 3,
     backgroundColor: Colors.outlineVariant,
+  },
+  avatars: {
+    flexDirection: 'row',
   },
   names: {
     flex: 1,

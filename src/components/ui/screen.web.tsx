@@ -83,17 +83,23 @@ const makeStyles = (colors: ColorPalette, width: number, height: number) =>
       gap: Spacing.lg,
     },
     glowLayer: {
-      // `fixed` (no `absolute`) le quita a Safari su desenfoque nativo bajo la barra de
-      // estado en iOS y deja ver el círculo a pantalla completa y sin difuminar -- por
-      // detrás del reloj/batería, mucho más sólido de lo que debería. Con `absolute` (lo
-      // que ya traía) y el tamaño en píxeles reales (no en "%"), el fondo no se estira en
-      // páginas largas y Safari lo sigue desenfocando como siempre bajo la barra de estado.
-      position: 'absolute',
+      // Tres formas probadas y las tres con un problema distinto:
+      // - `absolute` sobre `root`: en la vista móvil (el documento entero hace scroll,
+      //   `root` crece con el contenido) esto ata el fondo al principio del documento, así
+      //   que al bajar el scroll se queda atrás y desaparece.
+      // - `fixed`: no se mueve nunca, pero Safari en iOS deja de aplicarle su desenfoque
+      //   nativo bajo la barra de estado (sale sólido y sin difuminar, mal).
+      // - `sticky` con altura 0 y overflow visible (esto): no ocupa espacio en el flujo del
+      //   documento, así que no empuja nada, pero al pegarse arriba se queda siempre a la
+      //   vista igual que `fixed` -- y al seguir formando parte del contenido que hace
+      //   scroll normal (no una capa aparte), Safari lo desenfoca bajo la barra de estado
+      //   igual que a cualquier otro contenido.
+      position: 'sticky' as 'relative',
       top: 0,
       left: 0,
       width,
-      height,
-      overflow: 'hidden',
+      height: 0,
+      overflow: 'visible',
     },
     glowPrimary: {
       position: 'absolute',

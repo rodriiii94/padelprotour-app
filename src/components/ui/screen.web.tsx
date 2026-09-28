@@ -83,23 +83,18 @@ const makeStyles = (colors: ColorPalette, width: number, height: number) =>
       gap: Spacing.lg,
     },
     glowLayer: {
-      // Tres formas probadas y las tres con un problema distinto:
-      // - `absolute` sobre `root`: en la vista móvil (el documento entero hace scroll,
-      //   `root` crece con el contenido) esto ata el fondo al principio del documento, así
-      //   que al bajar el scroll se queda atrás y desaparece.
-      // - `fixed`: no se mueve nunca, pero Safari en iOS deja de aplicarle su desenfoque
-      //   nativo bajo la barra de estado (sale sólido y sin difuminar, mal).
-      // - `sticky` con altura 0 y overflow visible (esto): no ocupa espacio en el flujo del
-      //   documento, así que no empuja nada, pero al pegarse arriba se queda siempre a la
-      //   vista igual que `fixed` -- y al seguir formando parte del contenido que hace
-      //   scroll normal (no una capa aparte), Safari lo desenfoca bajo la barra de estado
-      //   igual que a cualquier otro contenido.
-      position: 'sticky' as 'relative',
+      // `fixed` y `sticky` mantienen el fondo siempre a la vista, pero los dos le quitan a
+      // Safari en iOS su desenfoque nativo bajo la barra de estado (sale sólido, no
+      // difuminado). Con `absolute` sí desenfoca como siempre -- a cambio, en la vista móvil
+      // (el documento entero hace scroll, `root` crece con el contenido) el fondo se queda
+      // atrás y desaparece al bajar del todo en una página larga. Decisión: mejor eso que
+      // perder el desenfoque.
+      position: 'absolute',
       top: 0,
       left: 0,
       width,
-      height: 0,
-      overflow: 'visible',
+      height,
+      overflow: 'hidden',
     },
     glowPrimary: {
       position: 'absolute',

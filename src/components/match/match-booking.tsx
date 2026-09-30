@@ -168,7 +168,7 @@ function BookingForm({
 
       <LabeledField label="Enlace de Playtomic">
         <TextField
-          placeholder="https://app.playtomic.com/t/…"
+          placeholder="Pega aquí el enlace"
           autoCapitalize="none"
           autoCorrect={false}
           keyboardType="url"
@@ -181,19 +181,19 @@ function BookingForm({
       <View style={styles.row}>
         <View style={styles.flex}>
           <LabeledField label="Día">
-            <TextField placeholder="04/10/2026" value={day} onChangeText={setDay} keyboardType="numbers-and-punctuation" />
+            <TextField placeholder="dd/mm" value={day} onChangeText={setDay} keyboardType="numbers-and-punctuation" />
           </LabeledField>
         </View>
         <View style={styles.flex}>
           <LabeledField label="Hora">
-            <TextField placeholder="19:30" value={time} onChangeText={setTime} keyboardType="numbers-and-punctuation" />
+            <TextField placeholder="hh:mm" value={time} onChangeText={setTime} keyboardType="numbers-and-punctuation" />
           </LabeledField>
         </View>
       </View>
       {dateInvalid && <Text style={styles.errorText}>Día como 04/10/2026 y hora como 19:30.</Text>}
 
       <LabeledField label="Club">
-        <TextField placeholder="Club Pádel Norte" value={club} onChangeText={setClub} maxLength={120} />
+        <TextField placeholder="Nombre del club" value={club} onChangeText={setClub} maxLength={120} />
       </LabeledField>
       {clubSuggestions.length > 0 && (
         <View style={styles.suggestions}>
@@ -210,7 +210,7 @@ function BookingForm({
       )}
 
       <LabeledField label="Pista (opcional)">
-        <TextField placeholder="Pista 3" value={court} onChangeText={setCourt} maxLength={255} />
+        <TextField placeholder="Número o nombre" value={court} onChangeText={setCourt} maxLength={255} />
       </LabeledField>
 
       {error && <Text style={styles.errorText}>{error}</Text>}

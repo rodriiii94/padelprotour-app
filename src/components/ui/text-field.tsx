@@ -9,7 +9,7 @@ export function TextField({ style, ...rest }: TextInputProps) {
   const styles = useMemo(() => makeStyles(colors, scheme), [colors, scheme]);
 
   return (
-    <TextInput style={[styles.input, style]} placeholderTextColor={colors.onSurfaceVariant} {...rest} />
+    <TextInput style={[styles.input, style]} placeholderTextColor={colors.outline} {...rest} />
   );
 }
 

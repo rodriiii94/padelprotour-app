@@ -1,56 +1,90 @@
-# Welcome to your Expo app 👋
+# PadelProTour App
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+App de **PadelProTour** para organizar ligas y torneos de pádel entre amigos: crear competiciones, invitar a tu pareja, ver el calendario y la clasificación, proponer y confirmar resultados, apuntar la reserva de pista de cada partido y chatear con los rivales.
 
-## Get started
+Es una sola base de código con [Expo](https://expo.dev) para **iOS, Android y web**. Todos los datos vienen de la API de [`padelprotour-api`](https://github.com/rodriiii94/padelprotour-api).
 
-1. Install dependencies
+- **Web en producción:** https://padelprotour.net
+- **Backend, arquitectura completa, despliegue y seguridad:** ver el [README de la API](https://github.com/rodriiii94/padelprotour-api#arquitectura)
 
-   ```bash
-   npm install
-   ```
+## Funcionalidades
 
-2. Start the app
+- Registro y login con email/contraseña o Google, verificación de email y borrado de cuenta.
+- Mis competiciones, buscador de competiciones públicas y acceso a las privadas por enlace de invitación.
+- Crear torneos y ligas (ida o ida y vuelta), categorías e inscripciones por pareja o individuales.
+- Calendario de partidos, clasificación y marcador de cada partido.
+- Proponer el resultado de un partido y que un rival lo confirme.
+- **Reserva de pista**: día/hora, club, pista y botón para abrir el partido en Playtomic.
+- Perfiles públicos de jugador con foto, estadísticas, logros y seguidores.
+- Chat de competición y chat de partido.
+- Modo oscuro por defecto, con modo claro opcional.
 
-   ```bash
-   npx expo start
-   ```
+## Stack
 
-In the output, you'll find options to open the app in a
+- **Expo SDK 57** · React Native 0.86 · React 19 · React Native Web
+- **Expo Router**: navegación basada en ficheros (`src/app`), con rutas protegidas para usuarios con sesión
+- **TypeScript** en modo estricto
+- **expo-secure-store**: el token de sesión se guarda en el llavero del sistema en iOS/Android (en web, en `localStorage`)
+- **Google Sign-In** nativo, **Sentry** para errores (opcional)
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+## Arquitectura
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+```mermaid
+flowchart LR
+    subgraph App["App Expo (esta)"]
+        screens["Pantallas<br/>src/app (Expo Router)"]
+        hooks["Hooks de estado<br/>src/hooks"]
+        client["Cliente HTTP<br/>src/api"]
+        store["Token<br/>SecureStore / localStorage"]
+    end
 
-## Get a fresh project
+    api["API PadelProTour<br/>api.padelprotour.net"]
+    vps["Nginx en el VPS<br/>padelprotour.net"]
 
-When you're ready, run:
-
-```bash
-npm run reset-project
+    screens --> hooks --> client
+    client <--> store
+    client -->|"HTTPS · Authorization: Bearer"| api
+    vps -. "sirve el build web<br/>(npx expo export)" .-> screens
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+- **`src/app`**: una pantalla por ruta (`partido/[id].tsx`, `categoria/[id].tsx`…). Los ficheros `*.web.tsx` son variantes solo para web: barra lateral en escritorio y scroll de documento en móvil.
+- **`src/api`**: una función por endpoint, con tipos en `types.ts`. `client.ts` añade el token y convierte los errores de la API en `ApiError`. Al arrancar, `use-auth` descarta el token guardado si la API responde `401` (un fallo de red no cierra la sesión).
+- **`src/hooks`**: sesión (`use-auth`), tema (`use-theme`) y carga de datos de cada pantalla.
+- **`src/components`**: componentes reutilizables (`ui/`) y por dominio (`match/`, `profile/`, `competition/`).
+- **`src/theme/tokens.ts`**: colores (tema oscuro y claro), tipografía y espaciados del sistema de diseño.
 
-### Other setup steps
+## Instalación en local
 
-- To set up ESLint for linting, run `npx expo lint`, or follow our guide on ["Using ESLint and Prettier"](https://docs.expo.dev/guides/using-eslint/)
-- If you'd like to set up unit testing, follow our guide on ["Unit Testing with Jest"](https://docs.expo.dev/develop/unit-testing/)
-- Learn more about the TypeScript setup in this template in our guide on ["Using TypeScript"](https://docs.expo.dev/guides/typescript/)
+Requisitos: Node 20+, y la API corriendo en local (ver [su README](https://github.com/rodriiii94/padelprotour-api#instalación-en-local)).
 
-## Learn more
+```bash
+npm install
+cp .env.example .env
+```
 
-To learn more about developing your project with Expo, look at the following resources:
+En `.env`, `EXPO_PUBLIC_API_URL` apunta a la API. Para el navegador vale `http://localhost:8000/api`. En un móvil o en el simulador usa la IP de tu ordenador en la red local (p. ej. `http://192.168.1.10:8000/api`) y levanta la API con `php artisan serve --host=0.0.0.0`. El resto de variables (Google, Sentry) son opcionales.
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+```bash
+npm run web      # en el navegador
+npm run ios      # simulador de iOS (requiere Xcode)
+npm run android  # emulador de Android
+```
 
-## Join the community
+Con los datos de ejemplo de la API (`php artisan db:seed`), en desarrollo el login ya viene relleno con la cuenta demo.
 
-Join our community of developers creating universal apps.
+## Comprobaciones
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+```bash
+npx tsc --noEmit   # tipos
+npm run lint       # ESLint (config de Expo)
+```
+
+## Despliegue de la web
+
+La web es un build estático que sirve Nginx en el VPS:
+
+```bash
+./deploy/deploy-web.sh <IP_DEL_VPS>
+```
+
+El script compila con `npx expo export --platform web` usando `.env.production`, que solo lleva valores públicos (URL de la API e IDs de OAuth), y sube `dist/` por `rsync` sobre SSH con clave a `/var/www/web`. No hay que reiniciar nada. El flujo completo (equipo local → GitHub → VPS por SSH) está en el [README de la API](https://github.com/rodriiii94/padelprotour-api#flujo-de-desarrollo-y-despliegue).

@@ -29,7 +29,7 @@ function isPreference(value: string | null): value is ThemePreference {
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const systemScheme = useColorScheme();
-  const [preference, setPreferenceState] = useState<ThemePreference>('system');
+  const [preference, setPreferenceState] = useState<ThemePreference>('dark');
 
   useEffect(() => {
     getThemePreference().then((stored) => {

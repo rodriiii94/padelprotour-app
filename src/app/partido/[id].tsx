@@ -129,7 +129,7 @@ export default function MatchDetailScreen() {
   const { user } = useAuth();
   const colors = useColors();
   const styles = useMemo(() => makeStyles(colors), [colors]);
-  const isOrganizer = isOrganizerParam === '1';
+  const isOrganizerParamSet = isOrganizerParam === '1';
   const matchId = Number(id);
 
   const [match, setMatch] = useState<Match | null>(null);
@@ -221,6 +221,9 @@ export default function MatchDetailScreen() {
   }
 
   const mySide = match ? sideOf(match, user?.id) : null;
+  // Si el organizador juega este partido, es parte interesada: se le trata como a un
+  // jugador más (propone y confirma un rival), igual que hace la API.
+  const isOrganizer = isOrganizerParamSet && mySide === null;
   const proposerSide = match?.result_proposed_by ? sideOf(match, match.result_proposed_by) : null;
   const isProposer = !!match?.result_proposed_by && match.result_proposed_by === user?.id;
   // Confirma o rechaza un rival de quien propuso, o el organizador.
@@ -238,7 +241,7 @@ export default function MatchDetailScreen() {
   // Mejor de 3: en cuanto un lado lleva 2 sets ganados, el partido está decidido.
   const isDecided = setsWon.side1 === 2 || setsWon.side2 === 2;
   const canAddSet = setCount < 3 && !isDecided;
-  const canComplete = setCount > 0 && setsWon.side1 !== setsWon.side2;
+  const canComplete = isDecided;
 
   return (
     <Screen>
@@ -263,7 +266,7 @@ export default function MatchDetailScreen() {
 
           <MatchBooking
             match={match}
-            canEdit={(mySide !== null || isOrganizer) && match.status !== 'completed'}
+            canEdit={(mySide !== null || isOrganizerParamSet) && match.status !== 'completed'}
             onSaved={(booking) => setMatch((current) => (current ? { ...current, ...booking } : current))}
           />
 
@@ -310,8 +313,10 @@ export default function MatchDetailScreen() {
                         Marcador no válido: 6 juegos con 2 de diferencia, 7-5, o 7-6 (tie-break).
                       </Text>
                     )}
-                  {setCount > 0 && setsWon.side1 === setsWon.side2 && (
-                    <Text style={styles.meta}>Empate en sets — añade uno más para desempatar.</Text>
+                  {setCount > 0 && (
+                    <Text style={styles.meta}>
+                      El partido termina cuando un lado gana 2 sets — añade el siguiente.
+                    </Text>
                   )}
                 </>
               )}
@@ -433,7 +438,7 @@ export default function MatchDetailScreen() {
           )}
 
           {user && (mySide !== null || isOrganizer) && (
-            <MatchChat matchId={match.id} currentUserId={user.id} isOrganizer={isOrganizer} />
+            <MatchChat matchId={match.id} currentUserId={user.id} isOrganizer={isOrganizerParamSet} />
           )}
         </>
       )}

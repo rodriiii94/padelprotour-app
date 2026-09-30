@@ -231,6 +231,10 @@ export interface Match {
   side2_player2?: PublicUserSummary;
   scheduled_at: string | null;
   court: string | null;
+  /** Club de la reserva de pista (se apunta a mano, ver `updateMatchBooking`). */
+  club?: string | null;
+  /** Enlace al partido en Playtomic; solo se abre, la app no lee nada de él. */
+  playtomic_url?: string | null;
   status: MatchStatus;
   winner_side: 1 | 2 | null;
   /** Quién propuso el resultado mientras el partido está en `pending_validation`. */
@@ -239,6 +243,15 @@ export interface Match {
   result_proposed_at?: string | null;
   match_sets?: MatchSet[];
 }
+
+export interface MatchBookingInput {
+  scheduled_at: string | null;
+  club: string | null;
+  court: string | null;
+  playtomic_url: string | null;
+}
+
+export type MatchBooking = MatchBookingInput & { id: number };
 
 export interface Ranking {
   id: number;

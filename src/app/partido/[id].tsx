@@ -12,6 +12,7 @@ import {
   updateMatchStatus,
 } from '@/api/categories';
 import { ApiError, type Match } from '@/api/types';
+import { MatchBooking } from '@/components/match/match-booking';
 import { MatchChat } from '@/components/match/match-chat';
 import { MatchStatusBadge, ScoreRows } from '@/components/match/match-scoreboard';
 import { ActionChip } from '@/components/ui/action-chip';
@@ -251,10 +252,7 @@ export default function MatchDetailScreen() {
 
       {match && (
         <>
-          <View>
-            <Text style={styles.title}>Resultado del partido</Text>
-            {match.court && <Text style={styles.meta}>{match.court}</Text>}
-          </View>
+          <Text style={styles.title}>Resultado del partido</Text>
 
           <GlassPanel style={styles.scoreboard}>
             <View style={styles.scoreboardHeader}>
@@ -262,6 +260,12 @@ export default function MatchDetailScreen() {
             </View>
             <ScoreRows match={match} currentUserId={user?.id} />
           </GlassPanel>
+
+          <MatchBooking
+            match={match}
+            canEdit={(mySide !== null || isOrganizer) && match.status !== 'completed'}
+            onSaved={(booking) => setMatch((current) => (current ? { ...current, ...booking } : current))}
+          />
 
           {error && (
             <GlassPanel style={styles.card}>

@@ -26,6 +26,7 @@ import { useAuth } from '@/hooks/use-auth';
 import { useGoBack } from '@/hooks/use-go-back';
 import { useCategoryDetail } from '@/hooks/use-category-detail';
 import { useColors } from '@/hooks/use-theme';
+import { bookingPlace } from '@/lib/booking';
 import { FontFamilies, Radii, Spacing, Typography, type ColorPalette } from '@/theme/tokens';
 
 const STATUS_LABEL: Record<RegistrationStatus, string> = {
@@ -487,7 +488,7 @@ function MatchRow({
         <View style={styles.matchWhen}>
           <MaterialIcons name="location-on" size={13} color={colors.onSurfaceVariant} />
           <Text style={styles.matchMeta} numberOfLines={1}>
-            {match.court ?? 'Pista sin asignar'}
+            {bookingPlace(match) ?? 'Pista sin asignar'}
             {match.scheduled_at ? ` · ${dateFormatter.format(new Date(match.scheduled_at))}` : ''}
           </Text>
         </View>

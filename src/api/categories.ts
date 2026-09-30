@@ -3,6 +3,8 @@ import type {
   Category,
   CategoryInput,
   Match,
+  MatchBooking,
+  MatchBookingInput,
   MatchMessage,
   MatchSet,
   MatchStatus,
@@ -133,4 +135,14 @@ export function sendMatchMessage(matchId: number, body: string): Promise<MatchMe
 
 export function deleteMatchMessage(messageId: number): Promise<void> {
   return apiFetch<void>(`/match-messages/${messageId}`, { method: 'DELETE' });
+}
+
+/** Reserva de pista del partido (día/hora, club, pista, enlace de Playtomic). `null` borra el campo. */
+export function updateMatchBooking(matchId: number, input: MatchBookingInput): Promise<MatchBooking> {
+  return apiFetch<MatchBooking>(`/matches/${matchId}/booking`, { method: 'PUT', body: input });
+}
+
+/** Clubes donde ya ha jugado el usuario, los más recientes primero (sugerencias). */
+export function listMyClubs(): Promise<string[]> {
+  return apiFetch<string[]>('/me/clubs');
 }

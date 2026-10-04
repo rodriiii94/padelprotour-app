@@ -5,12 +5,13 @@ import {
   useFonts,
 } from '@expo-google-fonts/manrope';
 import { Sora_600SemiBold, Sora_700Bold, Sora_800ExtraBold } from '@expo-google-fonts/sora';
-import { Slot, Stack, useRouter, useSegments } from 'expo-router';
+import { Slot, Stack, usePathname, useRouter, useSegments } from 'expo-router';
 import Head from 'expo-router/head';
 import * as SplashScreen from 'expo-splash-screen';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
+import { LandingPage } from '@/components/landing/landing-page';
 import { WebBottomBar, WebSidebar } from '@/components/ui/web-sidebar';
 import { AuthProvider, useAuth } from '@/hooks/use-auth';
 import { ThemeProvider, useColors } from '@/hooks/use-theme';
@@ -40,7 +41,10 @@ function RootLayoutWeb() {
   const pageHead = (
     <Head>
       <title>PadelProTour</title>
-      <meta name="description" content="Tus ligas y torneos de pádel" />
+      <meta
+        name="description"
+        content="Organiza ligas y torneos de pádel con tus amigos: inscripciones, calendario, resultados y clasificación en un solo sitio."
+      />
     </Head>
   );
 
@@ -73,6 +77,13 @@ function RootLayoutWebBody() {
 function AuthGateWeb() {
   const { user, isLoading } = useAuth();
   const isNarrow = useIsNarrowWeb();
+  const pathname = usePathname();
+  // Recuerda que en esta carga hubo sesión, para distinguir "acaba de cerrarla" de
+  // "llegó sin sesión".
+  const [wasSignedIn, setWasSignedIn] = useState(false);
+  if (user && !wasSignedIn) {
+    setWasSignedIn(true);
+  }
   const isOnAuthRoute = ['(auth)', 'verify-email'].includes((useSegments() as string[])[0]);
 
   // Con sesión ya activa, un enlace de invitación se abre tal cual: no queda pendiente.
@@ -84,6 +95,15 @@ function AuthGateWeb() {
 
   if (isLoading) {
     return null;
+  }
+
+  if (!user && wasSignedIn) {
+    return <ReloadToRoot />;
+  }
+
+  // Sin sesión, la raíz es la página de presentación en vez de saltar al login.
+  if (!user && pathname === '/') {
+    return <LandingPage />;
   }
 
   // Sin sesión: Stack con Stack.Protected. Sin él, expo-router deja abrir por URL
@@ -134,6 +154,18 @@ function AuthGateWeb() {
       {isNarrow && <WebBottomBar />}
     </View>
   );
+}
+
+// Al cerrar sesión (o borrar la cuenta) se recarga la web en "/", que sin sesión es la
+// página de presentación. Con una navegación normal no vale: al quedarse sin sesión el
+// navegador (Slot) se desmonta y expo-router deja en la barra de direcciones una ruta que
+// no es la que se ve.
+function ReloadToRoot() {
+  useEffect(() => {
+    window.location.replace('/');
+  }, []);
+
+  return null;
 }
 
 // Tras iniciar sesión, a la invitación con la que se entró; si no, al inicio. Se hace

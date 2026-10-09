@@ -8,7 +8,6 @@ import type {
   Match,
   Pair,
   Phase,
-  Ranking,
   Registration,
   PublicUserSummary,
   RegistrationStatus,
@@ -54,13 +53,6 @@ function playerName(summary: UserSummary | undefined, fallbackId: number): strin
   return summary?.name ?? `Jugador #${fallbackId}`;
 }
 
-function pairLabel(
-  pair: Pick<Pair, 'name' | 'player1' | 'player2' | 'player1_id' | 'player2_id'>
-): string {
-  if (pair.name) return pair.name;
-  return `${playerName(pair.player1, pair.player1_id)} / ${playerName(pair.player2, pair.player2_id)}`;
-}
-
 type PlayerRef = { id: number; name: string };
 
 function pairPlayers(
@@ -73,18 +65,10 @@ function pairPlayers(
 }
 
 
-/** Ranking rows only carry ids — resolve a label from the registrations already loaded. */
-function rankingLabel(ranking: Ranking, registrations: Registration[]): string {
-  if (ranking.pair_id !== null) {
-    const registration = registrations.find((r) => r.pair_id === ranking.pair_id);
-    return registration?.pair ? pairLabel(registration.pair) : `Pareja #${ranking.pair_id}`;
-  }
-  const registration = registrations.find((r) => r.player_id === ranking.player_id);
-  return registration?.player?.name ?? `Jugador #${ranking.player_id}`;
-}
 
 export default function CategoryDetailScreen() {
   const { id, invite } = useLocalSearchParams<{ id: string; invite?: string }>();
+  const router = useRouter();
   const goBack = useGoBack();
   const { user } = useAuth();
   const categoryId = Number(id);
@@ -98,7 +82,6 @@ export default function CategoryDetailScreen() {
     myPairs,
     phases,
     matchesByPhase,
-    rankings,
     isLoading,
     isMutating,
     error,
@@ -151,6 +134,17 @@ export default function CategoryDetailScreen() {
             <Text style={styles.title}>{category.name}</Text>
             {competition && <Text style={styles.meta}>{competition.name}</Text>}
           </View>
+
+          <ActionChip
+            icon="leaderboard"
+            label="Ver clasificación"
+            tone="accent"
+            onPress={() =>
+              router.push(
+                `/clasificacion/${categoryId}${invite ? `?invite=${encodeURIComponent(invite)}` : ''}`
+              )
+            }
+          />
 
           {(category.match_format || category.slots) && (
             <View style={styles.pills}>
@@ -249,41 +243,6 @@ export default function CategoryDetailScreen() {
                   />
                 ))}
               </View>
-            </View>
-          )}
-
-          {rankings.length > 0 && (
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Clasificación</Text>
-              <GlassPanel style={styles.rankingCard}>
-                {rankings.map((ranking, index) => {
-                  const podium = PODIUM[ranking.position];
-                  return (
-                    <View
-                      key={ranking.id}
-                      style={[styles.rankingRow, index > 0 && styles.rankingDivider]}>
-                      <View
-                        style={[
-                          styles.rankingBadge,
-                          podium && { borderColor: podium + '99', backgroundColor: podium + '22' },
-                        ]}>
-                        <Text style={[styles.rankingPosition, podium && { color: podium }]}>
-                          {ranking.position}
-                        </Text>
-                      </View>
-                      <Text
-                        style={[styles.rankingName, ranking.position === 1 && styles.rankingNameFirst]}
-                        numberOfLines={2}>
-                        {rankingLabel(ranking, registrations)}
-                      </Text>
-                      <View style={styles.rankingPointsWrap}>
-                        <Text style={styles.rankingPoints}>{ranking.points}</Text>
-                        <Text style={styles.rankingPointsUnit}>pts</Text>
-                      </View>
-                    </View>
-                  );
-                })}
-              </GlassPanel>
             </View>
           )}
         </>
@@ -527,68 +486,8 @@ function PhaseSection({
   );
 }
 
-const PODIUM: Record<number, string> = {
-  1: '#ffc857',
-  2: '#c9d1c0',
-  3: '#d99a6c',
-};
-
 const makeStyles = (colors: ColorPalette) =>
   StyleSheet.create({
-    rankingCard: {
-      paddingHorizontal: Spacing.sm,
-      paddingVertical: Spacing.base,
-    },
-    rankingRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: Spacing.sm,
-      paddingVertical: Spacing.xs + 2,
-    },
-    rankingDivider: {
-      borderTopWidth: StyleSheet.hairlineWidth,
-      borderTopColor: colors.glassBorder,
-    },
-    rankingBadge: {
-      width: 32,
-      height: 32,
-      borderRadius: 16,
-      borderWidth: 1,
-      borderColor: colors.glassBorder,
-      backgroundColor: colors.glassFill,
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
-    rankingPosition: {
-      fontFamily: FontFamilies.display,
-      fontSize: 14,
-      color: colors.onSurfaceVariant,
-    },
-    rankingName: {
-      flex: 1,
-      minWidth: 0,
-      ...Typography.bodyMd,
-      color: colors.onSurface,
-    },
-    rankingNameFirst: {
-      fontFamily: FontFamilies.bodyBold,
-      color: colors.primary,
-    },
-    rankingPointsWrap: {
-      flexDirection: 'row',
-      alignItems: 'baseline',
-      gap: 4,
-    },
-    rankingPoints: {
-      fontFamily: FontFamilies.display,
-      fontSize: 20,
-      color: colors.primaryContainer,
-    },
-    rankingPointsUnit: {
-      ...Typography.bodySm,
-      fontSize: 12,
-      color: colors.onSurfaceVariant,
-    },
     matchCard: {
       paddingVertical: Spacing.xs,
     },

@@ -260,7 +260,18 @@ export interface Ranking {
   player_id: number | null;
   points: number;
   position: number;
+  /** Partidos completados que cuentan para la clasificación (fases de grupo y jornadas). */
+  played: number;
+  won: number;
+  lost: number;
+  sets_won: number;
+  sets_lost: number;
+  games_won: number;
+  games_lost: number;
   calculated_at: string;
+  /** Embebidos en GET /categories/{id}/rankings: la pareja con sus jugadores, o el jugador. */
+  pair?: Pair | null;
+  player?: UserSummary | null;
 }
 
 export interface Paginated<T> {

@@ -1,5 +1,8 @@
 import type { PropsWithChildren } from 'react';
 
+import { TOKEN_KEY } from '@/api/token-storage';
+import { HIDE_LANDING_CLASS, LANDING_ID } from '@/components/landing/landing-page';
+
 /**
  * Raíz HTML de la web. No usa `ScrollViewStyleReset` de expo-router porque fija
  * `body { overflow: hidden }` con altura 100%: el documento nunca hace scroll y los
@@ -24,6 +27,7 @@ export default function Root({ children }: PropsWithChildren) {
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
         <link rel="manifest" href="/manifest.webmanifest" />
         <style id="app-reset" dangerouslySetInnerHTML={{ __html: css }} />
+        <script dangerouslySetInnerHTML={{ __html: hideLandingScript }} />
       </head>
       <body>{children}</body>
     </html>
@@ -41,4 +45,11 @@ html, body { background-color: #111508; }
   #root, body, html { height: 100%; }
   body { overflow: hidden; }
 }
+html.${HIDE_LANDING_CLASS} #${LANDING_ID} { display: none; }
 `;
+
+// El HTML estático de "/" trae la página de presentación, y Nginx sirve ese mismo fichero
+// para las rutas sin HTML propio (p. ej. /competicion/5). Se oculta antes del primer pintado
+// a quien no le toca verla: quien tiene un token guardado (mientras carga su sesión) y
+// quien no está en "/". El layout quita la clase en cuanto sabe si hay sesión.
+const hideLandingScript = `try{if(location.pathname!=='/'||localStorage.getItem(${JSON.stringify(TOKEN_KEY)}))document.documentElement.classList.add(${JSON.stringify(HIDE_LANDING_CLASS)})}catch(e){}`;

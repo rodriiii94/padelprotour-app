@@ -1,4 +1,4 @@
-const TOKEN_KEY = 'padelontour_token';
+export const TOKEN_KEY = 'padelontour_token';
 
 export async function getToken(): Promise<string | null> {
   return globalThis.localStorage?.getItem(TOKEN_KEY) ?? null;

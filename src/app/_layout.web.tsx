@@ -1,17 +1,16 @@
-import {
-  Manrope_400Regular,
-  Manrope_500Medium,
-  Manrope_700Bold,
-  useFonts,
-} from '@expo-google-fonts/manrope';
+import { Manrope_400Regular, Manrope_500Medium, Manrope_700Bold } from '@expo-google-fonts/manrope';
 import { Sora_600SemiBold, Sora_700Bold, Sora_800ExtraBold } from '@expo-google-fonts/sora';
+// El `useFonts` de @expo-google-fonts siempre empieza en "no cargadas", también al generar
+// el HTML estático, y deja la página vacía. El de expo-font las da por cargadas en el
+// servidor y las declara en el propio HTML.
+import { useFonts } from 'expo-font';
 import { Slot, Stack, usePathname, useRouter, useSegments } from 'expo-router';
 import Head from 'expo-router/head';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
-import { LandingPage } from '@/components/landing/landing-page';
+import { HIDE_LANDING_CLASS, LANDING_ID, LandingPage } from '@/components/landing/landing-page';
 import { WebBottomBar, WebSidebar } from '@/components/ui/web-sidebar';
 import { AuthProvider, useAuth } from '@/hooks/use-auth';
 import { ThemeProvider, useColors } from '@/hooks/use-theme';
@@ -38,15 +37,7 @@ function RootLayoutWeb() {
   }, [fontsLoaded]);
 
   // Va antes del return anticipado para que también salga en el HTML estático.
-  const pageHead = (
-    <Head>
-      <title>PadelProTour</title>
-      <meta
-        name="description"
-        content="Organiza ligas y torneos de pádel con tus amigos: inscripciones, calendario, resultados y clasificación en un solo sitio."
-      />
-    </Head>
-  );
+  const pageHead = <PageHead pathname={usePathname()} />;
 
   if (!fontsLoaded) {
     return pageHead;
@@ -63,6 +54,56 @@ function RootLayoutWeb() {
 }
 
 export default Sentry.wrap(RootLayoutWeb);
+
+const SITE_URL = 'https://padelprotour.net';
+const SITE_DESCRIPTION =
+  'Organiza ligas y torneos de pádel con tus amigos: inscripciones, calendario, resultados y clasificación en un solo sitio.';
+const HOME_TITLE = 'PadelProTour · Organiza ligas y torneos de pádel con tus amigos';
+/** Lo único que tiene sentido que indexe un buscador; el resto pide sesión. */
+const PUBLIC_PATHS = ['/', '/login', '/register', '/privacidad'];
+
+const STRUCTURED_DATA = JSON.stringify({
+  '@context': 'https://schema.org',
+  '@type': 'WebApplication',
+  name: 'PadelProTour',
+  url: SITE_URL,
+  description: SITE_DESCRIPTION,
+  applicationCategory: 'SportsApplication',
+  operatingSystem: 'Web',
+  inLanguage: 'es',
+  offers: { '@type': 'Offer', price: '0', priceCurrency: 'EUR' },
+});
+
+/** Metadatos de cada página para buscadores y para la vista previa al compartir el enlace. */
+function PageHead({ pathname }: { pathname: string }) {
+  const isHome = pathname === '/';
+  const isPublic = PUBLIC_PATHS.includes(pathname);
+  const title = isHome ? HOME_TITLE : 'PadelProTour';
+  const url = `${SITE_URL}${isHome ? '/' : pathname}`;
+
+  return (
+    <Head>
+      <title>{title}</title>
+      <meta name="description" content={SITE_DESCRIPTION} />
+      <meta name="robots" content={isPublic ? 'index, follow' : 'noindex'} />
+      {isPublic && <link rel="canonical" href={url} />}
+      <meta property="og:type" content="website" />
+      <meta property="og:site_name" content="PadelProTour" />
+      <meta property="og:locale" content="es_ES" />
+      <meta property="og:title" content={title} />
+      <meta property="og:description" content={SITE_DESCRIPTION} />
+      <meta property="og:url" content={url} />
+      <meta property="og:image" content={`${SITE_URL}/og-image.png`} />
+      <meta property="og:image:width" content="1200" />
+      <meta property="og:image:height" content="630" />
+      <meta name="twitter:card" content="summary_large_image" />
+      <meta name="twitter:title" content={title} />
+      <meta name="twitter:description" content={SITE_DESCRIPTION} />
+      <meta name="twitter:image" content={`${SITE_URL}/og-image.png`} />
+      {isHome && <script type="application/ld+json">{STRUCTURED_DATA}</script>}
+    </Head>
+  );
+}
 
 function RootLayoutWebBody() {
   const colors = useColors();
@@ -93,17 +134,31 @@ function AuthGateWeb() {
     }
   }, [user, isOnAuthRoute]);
 
-  if (isLoading) {
-    return null;
-  }
+  // Ya se sabe si hay sesión: deja de ocultar la presentación (ver +html.tsx), que solo
+  // se pinta si toca (sin sesión y en "/").
+  useEffect(() => {
+    if (!isLoading) {
+      document.documentElement.classList.remove(HIDE_LANDING_CLASS);
+    }
+  }, [isLoading]);
 
   if (!user && wasSignedIn) {
     return <ReloadToRoot />;
   }
 
-  // Sin sesión, la raíz es la página de presentación en vez de saltar al login.
+  // Sin sesión, la raíz es la página de presentación en vez de saltar al login. También
+  // mientras se comprueba la sesión: así va escrita en el HTML estático de "/" y los
+  // buscadores la leen. A quien ya tiene sesión se la oculta +html.tsx hasta que carga.
   if (!user && pathname === '/') {
-    return <LandingPage />;
+    return (
+      <View nativeID={LANDING_ID} style={styles.root}>
+        <LandingPage />
+      </View>
+    );
+  }
+
+  if (isLoading) {
+    return null;
   }
 
   // Sin sesión: Stack con Stack.Protected. Sin él, expo-router deja abrir por URL

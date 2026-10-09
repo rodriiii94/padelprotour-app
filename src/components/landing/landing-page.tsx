@@ -1,14 +1,16 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import { useMemo, type ComponentProps } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View, type TextStyle, type ViewStyle } from 'react-native';
 
 import { GlassPanel } from '@/components/ui/glass-panel';
-import { Screen } from '@/components/ui/screen';
-import { useIsNarrowWeb } from '@/hooks/use-is-narrow-web';
 import { useColors } from '@/hooks/use-theme';
 import { FontFamilies, Radii, Spacing, Typography, type ColorPalette } from '@/theme/tokens';
 
 type IconName = ComponentProps<typeof MaterialIcons>['name'];
+
+/** Id del contenedor de la presentación y clase que la oculta; los usa también +html.tsx. */
+export const LANDING_ID = 'landing';
+export const HIDE_LANDING_CLASS = 'hide-landing';
 
 const FEATURES: { icon: IconName; title: string; body: string }[] = [
   {
@@ -58,107 +60,120 @@ const SAMPLE_STANDINGS = [
 /**
  * Página de presentación para quien llega sin sesión a la raíz de la web. Los enlaces son
  * `href` reales (recarga completa): aquí todavía no hay ningún navegador montado.
+ *
+ * Va escrita en el HTML estático de "/" para que los buscadores la lean sin ejecutar
+ * JavaScript, así que tiene que pintarse igual en el servidor que en el navegador: nada de
+ * leer el ancho de la ventana (por eso no usa `Screen`). El diseño se adapta solo con
+ * `flexWrap` y unidades CSS (`vh`, `clamp`), que react-native-web pasa tal cual.
  */
 export function LandingPage() {
   const colors = useColors();
-  const isNarrow = useIsNarrowWeb();
-  const styles = useMemo(() => makeStyles(colors, isNarrow), [colors, isNarrow]);
+  const styles = useMemo(() => makeStyles(colors), [colors]);
 
   return (
-    <Screen>
-      <View style={styles.header}>
-        <View style={styles.brand}>
-          <View style={styles.mark}>
-            <MaterialIcons name="sports-tennis" size={22} color={colors.onPrimary} />
-          </View>
-          <Text style={styles.wordmark}>PadelProTour</Text>
-        </View>
-        <LinkButton href="/login" label="Iniciar sesión" variant="outline" compact styles={styles} />
+    <View style={styles.root}>
+      <View pointerEvents="none" style={styles.glowLayer}>
+        <View style={[styles.glow, styles.glowPrimary]} />
+        <View style={[styles.glow, styles.glowSecondary]} />
+        <View style={[styles.glow, styles.glowTertiary]} />
       </View>
-
-      <View style={styles.hero}>
-        <View style={styles.heroText}>
-          <Text role="heading" aria-level={1} style={styles.heroTitle}>
-            Tu liga de pádel, sin hojas de cálculo
-          </Text>
-          <Text style={styles.heroSubtitle}>
-            Organiza ligas y torneos con tus amigos: inscripciones, calendario, resultados y
-            clasificación en un solo sitio, desde el móvil o el ordenador.
-          </Text>
-          <View style={styles.ctaRow}>
-            <LinkButton href="/register" label="Crear cuenta" variant="primary" styles={styles} />
-            <LinkButton href="/login" label="Ya tengo cuenta" variant="outline" styles={styles} />
-          </View>
-        </View>
-
-        <GlassPanel style={styles.preview}>
-          <View style={styles.previewHeader}>
-            <MaterialIcons name="leaderboard" size={16} color={colors.onSurfaceVariant} />
-            <Text style={styles.previewLabel}>CLASIFICACIÓN · EJEMPLO</Text>
-          </View>
-          {SAMPLE_STANDINGS.map((row, index) => (
-            <View key={row.name} style={[styles.previewRow, index > 0 && styles.previewRowBorder]}>
-              <Text style={styles.previewPosition}>{index + 1}</Text>
-              <Text style={styles.previewName}>{row.name}</Text>
-              <Text style={styles.previewPoints}>{row.points} pts</Text>
+      <View style={styles.scroller}>
+        <View style={styles.content}>
+          <View style={styles.header}>
+            <View style={styles.brand}>
+              <View style={styles.mark}>
+                <MaterialIcons name="sports-tennis" size={22} color={colors.onPrimary} />
+              </View>
+              <Text style={styles.wordmark}>PadelProTour</Text>
             </View>
-          ))}
-          <View style={styles.previewMatch}>
-            <Text style={styles.previewMatchLabel}>Último resultado</Text>
-            <Text style={styles.previewMatchScore}>Los Cracks 6-3 · 7-5 Bandeja Team</Text>
+            <LinkButton href="/login" label="Iniciar sesión" variant="outline" compact styles={styles} />
           </View>
-        </GlassPanel>
-      </View>
 
-      <View style={styles.section}>
-        <Text role="heading" aria-level={2} style={styles.sectionTitle}>
-          Todo lo que necesita tu liga
-        </Text>
-        <View style={styles.grid}>
-          {FEATURES.map((feature) => (
-            <GlassPanel key={feature.title} style={styles.feature}>
-              <MaterialIcons name={feature.icon} size={26} color={colors.primaryContainer} />
-              <Text style={styles.featureTitle}>{feature.title}</Text>
-              <Text style={styles.featureBody}>{feature.body}</Text>
+          <View style={styles.hero}>
+            <View style={styles.heroText}>
+              <Text role="heading" aria-level={1} style={styles.heroTitle}>
+                Tu liga de pádel, sin hojas de cálculo
+              </Text>
+              <Text style={styles.heroSubtitle}>
+                Organiza ligas y torneos con tus amigos: inscripciones, calendario, resultados y
+                clasificación en un solo sitio, desde el móvil o el ordenador.
+              </Text>
+              <View style={styles.ctaRow}>
+                <LinkButton href="/register" label="Crear cuenta" variant="primary" styles={styles} />
+                <LinkButton href="/login" label="Ya tengo cuenta" variant="outline" styles={styles} />
+              </View>
+            </View>
+
+            <GlassPanel style={styles.preview}>
+              <View style={styles.previewHeader}>
+                <MaterialIcons name="leaderboard" size={16} color={colors.onSurfaceVariant} />
+                <Text style={styles.previewLabel}>CLASIFICACIÓN · EJEMPLO</Text>
+              </View>
+              {SAMPLE_STANDINGS.map((row, index) => (
+                <View key={row.name} style={[styles.previewRow, index > 0 && styles.previewRowBorder]}>
+                  <Text style={styles.previewPosition}>{index + 1}</Text>
+                  <Text style={styles.previewName}>{row.name}</Text>
+                  <Text style={styles.previewPoints}>{row.points} pts</Text>
+                </View>
+              ))}
+              <View style={styles.previewMatch}>
+                <Text style={styles.previewMatchLabel}>Último resultado</Text>
+                <Text style={styles.previewMatchScore}>Los Cracks 6-3 · 7-5 Bandeja Team</Text>
+              </View>
             </GlassPanel>
-          ))}
-        </View>
-      </View>
+          </View>
 
-      <View style={styles.section}>
-        <Text role="heading" aria-level={2} style={styles.sectionTitle}>
-          Cómo funciona
-        </Text>
-        <View style={styles.steps}>
-          {STEPS.map((step, index) => (
-            <View key={step.title} style={styles.step}>
-              <View style={styles.stepNumber}>
-                <Text style={styles.stepNumberText}>{index + 1}</Text>
-              </View>
-              <View style={styles.stepText}>
-                <Text style={styles.featureTitle}>{step.title}</Text>
-                <Text style={styles.featureBody}>{step.body}</Text>
-              </View>
+          <View style={styles.section}>
+            <Text role="heading" aria-level={2} style={styles.sectionTitle}>
+              Todo lo que necesita tu liga
+            </Text>
+            <View style={styles.grid}>
+              {FEATURES.map((feature) => (
+                <GlassPanel key={feature.title} style={styles.feature}>
+                  <MaterialIcons name={feature.icon} size={26} color={colors.primaryContainer} />
+                  <Text style={styles.featureTitle}>{feature.title}</Text>
+                  <Text style={styles.featureBody}>{feature.body}</Text>
+                </GlassPanel>
+              ))}
             </View>
-          ))}
+          </View>
+
+          <View style={styles.section}>
+            <Text role="heading" aria-level={2} style={styles.sectionTitle}>
+              Cómo funciona
+            </Text>
+            <View style={styles.steps}>
+              {STEPS.map((step, index) => (
+                <View key={step.title} style={styles.step}>
+                  <View style={styles.stepNumber}>
+                    <Text style={styles.stepNumberText}>{index + 1}</Text>
+                  </View>
+                  <View style={styles.stepText}>
+                    <Text style={styles.featureTitle}>{step.title}</Text>
+                    <Text style={styles.featureBody}>{step.body}</Text>
+                  </View>
+                </View>
+              ))}
+            </View>
+          </View>
+
+          <GlassPanel style={styles.closing}>
+            <Text role="heading" aria-level={2} style={styles.sectionTitle}>
+              ¿Montamos la tuya?
+            </Text>
+            <Text style={styles.heroSubtitle}>Crea tu cuenta y ten la liga lista antes del próximo partido.</Text>
+            <LinkButton href="/register" label="Crear cuenta" variant="primary" styles={styles} />
+          </GlassPanel>
+
+          <View style={styles.footer}>
+            <Text style={styles.footerText}>© {new Date().getFullYear()} PadelProTour</Text>
+            <Text {...linkProps('/privacidad')} style={styles.footerLink}>
+              Política de privacidad
+            </Text>
+          </View>
         </View>
       </View>
-
-      <GlassPanel style={styles.closing}>
-        <Text role="heading" aria-level={2} style={styles.sectionTitle}>
-          ¿Montamos la tuya?
-        </Text>
-        <Text style={styles.heroSubtitle}>Crea tu cuenta y ten la liga lista antes del próximo partido.</Text>
-        <LinkButton href="/register" label="Crear cuenta" variant="primary" styles={styles} />
-      </GlassPanel>
-
-      <View style={styles.footer}>
-        <Text style={styles.footerText}>© {new Date().getFullYear()} PadelProTour</Text>
-        <Text {...linkProps('/privacidad')} style={styles.footerLink}>
-          Política de privacidad
-        </Text>
-      </View>
-    </Screen>
+    </View>
   );
 }
 
@@ -197,13 +212,73 @@ function LinkButton({
   );
 }
 
-const makeStyles = (colors: ColorPalette, isNarrow: boolean) =>
+/** Valores CSS que react-native-web acepta pero los tipos de React Native no conocen. */
+const css = <T extends ViewStyle | TextStyle>(style: Record<string, unknown>) => style as T;
+
+const makeStyles = (colors: ColorPalette) =>
   StyleSheet.create({
+    root: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+    // Misma idea que en `Screen`: los círculos ocupan una pantalla y no dependen del alto
+    // del contenido (aquí con `vh` en vez de medir la ventana).
+    glowLayer: css<ViewStyle>({
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      width: '100%',
+      height: '100vh',
+      overflow: 'hidden',
+    }),
+    glow: {
+      position: 'absolute',
+      borderRadius: Radii.full,
+    },
+    glowPrimary: {
+      width: 400,
+      height: 400,
+      top: -100,
+      left: -100,
+      backgroundColor: colors.primaryContainer,
+      opacity: 0.12,
+    },
+    glowSecondary: css<ViewStyle>({
+      width: 300,
+      height: 300,
+      top: '25vh',
+      right: -150,
+      backgroundColor: colors.secondaryContainer,
+      opacity: 0.08,
+    }),
+    glowTertiary: css<ViewStyle>({
+      width: 260,
+      height: 260,
+      top: '68vh',
+      left: -90,
+      backgroundColor: colors.primaryContainer,
+      opacity: 0.07,
+    }),
+    // En escritorio el documento no hace scroll (ver +html.tsx): lo hace este contenedor.
+    // En móvil no tiene alto fijo, crece con el contenido y hace scroll el documento.
+    scroller: css<ViewStyle>({
+      flex: 1,
+      overflowY: 'auto',
+    }),
+    content: css<ViewStyle>({
+      width: '100%',
+      maxWidth: 880 + Spacing.lg * 2,
+      alignSelf: 'center',
+      paddingHorizontal: 'clamp(20px, 5vw, 32px)',
+      paddingTop: 'max(24px, env(safe-area-inset-top))',
+      paddingBottom: Spacing.lg,
+      gap: Spacing.lg,
+    }),
     header: {
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'space-between',
-      gap: Spacing.sm,
+      gap: Spacing.xs,
     },
     brand: {
       flexDirection: 'row',
@@ -212,32 +287,37 @@ const makeStyles = (colors: ColorPalette, isNarrow: boolean) =>
       flexShrink: 1,
     },
     mark: {
-      width: isNarrow ? 32 : 38,
-      height: isNarrow ? 32 : 38,
+      width: 34,
+      height: 34,
       borderRadius: Radii.md,
       backgroundColor: colors.primaryContainer,
       alignItems: 'center',
       justifyContent: 'center',
     },
-    wordmark: {
+    wordmark: css<TextStyle>({
       fontFamily: FontFamilies.display,
-      fontSize: isNarrow ? 16 : 20,
+      fontSize: 'clamp(16px, 4.4vw, 20px)',
       color: colors.primary,
-    },
+    }),
     hero: {
-      flexDirection: isNarrow ? 'column' : 'row',
-      alignItems: isNarrow ? 'stretch' : 'center',
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      alignItems: 'center',
       gap: Spacing.lg,
-      paddingVertical: isNarrow ? Spacing.sm : Spacing.lg,
+      paddingVertical: Spacing.sm,
     },
     heroText: {
-      flex: isNarrow ? undefined : 1.2,
+      flexBasis: 360,
+      flexGrow: 1.2,
+      flexShrink: 1,
       gap: Spacing.sm,
     },
-    heroTitle: {
-      ...(isNarrow ? Typography.headlineLg : Typography.display),
+    heroTitle: css<TextStyle>({
+      fontFamily: FontFamilies.display,
+      fontSize: 'clamp(32px, 5.2vw, 42px)',
+      lineHeight: '1.12',
       color: colors.primary,
-    },
+    }),
     heroSubtitle: {
       ...Typography.bodyLg,
       color: colors.onSurfaceVariant,
@@ -284,7 +364,9 @@ const makeStyles = (colors: ColorPalette, isNarrow: boolean) =>
       opacity: 0.75,
     },
     preview: {
-      flex: isNarrow ? undefined : 1,
+      flexBasis: 280,
+      flexGrow: 1,
+      flexShrink: 1,
       padding: Spacing.sm,
     },
     previewHeader: {
@@ -353,8 +435,9 @@ const makeStyles = (colors: ColorPalette, isNarrow: boolean) =>
       gap: Spacing.sm,
     },
     feature: {
-      flexBasis: isNarrow ? '100%' : '30%',
+      flexBasis: 240,
       flexGrow: 1,
+      flexShrink: 1,
       padding: Spacing.sm,
       gap: Spacing.xs,
     },
@@ -369,11 +452,14 @@ const makeStyles = (colors: ColorPalette, isNarrow: boolean) =>
       color: colors.onSurfaceVariant,
     },
     steps: {
-      flexDirection: isNarrow ? 'column' : 'row',
+      flexDirection: 'row',
+      flexWrap: 'wrap',
       gap: Spacing.sm,
     },
     step: {
-      flex: isNarrow ? undefined : 1,
+      flexBasis: 230,
+      flexGrow: 1,
+      flexShrink: 1,
       flexDirection: 'row',
       gap: Spacing.xs,
     },

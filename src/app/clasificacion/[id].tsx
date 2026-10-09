@@ -1,6 +1,6 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import { useFocusEffect, useLocalSearchParams } from 'expo-router';
-import { useCallback, useMemo } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 
 import type { Ranking } from '@/api/types';
@@ -13,6 +13,7 @@ import { useColors } from '@/hooks/use-theme';
 import {
   PODIUM_COLORS,
   signedDiff,
+  standingLines,
   standingName,
   standingPlayerIds,
   standingSummary,
@@ -35,6 +36,17 @@ const COLUMNS: { key: string; label: string; value: (ranking: Ranking) => string
   { key: 'games_diff', label: 'DJ', value: (r) => signedDiff(r.games_won, r.games_lost) },
 ];
 
+/** En móvil solo caben las columnas clave; sets y juegos se ven al tocar la fila. */
+const COMPACT_COLUMNS: typeof COLUMNS = [
+  { key: 'played', label: 'PJ', value: (r) => r.played },
+  { key: 'won', label: 'G', value: (r) => r.won },
+  { key: 'lost', label: 'P', value: (r) => r.lost },
+  { key: 'sets_diff', label: 'DS', value: (r) => signedDiff(r.sets_won, r.sets_lost) },
+];
+
+const COMPACT_LEGEND =
+  'PJ: jugados · G: ganados · P: perdidos · DS: diferencia de sets. Toca una fila para ver sets y juegos.';
+
 const LEGEND =
   'PJ: partidos jugados · PG: ganados · PP: perdidos · SF/SC: sets a favor y en contra · ' +
   'DS: diferencia de sets · JF/JC: juegos a favor y en contra · DJ: diferencia de juegos';
@@ -46,6 +58,7 @@ export default function StandingsScreen() {
   const colors = useColors();
   const styles = useMemo(() => makeStyles(colors), [colors]);
   const showTable = useWindowDimensions().width >= TABLE_MIN_WIDTH;
+  const [expandedId, setExpandedId] = useState<number | null>(null);
   const { category, competition, rankings, isLoading, error, refetch } = useStandings(Number(id), invite);
 
   useFocusEffect(
@@ -141,52 +154,71 @@ export default function StandingsScreen() {
             })}
           </GlassPanel>
         ) : (
-          <View role="list" style={styles.cards}>
+          <GlassPanel style={styles.compact}>
+            <View style={styles.compactHeader}>
+              <Text style={[styles.headerCell, styles.compactPosition]}>#</Text>
+              <Text style={[styles.headerCell, styles.nameCell]}>{rankings[0].pair ? 'Pareja' : 'Jugador'}</Text>
+              {COMPACT_COLUMNS.map((column) => (
+                <Text key={column.key} style={[styles.headerCell, styles.compactStat]}>
+                  {column.label}
+                </Text>
+              ))}
+              <Text style={[styles.headerCell, styles.compactPoints]}>Pts</Text>
+            </View>
             {rankings.map((ranking) => {
-              const { title, subtitle } = standingName(ranking);
+              const isExpanded = expandedId === ranking.id;
               return (
-                <GlassPanel
+                <Pressable
                   key={ranking.id}
-                  role="listitem"
-                  accessible
+                  onPress={() => setExpandedId(isExpanded ? null : ranking.id)}
+                  accessibilityRole="button"
+                  aria-expanded={isExpanded}
                   accessibilityLabel={standingSummary(ranking)}
-                  style={[styles.rowCard, isMine(ranking) && styles.mine]}>
-                  <View style={styles.rowCardTop}>
-                    <PositionBadge position={ranking.position} styles={styles} />
-                    <View style={styles.rowCardName}>
-                      <Text style={[styles.name, isMine(ranking) && styles.nameMine]}>{title}</Text>
-                      {subtitle && <Text style={styles.subtitle}>{subtitle}</Text>}
+                  style={[styles.compactRow, isMine(ranking) && styles.mine]}>
+                  <View style={styles.compactLine}>
+                    <View style={styles.compactPosition}>
+                      <PositionBadge position={ranking.position} styles={styles} small />
                     </View>
-                    <View style={styles.rowCardPoints}>
-                      <Text style={styles.pointsLarge}>{ranking.points}</Text>
-                      <Text style={styles.pointsUnit}>pts</Text>
+                    <View style={styles.nameCell}>
+                      {standingLines(ranking).map((line, index) => (
+                        <Text
+                          key={index}
+                          numberOfLines={1}
+                          style={[
+                            line.secondary ? styles.compactSubtitle : styles.compactName,
+                            isMine(ranking) && !line.secondary && styles.nameMine,
+                          ]}>
+                          {line.text}
+                        </Text>
+                      ))}
                     </View>
+                    {COMPACT_COLUMNS.map((column) => (
+                      <Text key={column.key} style={[styles.cell, styles.compactStat]}>
+                        {column.value(ranking)}
+                      </Text>
+                    ))}
+                    <Text style={[styles.points, styles.compactPoints]}>{ranking.points}</Text>
                   </View>
-                  <View style={styles.statGrid}>
-                    <Stat label="Jugados" value={ranking.played} styles={styles} />
-                    <Stat label="G – P" value={`${ranking.won} – ${ranking.lost}`} styles={styles} />
-                    <Stat
-                      label="Sets"
-                      value={`${ranking.sets_won} – ${ranking.sets_lost}`}
-                      detail={signedDiff(ranking.sets_won, ranking.sets_lost)}
-                      styles={styles}
-                    />
-                    <Stat
-                      label="Juegos"
-                      value={`${ranking.games_won} – ${ranking.games_lost}`}
-                      detail={signedDiff(ranking.games_won, ranking.games_lost)}
-                      styles={styles}
-                    />
-                  </View>
-                </GlassPanel>
+                  {isExpanded && (
+                    <View style={styles.compactDetail}>
+                      <Text style={styles.compactDetailText}>
+                        Sets {ranking.sets_won}–{ranking.sets_lost} ({signedDiff(ranking.sets_won, ranking.sets_lost)})
+                      </Text>
+                      <Text style={styles.compactDetailText}>
+                        Juegos {ranking.games_won}–{ranking.games_lost} (
+                        {signedDiff(ranking.games_won, ranking.games_lost)})
+                      </Text>
+                    </View>
+                  )}
+                </Pressable>
               );
             })}
-          </View>
+          </GlassPanel>
         ))}
 
       {rankings.length > 0 && (
         <View style={styles.notes}>
-          {showTable && <Text style={styles.note}>{LEGEND}</Text>}
+          <Text style={styles.note}>{showTable ? LEGEND : COMPACT_LEGEND}</Text>
           <Text style={styles.note}>
             Victoria: 3 puntos. A igualdad de puntos desempata el enfrentamiento directo (si son dos),
             después la diferencia de sets, la de juegos y los juegos ganados. Solo cuentan los
@@ -200,32 +232,16 @@ export default function StandingsScreen() {
 
 type Styles = ReturnType<typeof makeStyles>;
 
-function PositionBadge({ position, styles }: { position: number; styles: Styles }) {
+function PositionBadge({ position, styles, small = false }: { position: number; styles: Styles; small?: boolean }) {
   const podium = PODIUM_COLORS[position];
   return (
-    <View style={[styles.badge, podium ? { borderColor: podium + '80', backgroundColor: podium + '1f' } : null]}>
+    <View
+      style={[
+        styles.badge,
+        small && styles.badgeSmall,
+        podium ? { borderColor: podium + '80', backgroundColor: podium + '1f' } : null,
+      ]}>
       <Text style={[styles.badgeText, podium ? { color: podium } : null]}>{position}</Text>
-    </View>
-  );
-}
-
-function Stat({
-  label,
-  value,
-  detail,
-  styles,
-}: {
-  label: string;
-  value: string | number;
-  /** Diferencia con signo, bajo el valor. */
-  detail?: string;
-  styles: Styles;
-}) {
-  return (
-    <View style={styles.stat}>
-      <Text style={styles.statLabel}>{label}</Text>
-      <Text style={styles.statValue}>{value}</Text>
-      {detail ? <Text style={styles.statDetail}>{detail}</Text> : null}
     </View>
   );
 }
@@ -332,61 +348,63 @@ const makeStyles = (colors: ColorPalette) =>
       fontSize: 14,
       color: colors.onSurfaceVariant,
     },
-    cards: {
-      gap: Spacing.xs,
+    badgeSmall: {
+      width: 24,
+      height: 24,
     },
-    rowCard: {
-      padding: Spacing.sm,
-      gap: Spacing.sm,
+    compact: {
+      paddingVertical: Spacing.xs,
     },
-    rowCardTop: {
+    compactHeader: {
       flexDirection: 'row',
       alignItems: 'center',
-      gap: Spacing.xs,
-    },
-    rowCardName: {
-      flex: 1,
-      minWidth: 0,
-    },
-    rowCardPoints: {
-      flexDirection: 'row',
-      alignItems: 'baseline',
+      paddingHorizontal: 10,
+      paddingBottom: Spacing.xs,
       gap: 4,
     },
-    pointsLarge: {
-      fontFamily: FontFamilies.display,
-      fontSize: 24,
-      color: colors.primaryContainer,
+    compactRow: {
+      paddingHorizontal: 10,
+      paddingVertical: 10,
+      borderTopWidth: 1,
+      borderTopColor: colors.glassBorder,
+      gap: 6,
     },
-    pointsUnit: {
+    compactLine: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
+    },
+    compactPosition: {
+      width: 28,
+    },
+    compactStat: {
+      width: 22,
+      textAlign: 'center',
+    },
+    compactPoints: {
+      width: 26,
+      textAlign: 'right',
+    },
+    compactName: {
       ...Typography.bodySm,
+      color: colors.onSurface,
+    },
+    compactSubtitle: {
+      fontFamily: FontFamilies.body,
+      fontSize: 12,
+      lineHeight: 17,
       color: colors.onSurfaceVariant,
     },
-    statGrid: {
+    compactDetail: {
       flexDirection: 'row',
       flexWrap: 'wrap',
-      gap: Spacing.sm,
+      columnGap: Spacing.sm,
+      paddingLeft: 32,
     },
-    stat: {
-      flexGrow: 1,
-      flexBasis: '20%',
-      gap: 2,
-    },
-    statLabel: {
-      fontFamily: FontFamilies.bodyBold,
-      fontSize: 10,
-      letterSpacing: 1,
-      textTransform: 'uppercase',
-      color: colors.onSurfaceVariant,
-    },
-    statValue: {
-      ...Typography.bodyMd,
-      color: colors.onSurface,
-      fontVariant: ['tabular-nums'],
-    },
-    statDetail: {
+    compactDetailText: {
       ...Typography.bodySm,
       color: colors.onSurfaceVariant,
+      fontVariant: ['tabular-nums'],
     },
     notes: {
       gap: Spacing.xs,

@@ -21,6 +21,27 @@ export function standingName(ranking: Ranking): { title: string; subtitle: strin
   return { title: ranking.player?.name ?? `Jugador #${ranking.player_id}`, subtitle: null };
 }
 
+/**
+ * La misma fila en líneas cortas para la tabla de móvil: cada jugador en su línea, o el
+ * nombre de la pareja y debajo, en secundario, quiénes son.
+ */
+export function standingLines(ranking: Ranking): { text: string; secondary: boolean }[] {
+  if (!ranking.pair) return [{ text: standingName(ranking).title, secondary: false }];
+
+  const players = [ranking.pair.player1?.name, ranking.pair.player2?.name].filter(
+    (name): name is string => !!name
+  );
+  if (ranking.pair.name) {
+    return [
+      { text: ranking.pair.name, secondary: false },
+      ...(players.length ? [{ text: players.join(' / '), secondary: true }] : []),
+    ];
+  }
+  return players.length
+    ? players.map((text) => ({ text, secondary: false }))
+    : [{ text: `Pareja #${ranking.pair.id}`, secondary: false }];
+}
+
 /** Ids de los jugadores de la fila, para saber si es la del usuario. */
 export function standingPlayerIds(ranking: Ranking): number[] {
   if (ranking.pair) return [ranking.pair.player1_id, ranking.pair.player2_id];

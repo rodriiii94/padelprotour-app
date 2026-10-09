@@ -272,6 +272,30 @@ export interface Ranking {
   /** Embebidos en GET /categories/{id}/rankings: la pareja con sus jugadores, o el jugador. */
   pair?: Pair | null;
   player?: UserSummary | null;
+  /** Solo en GET /categories/{id}/rankings: últimos 5 resultados que puntúan, del más antiguo al más reciente. */
+  form?: FormResult[];
+  /** Solo en GET /categories/{id}/rankings: sus partidos; primero los jugados por fecha, luego los pendientes. */
+  matches?: StandingMatch[];
+}
+
+export type FormResult = 'W' | 'L';
+
+/** Un partido visto desde una fila de la clasificación. */
+export interface StandingMatch {
+  id: number;
+  phase: string;
+  status: MatchStatus;
+  scheduled_at: string | null;
+  club: string | null;
+  court: string | null;
+  /** Nombre de la pareja rival, o sus dos jugadores ("Ana / Luis"). */
+  opponent: string;
+  /** Compañero en ese partido; solo en ligas individuales con rotación. */
+  partner: string | null;
+  /** null hasta que el resultado está confirmado. */
+  result: 'won' | 'lost' | null;
+  /** Sets con los juegos propios primero ("6-3 7-5"); existe desde que se propone el resultado. */
+  score: string | null;
 }
 
 export interface Paginated<T> {

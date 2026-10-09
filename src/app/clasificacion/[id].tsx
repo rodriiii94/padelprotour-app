@@ -4,12 +4,16 @@ import { useCallback, useMemo, useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 
 import type { Ranking } from '@/api/types';
+import { FormDots } from '@/components/standings/form-dots';
+import { StandingMatches } from '@/components/standings/standing-matches';
+import { ActionChip } from '@/components/ui/action-chip';
 import { GlassPanel } from '@/components/ui/glass-panel';
 import { Screen } from '@/components/ui/screen';
 import { useAuth } from '@/hooks/use-auth';
 import { useGoBack } from '@/hooks/use-go-back';
 import { useStandings } from '@/hooks/use-standings';
 import { useColors } from '@/hooks/use-theme';
+import { shareStandings } from '@/lib/share-standings';
 import {
   PODIUM_COLORS,
   signedDiff,
@@ -45,11 +49,13 @@ const COMPACT_COLUMNS: typeof COLUMNS = [
 ];
 
 const COMPACT_LEGEND =
-  'PJ: jugados · G: ganados · P: perdidos · DS: diferencia de sets. Toca una fila para ver sets y juegos.';
+  'PJ: jugados · G: ganados · P: perdidos · DS: diferencia de sets. Los puntos de color son la racha de ' +
+  'los últimos 5 partidos. Toca una fila para ver sets, juegos y sus partidos.';
 
 const LEGEND =
   'PJ: partidos jugados · PG: ganados · PP: perdidos · SF/SC: sets a favor y en contra · ' +
-  'DS: diferencia de sets · JF/JC: juegos a favor y en contra · DJ: diferencia de juegos';
+  'DS: diferencia de sets · JF/JC: juegos a favor y en contra · DJ: diferencia de juegos · ' +
+  'Racha: últimos 5 partidos, el más reciente a la derecha. Pulsa una fila para ver sus partidos.';
 
 export default function StandingsScreen() {
   const { id, invite } = useLocalSearchParams<{ id: string; invite?: string }>();
@@ -59,6 +65,8 @@ export default function StandingsScreen() {
   const styles = useMemo(() => makeStyles(colors), [colors]);
   const showTable = useWindowDimensions().width >= TABLE_MIN_WIDTH;
   const [expandedId, setExpandedId] = useState<number | null>(null);
+  const [isSharing, setIsSharing] = useState(false);
+  const [shareError, setShareError] = useState<string | null>(null);
   const { category, competition, rankings, isLoading, error, refetch } = useStandings(Number(id), invite);
 
   useFocusEffect(
@@ -67,6 +75,20 @@ export default function StandingsScreen() {
     }, [refetch])
   );
 
+  async function handleShare() {
+    if (!category) return;
+    setIsSharing(true);
+    setShareError(null);
+    try {
+      await shareStandings({ title: category.name, subtitle: competition?.name ?? '', rankings });
+    } catch {
+      setShareError('No se pudo compartir la clasificación.');
+    } finally {
+      setIsSharing(false);
+    }
+  }
+
+  const isOrganizer = user !== null && competition?.organizer_id === user.id;
   const isMine = (ranking: Ranking) => user !== null && standingPlayerIds(ranking).includes(user.id);
 
   return (
@@ -75,6 +97,15 @@ export default function StandingsScreen() {
         <Pressable onPress={goBack} hitSlop={12} accessibilityRole="button" accessibilityLabel="Volver">
           <MaterialIcons name="arrow-back" size={24} color={colors.onSurface} />
         </Pressable>
+        {rankings.length > 0 && category && (
+          <ActionChip
+            icon="ios-share"
+            label={isSharing ? 'Preparando…' : 'Compartir'}
+            fill={false}
+            disabled={isSharing}
+            onPress={handleShare}
+          />
+        )}
       </View>
 
       <View>
@@ -91,9 +122,9 @@ export default function StandingsScreen() {
 
       {isLoading && <ActivityIndicator color={colors.primaryContainer} style={styles.spinner} />}
 
-      {error && (
+      {(error ?? shareError) && (
         <GlassPanel style={styles.card}>
-          <Text style={styles.body}>{error}</Text>
+          <Text style={styles.body}>{error ?? shareError}</Text>
         </GlassPanel>
       )}
 
@@ -120,35 +151,61 @@ export default function StandingsScreen() {
                   {column.label}
                 </Text>
               ))}
+              <Text role="columnheader" style={[styles.headerCell, styles.formCell]}>
+                Racha
+              </Text>
               <Text role="columnheader" style={[styles.headerCell, styles.pointsCell]}>
                 Pts
               </Text>
+              <View style={styles.chevronCell} />
             </View>
             {rankings.map((ranking) => {
               const { title, subtitle } = standingName(ranking);
+              const isExpanded = expandedId === ranking.id;
               return (
-                <View key={ranking.id} role="row" style={[styles.tableRow, isMine(ranking) && styles.mine]}>
-                  <View role="cell" style={styles.positionCell}>
-                    <PositionBadge position={ranking.position} styles={styles} />
-                  </View>
-                  <View role="cell" style={styles.nameCell}>
-                    <Text style={[styles.name, isMine(ranking) && styles.nameMine]} numberOfLines={1}>
-                      {title}
-                    </Text>
-                    {subtitle && (
-                      <Text style={styles.subtitle} numberOfLines={1}>
-                        {subtitle}
+                <View key={ranking.id} style={[styles.tableRowGroup, isMine(ranking) && styles.mine]}>
+                  <Pressable
+                    role="row"
+                    aria-expanded={isExpanded}
+                    onPress={() => setExpandedId(isExpanded ? null : ranking.id)}
+                    style={styles.tableRow}>
+                    <View role="cell" style={styles.positionCell}>
+                      <PositionBadge position={ranking.position} styles={styles} />
+                    </View>
+                    <View role="cell" style={styles.nameCell}>
+                      <Text style={[styles.name, isMine(ranking) && styles.nameMine]} numberOfLines={1}>
+                        {title}
                       </Text>
-                    )}
-                  </View>
-                  {COLUMNS.map((column) => (
-                    <Text key={column.key} role="cell" style={[styles.cell, styles.statCell]}>
-                      {column.value(ranking)}
+                      {subtitle && (
+                        <Text style={styles.subtitle} numberOfLines={1}>
+                          {subtitle}
+                        </Text>
+                      )}
+                    </View>
+                    {COLUMNS.map((column) => (
+                      <Text key={column.key} role="cell" style={[styles.cell, styles.statCell]}>
+                        {column.value(ranking)}
+                      </Text>
+                    ))}
+                    <View role="cell" style={styles.formCell}>
+                      <FormDots form={ranking.form ?? []} emptyColor={colors.outlineVariant} />
+                    </View>
+                    <Text role="cell" style={[styles.points, styles.pointsCell]}>
+                      {ranking.points}
                     </Text>
-                  ))}
-                  <Text role="cell" style={[styles.points, styles.pointsCell]}>
-                    {ranking.points}
-                  </Text>
+                    <View style={styles.chevronCell}>
+                      <MaterialIcons
+                        name={isExpanded ? 'expand-less' : 'expand-more'}
+                        size={18}
+                        color={colors.onSurfaceVariant}
+                      />
+                    </View>
+                  </Pressable>
+                  {isExpanded && (
+                    <View style={styles.tableDetail}>
+                      <StandingMatches ranking={ranking} isOrganizer={isOrganizer} />
+                    </View>
+                  )}
                 </View>
               );
             })}
@@ -168,49 +225,57 @@ export default function StandingsScreen() {
             {rankings.map((ranking) => {
               const isExpanded = expandedId === ranking.id;
               return (
-                <Pressable
-                  key={ranking.id}
-                  onPress={() => setExpandedId(isExpanded ? null : ranking.id)}
-                  accessibilityRole="button"
-                  aria-expanded={isExpanded}
-                  accessibilityLabel={standingSummary(ranking)}
-                  style={[styles.compactRow, isMine(ranking) && styles.mine]}>
-                  <View style={styles.compactLine}>
-                    <View style={styles.compactPosition}>
-                      <PositionBadge position={ranking.position} styles={styles} small />
-                    </View>
-                    <View style={styles.nameCell}>
-                      {standingLines(ranking).map((line, index) => (
-                        <Text
-                          key={index}
-                          numberOfLines={1}
-                          style={[
-                            line.secondary ? styles.compactSubtitle : styles.compactName,
-                            isMine(ranking) && !line.secondary && styles.nameMine,
-                          ]}>
-                          {line.text}
+                <View key={ranking.id} style={[styles.compactRow, isMine(ranking) && styles.mine]}>
+                  <Pressable
+                    onPress={() => setExpandedId(isExpanded ? null : ranking.id)}
+                    accessibilityRole="button"
+                    aria-expanded={isExpanded}
+                    accessibilityLabel={standingSummary(ranking)}
+                    style={styles.compactToggle}>
+                    <View style={styles.compactLine}>
+                      <View style={styles.compactPosition}>
+                        <PositionBadge position={ranking.position} styles={styles} small />
+                      </View>
+                      <View style={styles.nameCell}>
+                        {standingLines(ranking).map((line, index) => (
+                          <Text
+                            key={index}
+                            numberOfLines={1}
+                            style={[
+                              line.secondary ? styles.compactSubtitle : styles.compactName,
+                              isMine(ranking) && !line.secondary && styles.nameMine,
+                            ]}>
+                            {line.text}
+                          </Text>
+                        ))}
+                      </View>
+                      {COMPACT_COLUMNS.map((column) => (
+                        <Text key={column.key} style={[styles.cell, styles.compactStat]}>
+                          {column.value(ranking)}
                         </Text>
                       ))}
+                      <Text style={[styles.points, styles.compactPoints]}>{ranking.points}</Text>
                     </View>
-                    {COMPACT_COLUMNS.map((column) => (
-                      <Text key={column.key} style={[styles.cell, styles.compactStat]}>
-                        {column.value(ranking)}
-                      </Text>
-                    ))}
-                    <Text style={[styles.points, styles.compactPoints]}>{ranking.points}</Text>
-                  </View>
+                    <View style={styles.compactFormLine}>
+                      <FormDots form={ranking.form ?? []} emptyColor={colors.outlineVariant} />
+                      <MaterialIcons
+                        name={isExpanded ? 'expand-less' : 'expand-more'}
+                        size={16}
+                        color={colors.onSurfaceVariant}
+                      />
+                    </View>
+                  </Pressable>
                   {isExpanded && (
                     <View style={styles.compactDetail}>
                       <Text style={styles.compactDetailText}>
                         Sets {ranking.sets_won}–{ranking.sets_lost} ({signedDiff(ranking.sets_won, ranking.sets_lost)})
-                      </Text>
-                      <Text style={styles.compactDetailText}>
-                        Juegos {ranking.games_won}–{ranking.games_lost} (
+                        {'   '}Juegos {ranking.games_won}–{ranking.games_lost} (
                         {signedDiff(ranking.games_won, ranking.games_lost)})
                       </Text>
+                      <StandingMatches ranking={ranking} isOrganizer={isOrganizer} />
                     </View>
                   )}
-                </Pressable>
+                </View>
               );
             })}
           </GlassPanel>
@@ -250,6 +315,8 @@ const makeStyles = (colors: ColorPalette) =>
   StyleSheet.create({
     header: {
       flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
     },
     spinner: {
       marginTop: Spacing.lg,
@@ -279,14 +346,29 @@ const makeStyles = (colors: ColorPalette) =>
       paddingBottom: Spacing.xs,
       gap: Spacing.xs,
     },
+    tableRowGroup: {
+      borderTopWidth: 1,
+      borderTopColor: colors.glassBorder,
+    },
     tableRow: {
       flexDirection: 'row',
       alignItems: 'center',
       paddingHorizontal: Spacing.sm,
       paddingVertical: 10,
       gap: Spacing.xs,
-      borderTopWidth: 1,
-      borderTopColor: colors.glassBorder,
+    },
+    tableDetail: {
+      paddingLeft: Spacing.sm + 36 + Spacing.xs,
+      paddingRight: Spacing.sm,
+      paddingBottom: Spacing.sm,
+    },
+    formCell: {
+      width: 64,
+      alignItems: 'center',
+      textAlign: 'center',
+    },
+    chevronCell: {
+      width: 18,
     },
     headerCell: {
       fontFamily: FontFamilies.bodyBold,
@@ -367,6 +449,15 @@ const makeStyles = (colors: ColorPalette) =>
       paddingVertical: 10,
       borderTopWidth: 1,
       borderTopColor: colors.glassBorder,
+      gap: Spacing.xs,
+    },
+    compactToggle: {
+      gap: 6,
+    },
+    compactFormLine: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'flex-end',
       gap: 6,
     },
     compactLine: {
@@ -396,10 +487,8 @@ const makeStyles = (colors: ColorPalette) =>
       color: colors.onSurfaceVariant,
     },
     compactDetail: {
-      flexDirection: 'row',
-      flexWrap: 'wrap',
-      columnGap: Spacing.sm,
       paddingLeft: 32,
+      gap: Spacing.xs,
     },
     compactDetailText: {
       ...Typography.bodySm,

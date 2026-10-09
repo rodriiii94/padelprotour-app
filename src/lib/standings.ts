@@ -1,4 +1,4 @@
-import type { Ranking } from '@/api/types';
+import type { Ranking, StandingMatch } from '@/api/types';
 
 /** Oro, plata y bronce para las tres primeras posiciones. */
 export const PODIUM_COLORS: Record<number, string> = {
@@ -65,4 +65,17 @@ export function standingSummary(ranking: Ranking): string {
     `sets ${ranking.sets_won} a favor y ${ranking.sets_lost} en contra`,
     `juegos ${ranking.games_won} a favor y ${ranking.games_lost} en contra`,
   ].join(', ');
+}
+
+/** Colores de un resultado en la racha y en la lista de partidos. */
+export const RESULT_COLORS = { won: '#7ad151', lost: '#f2726a' } as const;
+
+/** Partidos con resultado (confirmado o pendiente de validar), del más reciente al más antiguo. */
+export function playedMatches(ranking: Ranking): StandingMatch[] {
+  return (ranking.matches ?? []).filter((match) => match.score !== null).reverse();
+}
+
+/** El siguiente partido por jugar: la API ya los da ordenados por fecha, sin fecha al final. */
+export function nextMatch(ranking: Ranking): StandingMatch | null {
+  return (ranking.matches ?? []).find((match) => match.score === null) ?? null;
 }

@@ -15,6 +15,7 @@ import {
   DOMINANT_HAND_LABEL,
   PREFERRED_SIDE_LABEL,
   SOCIAL_NETWORKS,
+  achievementProgress,
   availabilitySlot,
   filledSocialLinks,
   formatMonthYear,
@@ -38,7 +39,7 @@ export function PlayerProfileView({
   const subtitle = subtitleFor(profile);
   const socials = filledSocialLinks(profile.social_links);
   const availability = new Set(profile.availability ?? []);
-  const unlocked = ACHIEVEMENT_ORDER.filter((key) => profile.achievements.includes(key));
+  const unlocked = new Set(profile.achievements);
   const chips = [
     profile.preferred_side ? PREFERRED_SIDE_LABEL[profile.preferred_side] : null,
     profile.dominant_hand ? DOMINANT_HAND_LABEL[profile.dominant_hand] : null,
@@ -105,20 +106,48 @@ export function PlayerProfileView({
       </Section>
 
       <Section title="Logros">
-        {unlocked.length === 0 ? (
-          <GlassPanel style={styles.card}>
-            <Text style={styles.meta}>Todavía sin logros.</Text>
-          </GlassPanel>
-        ) : (
-          <View style={styles.chips}>
-            {unlocked.map((key) => (
-              <View key={key} style={styles.achievement} accessibilityLabel={ACHIEVEMENTS[key].description}>
-                <MaterialIcons name={ACHIEVEMENTS[key].icon} size={18} color={colors.primaryContainer} />
-                <Text style={styles.achievementLabel}>{ACHIEVEMENTS[key].label}</Text>
+        <GlassPanel style={styles.achievements}>
+          {ACHIEVEMENT_ORDER.map((key, index) => {
+            const { label, description, icon } = ACHIEVEMENTS[key];
+            const isUnlocked = unlocked.has(key);
+            const progress = isUnlocked ? null : achievementProgress(key, stats);
+            return (
+              <View
+                key={key}
+                accessible
+                accessibilityLabel={`${label}: ${description}. ${
+                  isUnlocked
+                    ? 'Conseguido'
+                    : progress
+                      ? `Pendiente, ${progress.current} de ${progress.goal} ${progress.unit}`
+                      : 'Pendiente'
+                }`}
+                style={[styles.achievementRow, index > 0 && styles.achievementDivider, !isUnlocked && styles.locked]}>
+                <View style={[styles.achievementIcon, isUnlocked && styles.achievementIconUnlocked]}>
+                  <MaterialIcons
+                    name={icon}
+                    size={20}
+                    color={isUnlocked ? colors.onPrimary : colors.onSurfaceVariant}
+                  />
+                </View>
+                <View style={styles.flex}>
+                  <Text style={styles.achievementLabel}>{label}</Text>
+                  <Text style={styles.meta}>{description}</Text>
+                  {progress && (
+                    <View style={styles.progressTrack}>
+                      <View style={[styles.progressFill, { width: `${(progress.current / progress.goal) * 100}%` }]} />
+                    </View>
+                  )}
+                </View>
+                {isUnlocked ? (
+                  <MaterialIcons name="check-circle" size={20} color={colors.primaryContainer} />
+                ) : (
+                  <Text style={styles.progressText}>{progress ? `${progress.current} / ${progress.goal}` : 'Pendiente'}</Text>
+                )}
               </View>
-            ))}
-          </View>
-        )}
+            );
+          })}
+        </GlassPanel>
       </Section>
 
       {partner ? (
@@ -299,20 +328,57 @@ const makeStyles = (colors: ColorPalette) =>
       fontSize: 12,
       color: colors.onSurfaceVariant,
     },
-    achievement: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: Spacing.base,
-      backgroundColor: colors.glassFill,
-      borderWidth: 1,
-      borderColor: colors.primaryContainer,
-      borderRadius: Radii.full,
-      paddingHorizontal: Spacing.xs,
+    achievements: {
+      paddingHorizontal: Spacing.sm,
       paddingVertical: Spacing.base,
     },
+    achievementRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: Spacing.xs,
+      paddingVertical: Spacing.xs,
+    },
+    achievementDivider: {
+      borderTopWidth: 1,
+      borderTopColor: colors.glassBorder,
+    },
+    locked: {
+      opacity: 0.6,
+    },
+    achievementIcon: {
+      width: 36,
+      height: 36,
+      borderRadius: Radii.full,
+      alignItems: 'center',
+      justifyContent: 'center',
+      borderWidth: 1,
+      borderColor: colors.glassBorder,
+    },
+    achievementIconUnlocked: {
+      backgroundColor: colors.primaryContainer,
+      borderColor: colors.primaryContainer,
+    },
     achievementLabel: {
-      ...Typography.bodySm,
+      ...Typography.bodyMd,
+      fontFamily: FontFamilies.bodyBold,
       color: colors.onSurface,
+    },
+    progressTrack: {
+      height: 4,
+      borderRadius: Radii.full,
+      backgroundColor: colors.glassBorder,
+      marginTop: 6,
+      overflow: 'hidden',
+    },
+    progressFill: {
+      height: 4,
+      borderRadius: Radii.full,
+      backgroundColor: colors.onSurfaceVariant,
+    },
+    progressText: {
+      ...Typography.bodySm,
+      color: colors.onSurfaceVariant,
+      fontVariant: ['tabular-nums'],
     },
     partnerRow: {
       flexDirection: 'row',

@@ -4,6 +4,7 @@ import type {
   AchievementKey,
   AvatarColor,
   DominantHand,
+  PlayerStats,
   PreferredSide,
   SocialLinks,
   SocialNetwork,
@@ -54,6 +55,30 @@ export const ACHIEVEMENT_ORDER: AchievementKey[] = [
   'matches_50',
   'champion',
 ];
+
+/**
+ * Cuánto lleva un jugador de cada logro, con las estadísticas que ya trae su perfil. `null`
+ * en los que no se pueden contar (campeón). Las metas son las mismas que aplica la API.
+ */
+const ACHIEVEMENT_PROGRESS: Record<
+  AchievementKey,
+  { goal: number; current: (stats: PlayerStats) => number; unit: string } | null
+> = {
+  first_win: { goal: 1, current: (stats) => stats.wins, unit: 'victorias' },
+  matches_10: { goal: 10, current: (stats) => stats.matches_played, unit: 'partidos' },
+  win_streak_5: { goal: 5, current: (stats) => stats.best_streak, unit: 'victorias seguidas' },
+  matches_50: { goal: 50, current: (stats) => stats.matches_played, unit: 'partidos' },
+  champion: null,
+};
+
+export function achievementProgress(
+  key: AchievementKey,
+  stats: PlayerStats
+): { current: number; goal: number; unit: string } | null {
+  const progress = ACHIEVEMENT_PROGRESS[key];
+  if (!progress) return null;
+  return { current: Math.min(progress.current(stats), progress.goal), goal: progress.goal, unit: progress.unit };
+}
 
 export const SOCIAL_NETWORKS: Record<SocialNetwork, { label: string; urlFor: (handle: string) => string }> = {
   instagram: { label: 'Instagram', urlFor: (h) => `https://instagram.com/${encodeURIComponent(h)}` },

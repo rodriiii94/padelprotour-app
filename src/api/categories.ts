@@ -11,6 +11,7 @@ import type {
   Pair,
   Paginated,
   Phase,
+  PlayoffBracket,
   PublicUserSummary,
   Ranking,
   Registration,
@@ -145,4 +146,18 @@ export function updateMatchBooking(matchId: number, input: MatchBookingInput): P
 /** Clubes donde ya ha jugado el usuario, los más recientes primero (sugerencias). */
 export function listMyClubs(): Promise<string[]> {
   return apiFetch<string[]>('/me/clubs');
+}
+
+export function getPlayoff(categoryId: number, invite?: string): Promise<PlayoffBracket> {
+  return apiFetch<PlayoffBracket>(withInvite(`/categories/${categoryId}/playoff`, invite));
+}
+
+/** Playoff con las `size` primeras de la clasificación (solo el organizador). */
+export function createPlayoff(categoryId: number, size: 4 | 8): Promise<PlayoffBracket> {
+  return apiFetch<PlayoffBracket>(`/categories/${categoryId}/playoff`, { method: 'POST', body: { size } });
+}
+
+/** Solo mientras ningún partido del playoff tenga resultado. */
+export function deletePlayoff(categoryId: number): Promise<void> {
+  return apiFetch<void>(`/categories/${categoryId}/playoff`, { method: 'DELETE' });
 }

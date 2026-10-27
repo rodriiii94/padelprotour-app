@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 
 import {
   createPair,
+  createPlayoff as createPlayoffRequest,
   createRegistration,
   generateRoundRobin,
   getCategory,
@@ -13,7 +14,7 @@ import {
   updateRegistrationStatus,
 } from '@/api/categories';
 import { getCompetition } from '@/api/competitions';
-import type { Category, Competition, Match, Pair, Phase, Ranking, Registration } from '@/api/types';
+import { ApiError, type Category, type Competition, type Match, type Pair, type Phase, type Ranking, type Registration } from '@/api/types';
 
 /** `invite`: código del enlace, para leer una competición privada antes de participar en ella. */
 export function useCategoryDetail(categoryId: number, invite?: string) {
@@ -74,8 +75,10 @@ export function useCategoryDetail(categoryId: number, invite?: string) {
       try {
         await action();
         refetch();
-      } catch {
-        setError(failureMessage);
+      } catch (e) {
+        // El motivo concreto que da la API (p. ej. "Hay 1 resultado pendiente de validar").
+        const reason = e instanceof ApiError ? Object.values(e.errors ?? {})[0]?.[0] : undefined;
+        setError(reason ?? failureMessage);
       } finally {
         setIsMutating(false);
       }
@@ -137,7 +140,13 @@ export function useCategoryDetail(categoryId: number, invite?: string) {
     [runMutation, categoryId]
   );
 
+  const createPlayoff = useCallback(
+    (size: 4 | 8) => runMutation(() => createPlayoffRequest(categoryId, size), 'No se pudo crear el playoff.'),
+    [runMutation, categoryId]
+  );
+
   return {
+    createPlayoff,
     category,
     competition,
     registrations,

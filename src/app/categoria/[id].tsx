@@ -26,6 +26,7 @@ import { useGoBack } from '@/hooks/use-go-back';
 import { useCategoryDetail } from '@/hooks/use-category-detail';
 import { useColors } from '@/hooks/use-theme';
 import { bookingPlace } from '@/lib/booking';
+import { confirmAction } from '@/lib/confirm';
 import { FontFamilies, Radii, Spacing, Typography, type ColorPalette } from '@/theme/tokens';
 
 const STATUS_LABEL: Record<RegistrationStatus, string> = {
@@ -92,6 +93,7 @@ export default function CategoryDetailScreen() {
     joinIndividually,
     formPairAndJoin,
     generateCalendar,
+    createPlayoff,
   } = useCategoryDetail(categoryId, invite);
 
   useFocusEffect(
@@ -111,6 +113,25 @@ export default function CategoryDetailScreen() {
     (pair) => !registrations.some((r) => r.pair_id === pair.id && r.status !== 'rejected')
   );
   const confirmedCount = registrations.filter((r) => r.status === 'confirmed').length;
+  const inviteQuery = invite ? `?invite=${encodeURIComponent(invite)}` : '';
+  // El playoff tiene su propia pantalla: el calendario muestra solo la liga.
+  const leaguePhases = phases.filter((phase) => phase.type !== 'elimination_round');
+  const hasPlayoff = leaguePhases.length < phases.length;
+  const unplayedLeagueMatches = leaguePhases
+    .flatMap((phase) => matchesByPhase[phase.id] ?? [])
+    .filter((match) => match.status === 'scheduled' || match.status === 'in_progress').length;
+
+  const askCreatePlayoff = (size: 4 | 8) =>
+    confirmAction({
+      title: `Crear playoff de ${size}`,
+      message:
+        `Entrarán las ${size} primeras de la clasificación actual.` +
+        (unplayedLeagueMatches > 0
+          ? ` Quedan ${unplayedLeagueMatches} partidos de liga sin jugar: si se juegan después, ya no cambiarán los cruces.`
+          : ''),
+      confirmLabel: 'Crear playoff',
+      onConfirm: () => createPlayoff(size),
+    });
 
   return (
     <Screen>
@@ -135,16 +156,22 @@ export default function CategoryDetailScreen() {
             {competition && <Text style={styles.meta}>{competition.name}</Text>}
           </View>
 
-          <ActionChip
-            icon="leaderboard"
-            label="Ver clasificación"
-            tone="accent"
-            onPress={() =>
-              router.push(
-                `/clasificacion/${categoryId}${invite ? `?invite=${encodeURIComponent(invite)}` : ''}`
-              )
-            }
-          />
+          <View style={styles.topActions}>
+            <ActionChip
+              icon="leaderboard"
+              label="Ver clasificación"
+              tone="accent"
+              onPress={() => router.push(`/clasificacion/${categoryId}${inviteQuery}`)}
+            />
+            {hasPlayoff && (
+              <ActionChip
+                icon="emoji-events"
+                label="Ver playoff"
+                tone="accent"
+                onPress={() => router.push(`/playoff/${categoryId}${inviteQuery}`)}
+              />
+            )}
+          </View>
 
           {(category.match_format || category.slots) && (
             <View style={styles.pills}>
@@ -226,14 +253,35 @@ export default function CategoryDetailScreen() {
                   />
                 </GlassPanel>
               )}
+
+              {!isIndividual && leaguePhases.length > 0 && !hasPlayoff && (
+                <GlassPanel style={styles.card}>
+                  <Text style={styles.cardTitle}>Playoff (opcional)</Text>
+                  <Text style={styles.body}>
+                    Al acabar la liga, enfrenta a las mejores en eliminatorias a partido único: 1º contra 4º y 2º
+                    contra 3º (o hasta cuartos con 8). El ganador de la final es el campeón.
+                  </Text>
+                  <View style={styles.topActions}>
+                    {([4, 8] as const).map((size) => (
+                      <ActionChip
+                        key={size}
+                        icon="emoji-events"
+                        label={`Playoff de ${size}`}
+                        disabled={isMutating || confirmedCount < size}
+                        onPress={() => askCreatePlayoff(size)}
+                      />
+                    ))}
+                  </View>
+                </GlassPanel>
+              )}
             </View>
           )}
 
-          {phases.length > 0 && (
+          {leaguePhases.length > 0 && (
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>Calendario</Text>
               <View style={styles.list}>
-                {phases.map((phase) => (
+                {leaguePhases.map((phase) => (
                   <PhaseSection
                     key={phase.id}
                     phase={phase}
@@ -518,6 +566,11 @@ const makeStyles = (colors: ColorPalette) =>
       lineHeight: 22,
       color: colors.primary,
       flexShrink: 1,
+    },
+    topActions: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: Spacing.xs,
     },
     pills: {
       flexDirection: 'row',

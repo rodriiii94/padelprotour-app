@@ -237,6 +237,8 @@ export interface Match {
   playtomic_url?: string | null;
   status: MatchStatus;
   winner_side: 1 | 2 | null;
+  /** Hueco del partido en su ronda de playoff (0, 1…); null fuera del playoff. */
+  bracket_position?: number | null;
   /** Quién propuso el resultado mientras el partido está en `pending_validation`. */
   result_proposed_by?: number | null;
   /** Cuándo se propuso; 48 h después, sin respuesta, se confirma solo. */
@@ -320,4 +322,35 @@ export class ApiError extends Error {
     this.status = status;
     this.errors = body.errors;
   }
+}
+
+/** Una pareja en un hueco del cuadro, o el texto de quién llegará si aún no se sabe. */
+export type PlayoffSide =
+  | { seed: number | null; pair_id: number | null; name: string; placeholder?: undefined }
+  | { placeholder: string; seed?: undefined; pair_id?: undefined; name?: undefined };
+
+export interface PlayoffSlot {
+  position: number;
+  /** null hasta que se conocen las dos parejas. */
+  match_id: number | null;
+  status: MatchStatus | null;
+  /** Cuando el resultado está confirmado. */
+  winner_side: 1 | 2 | null;
+  scheduled_at: string | null;
+  /** Juegos del lado 1 primero: "6-3 7-5". */
+  score: string | null;
+  sides: [PlayoffSide, PlayoffSide];
+}
+
+export interface PlayoffRound {
+  phase_id: number;
+  name: string;
+  matches: PlayoffSlot[];
+}
+
+/** `GET /categories/{id}/playoff` */
+export interface PlayoffBracket {
+  size: 4 | 8;
+  champion: { pair_id: number; name: string } | null;
+  rounds: PlayoffRound[];
 }

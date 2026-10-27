@@ -117,18 +117,15 @@ export default function CategoryDetailScreen() {
   // El playoff tiene su propia pantalla: el calendario muestra solo la liga.
   const leaguePhases = phases.filter((phase) => phase.type !== 'elimination_round');
   const hasPlayoff = leaguePhases.length < phases.length;
-  const unplayedLeagueMatches = leaguePhases
+  // El playoff solo se puede crear con la liga terminada (todo con resultado confirmado).
+  const unfinishedLeagueMatches = leaguePhases
     .flatMap((phase) => matchesByPhase[phase.id] ?? [])
-    .filter((match) => match.status === 'scheduled' || match.status === 'in_progress').length;
+    .filter((match) => match.status !== 'completed').length;
 
   const askCreatePlayoff = (size: 4 | 8) =>
     confirmAction({
       title: `Crear playoff de ${size}`,
-      message:
-        `Entrarán las ${size} primeras de la clasificación actual.` +
-        (unplayedLeagueMatches > 0
-          ? ` Quedan ${unplayedLeagueMatches} partidos de liga sin jugar: si se juegan después, ya no cambiarán los cruces.`
-          : ''),
+      message: `Entrarán las ${size} primeras de la clasificación final de la liga.`,
       confirmLabel: 'Crear playoff',
       onConfirm: () => createPlayoff(size),
     });
@@ -261,13 +258,21 @@ export default function CategoryDetailScreen() {
                     Al acabar la liga, enfrenta a las mejores en eliminatorias a partido único: 1º contra 4º y 2º
                     contra 3º (o hasta cuartos con 8). El ganador de la final es el campeón.
                   </Text>
+                  {unfinishedLeagueMatches > 0 && (
+                    <Text style={styles.body}>
+                      Disponible cuando termine la liga:{' '}
+                      {unfinishedLeagueMatches === 1
+                        ? 'queda 1 partido sin resultado confirmado.'
+                        : `quedan ${unfinishedLeagueMatches} partidos sin resultado confirmado.`}
+                    </Text>
+                  )}
                   <View style={styles.topActions}>
                     {([4, 8] as const).map((size) => (
                       <ActionChip
                         key={size}
                         icon="emoji-events"
                         label={`Playoff de ${size}`}
-                        disabled={isMutating || confirmedCount < size}
+                        disabled={isMutating || confirmedCount < size || unfinishedLeagueMatches > 0}
                         onPress={() => askCreatePlayoff(size)}
                       />
                     ))}
